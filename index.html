@@ -38,7 +38,7 @@
         .habit-item.is-frog.done { border-left: 4px solid #facc15; opacity: 0.6; }
         
         .habit-row { display: flex; justify-content: space-between; align-items: center; }
-        .check { width: 24px; height: 24px; border: 2px solid #3f3f46; border-radius: 7px; flex-shrink: 0; cursor: pointer; }
+        .check { width: 24px; height: 24px; border: 2px solid #3f3f3f; border-radius: 7px; flex-shrink: 0; cursor: pointer; }
         .done .check { background: var(--primary); border-color: var(--primary); display: flex; align-items: center; justify-content: center; }
         .is-frog.done .check { background: #facc15; border-color: #facc15; }
         .done .check::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
@@ -82,12 +82,20 @@
         }
         .tool-btn:hover { background: #fff; color: #000; border-color: #fff; }
 
-        /* Guide Section */
+        /* Expandable Guide Section */
+        .guide-container { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
+        .guide-toggle { background: none; border: none; color: #71717a; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; opacity: 0.4; transition: 0.3s; }
+        .guide-toggle:hover { opacity: 1; }
+        
         .instruction-box { 
-            background: #111; border: 1px solid #222; padding: 25px; border-radius: 15px; 
-            max-width: 500px; font-size: 0.8rem; color: #71717a; line-height: 1.6; margin-top: 40px;
+            height: 0; overflow: hidden; opacity: 0;
+            background: rgba(17, 17, 17, 0.5); border: 1px solid rgba(39, 39, 42, 0.3); 
+            padding: 0 25px; border-radius: 15px; 
+            font-size: 0.75rem; color: #71717a; line-height: 1.6; text-align: center;
+            transition: all 0.4s ease-in-out;
         }
-        .instruction-box h4 { color: var(--primary); margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .instruction-box.open { height: auto; padding: 25px; opacity: 1; margin-top: 15px; }
+        .instruction-box h4 { color: var(--primary); margin-top: 0; text-transform: uppercase; letter-spacing: 1px; font-size: 0.7rem; }
         .instruction-box b { color: #fff; }
 
         @media (max-width: 800px) { .year-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -140,12 +148,15 @@
             <a href="https://www.brain.fm" target="_blank" class="tool-btn">meditate now</a>
         </div>
 
-        <div class="instruction-box">
-            <h4>Cloud Sync Guide</h4>
-            1. <b>Master Key:</b> Get your Master Key from JSONBin.io (Settings > API Keys).<br>
-            2. <b>Link Device:</b> Paste your Master Key. If it's your first time, leave Bin ID <b>empty</b>.<br>
-            3. <b>Create Locker:</b> Click "One-Tap Sync". It will generate a Bin ID. <b>Save this ID!</b><br>
-            4. <b>Multi-Device:</b> On your second device, enter the same Master Key AND that saved Bin ID.
+        <div class="guide-container">
+            <button class="guide-toggle" onclick="toggleGuide()">Show Setup Guide ↓</button>
+            <div class="instruction-box" id="setupGuide">
+                <h4>Cloud Sync Instructions</h4>
+                1. <b>Master Key:</b> Get your Master Key from JSONBin.io (Settings > API Keys).<br>
+                2. <b>Link Device:</b> Paste your Key. If it's your first time, leave Bin ID <b>empty</b>.<br>
+                3. <b>Create Locker:</b> Click "One-Tap Sync". It will generate a Bin ID. <b>Save this ID!</b><br>
+                4. <b>Multi-Device:</b> On other devices, enter the same Master Key AND that saved Bin ID.
+            </div>
         </div>
 
         <button onclick="clearAllData()" class="tool-btn" style="color: #ef4444; border-color: #ef4444; margin-top: 40px; font-size: 0.5rem; opacity: 0.4;">Clear All Habit History</button>
@@ -177,6 +188,13 @@
         key: localStorage.getItem('sync_key') || '',
         binId: localStorage.getItem('sync_bin_id') || ''
     };
+
+    function toggleGuide() {
+        const guide = document.getElementById('setupGuide');
+        const btn = document.querySelector('.guide-toggle');
+        guide.classList.toggle('open');
+        btn.innerText = guide.classList.contains('open') ? 'Hide Setup Guide ↑' : 'Show Setup Guide ↓';
+    }
 
     function updateSyncStatus(msg) {
         document.getElementById('syncStatus').innerText = `Cloud: ${msg}`;
