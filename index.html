@@ -119,16 +119,20 @@
         <div id="timerDisplay" onclick="toggleTimer()" ondblclick="resetTimer()">25:00</div>
         
         <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
+        
         <div class="button-row">
             <button onclick="cloudSync()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">One-Tap Sync</button>
-            <button onclick="playChillVibe()" class="tool-btn">Chill Music</button>
-            <button onclick="setupCloud()" class="tool-btn" style="opacity: 0.5;">Link Device</button>
+            <button onclick="setupCloud()" class="tool-btn">Link Device</button>
+            <button onclick="resetCloud()" class="tool-btn" style="color: #71717a; font-size: 0.6rem;">Reset Cloud Link</button>
         </div>
 
         <div class="button-row">
+            <button onclick="playChillVibe()" class="tool-btn">Chill Music</button>
             <a href="https://www.youtube.com/watch?v=mw4k1tCnAuE" target="_blank" class="tool-btn">Handpan Focus</a>
             <a href="https://www.brain.fm" target="_blank" class="tool-btn">meditate now</a>
         </div>
+
+        <button onclick="clearAllData()" class="tool-btn" style="color: #ef4444; border-color: #ef4444; margin-top: 20px; font-size: 0.5rem; opacity: 0.4;">Clear All Habit History</button>
     </div>
 </div>
 
@@ -153,7 +157,7 @@
     let deleteTimeouts = {};
 
     // --- CLOUD SYNC LOGIC ---
-    const CLOUD_CONFIG = {
+    let CLOUD_CONFIG = {
         key: localStorage.getItem('sync_key') || '',
         binId: localStorage.getItem('sync_bin_id') || ''
     };
@@ -172,9 +176,18 @@
         }
     }
 
+    function resetCloud() {
+        if (confirm("Disconnect from Cloud? This only removes the keys, not your habits.")) {
+            localStorage.removeItem('sync_key');
+            localStorage.removeItem('sync_bin_id');
+            alert("Cloud link removed. Page will reload.");
+            location.reload();
+        }
+    }
+
     async function cloudSync() {
         if (!CLOUD_CONFIG.key) {
-            alert("Please click 'Link Device' first to set up your cloud key.");
+            alert("Please click 'Link Device' first.");
             return;
         }
         updateSyncStatus("Syncing...");
@@ -189,7 +202,7 @@
                 localStorage.setItem('sync_bin_id', result.metadata.id);
                 CLOUD_CONFIG.binId = result.metadata.id;
                 updateSyncStatus("Linked & Saved");
-                alert("Cloud Linked! Copy this Bin ID to your other devices: " + result.metadata.id);
+                alert("New Cloud Locker Created! Bin ID: " + result.metadata.id);
             } else {
                 const response = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
                     headers: { 'X-Master-Key': CLOUD_CONFIG.key }
@@ -210,12 +223,19 @@
             }
         } catch (error) {
             updateSyncStatus("Error");
-            alert("Sync failed. Check your Key/Bin ID.");
+            alert("Sync failed. Check your Secret Key and Bin ID.");
+        }
+    }
+
+    function clearAllData() {
+        if (confirm("🚨 WIPE ALL HISTORY? This cannot be undone.")) {
+            state = { dailyData: {} };
+            localStorage.setItem('discipline_v12', JSON.stringify(state));
+            saveAndRender();
         }
     }
 
     if (CLOUD_CONFIG.key) updateSyncStatus("Ready");
-    // --- END CLOUD SYNC LOGIC ---
 
     function updateQuote(isComplete) {
         const textEl = document.getElementById('quoteText');
