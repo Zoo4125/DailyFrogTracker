@@ -16,6 +16,14 @@
         .particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; animation: explode 1.2s ease-out forwards; }
         @keyframes explode { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--x), var(--y)); opacity: 0; } }
 
+        /* Custom Sync Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .modal-close { position: absolute; top: 20px; right: 20px; color: var(--success); cursor: pointer; font-weight: bold; font-size: 1.4rem; transition: 0.2s; }
+        .modal-close:hover { transform: scale(1.1); }
+        .modal-text { color: #a1a1aa; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.6; }
+        .modal-btns { display: flex; flex-direction: column; gap: 12px; }
+
         /* Top Section */
         .today-section { text-align: center; margin-top: 40px; }
         .quote-text { font-size: 1.1rem; color: #a1a1aa; font-style: italic; display: block; margin-bottom: 20px; min-height: 3em; max-width: 600px; }
@@ -27,7 +35,7 @@
         .input-group { width: 100%; max-width: 500px; margin: 30px auto; display: flex; flex-direction: column; gap: 10px; }
         input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 18px; border-radius: 14px; box-sizing: border-box; outline: none; font-size: 1rem; text-align: center; transition: 0.3s; }
         input:focus { border-color: var(--primary); background: #050505; }
-        #frogInput { border-color: var(--frog); box-shadow: 0 0 15px rgba(250, 204, 21, 0.05); }
+        #frogInput { border-color: var(--frog); }
 
         @keyframes frogGlow { 0% { box-shadow: 0 0 5px rgba(250, 204, 21, 0.1); } 50% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.25); } 100% { box-shadow: 0 0 5px rgba(250, 204, 21, 0.1); } }
         .habit-item.is-frog:not(.done) { animation: frogGlow 3s infinite ease-in-out; }
@@ -48,14 +56,12 @@
         .is-frog.done .check { background: var(--frog); border-color: var(--frog); }
         .done .check::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
         
-        /* Action Buttons */
         .action-btns { display: flex; gap: 12px; align-items: center; }
         .move-btn { color: var(--primary); cursor: pointer; font-size: 1.1rem; font-weight: bold; display: none; }
         .delete-btn { color: var(--success); opacity: 0.8; cursor: pointer; font-size: 1.1rem; transition: 0.2s; min-width: 18px; text-align: center; }
         .delete-btn:hover { opacity: 1; }
         .delete-btn.confirm { color: var(--success); font-weight: bold; opacity: 1; }
 
-        /* Selectors */
         .col-selector-wrap { display: flex; justify-content: center; gap: 10px; border-top: 1px solid #27272a; padding-top: 10px; }
         .sq-btn { width: 14px; height: 14px; border: 1px solid #3f3f46; border-radius: 3px; cursor: pointer; transition: 0.2s; }
         .sq-btn.active { background: var(--success); border-color: var(--success); }
@@ -77,7 +83,7 @@
         /* Footer Section */
         .footer-tools { margin-top: auto; padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
         #timerDisplay { font-family: monospace; font-size: 1.4rem; color: var(--success); font-weight: bold; cursor: pointer; padding: 12px 40px; background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 12px; user-select: none; transition: 0.3s; }
-        #timerDisplay.active { animation: breathe 3s infinite; border-color: var(--success); box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
+        #timerDisplay.active { animation: breathe 3s infinite; border-color: var(--success); }
         @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.98); } }
         
         .button-row { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
@@ -91,7 +97,6 @@
         .expand-box { height: 0; overflow: hidden; opacity: 0; transition: all 0.4s ease-in-out; text-align: center; }
         .expand-box.open { height: auto; opacity: 1; padding: 20px 0; }
         .instruction-box { background: rgba(17, 17, 17, 0.5); border: 1px solid rgba(39, 39, 42, 0.3); padding: 25px; border-radius: 15px; font-size: 0.75rem; color: #71717a; line-height: 1.6; }
-        .instruction-box b { color: var(--primary); }
 
         @media (max-width: 800px) { .year-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
@@ -99,6 +104,21 @@
 <body>
 
 <div id="firework-container" class="firework-container"></div>
+
+<div id="syncModal" class="modal-overlay">
+    <div class="sync-modal">
+        <div class="modal-close" onclick="closeSyncModal()">✕</div>
+        <div class="modal-text">
+            Click Download to Download from the Cloud<br>
+            or<br>
+            Click Upload to Upload to the Cloud
+        </div>
+        <div class="modal-btns">
+            <button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Download</button>
+            <button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload</button>
+        </div>
+    </div>
+</div>
 
 <div class="container">
     <div class="today-section">
@@ -131,7 +151,7 @@
         <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
         
         <div class="button-row">
-            <button onclick="cloudSyncCheck()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
+            <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
             <button onclick="setupCloud()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Link</button>
             <button onclick="resetCloud()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Reset</button>
         </div>
@@ -139,18 +159,18 @@
         <div class="button-row">
             <button onclick="playStretch()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Stretch</button>
             <button onclick="playChillVibe()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Chill</button>
-            <a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Mediate</a>
+            <a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Meditate</a>
         </div>
 
         <div class="toggle-section">
             <button class="toggle-link" onclick="toggleElement('setupGuide')">Show Setup Guide ↓</button>
             <div id="setupGuide" class="expand-box">
                 <div class="instruction-box">
-                    <b>JSONBIN SYNC</b><br>
-                    1. Get API Key from JSONBin.io.<br>
-                    2. Click "Link" (Green Button) to paste Key.<br>
-                    3. Click "Sync" -> "Cancel" (Upload) to create Bin ID.<br>
-                    4. Save that ID to link other devices!
+                    <b>CLOUDSYNC SETUP</b><br>
+                    1. Get a Master Key from JSONBin.io.<br>
+                    2. Click "Link" (Green) to enter your Key.<br>
+                    3. Click "Sync" then "Upload" to create your first locker.<br>
+                    4. Save the generated ID to link other devices!
                 </div>
             </div>
         </div>
@@ -185,6 +205,10 @@
     let deleteTimeouts = {};
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
 
+    // --- Modal Logic ---
+    function openSyncModal() { document.getElementById('syncModal').style.display = 'flex'; }
+    function closeSyncModal() { document.getElementById('syncModal').style.display = 'none'; }
+
     function toggleElement(id) {
         const el = document.getElementById(id);
         const btn = el.previousElementSibling;
@@ -192,70 +216,55 @@
         btn.innerText = isOpen ? `Hide ${btn.innerText.split(' ')[1]} ↑` : `Show ${btn.innerText.split(' ')[1]} ↓`;
     }
 
-    function updateSyncStatus(msg) {
-        document.getElementById('syncStatus').innerText = `Cloud: ${msg}`;
-    }
-
-    function playStretch() { window.open("https://www.youtube.com/watch?v=ChGP5ahvvN4&list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy&shuffle=1", '_blank'); }
-    function playChillVibe() { window.open('https://www.youtube.com/watch?v=nPb2xhiyBXE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=450,height=400'); }
+   function playStretch() { 
+    window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); }
+    function playChillVibe() { window.open('https://www.youtube.com/watch?v=nPb2xhiyBXE', 'chillPlayer', 'width=450,height=400'); }
 
     function playChime() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
-        [174, 174.5, 348, 522].forEach((freq, i) => {
+        [174, 348, 522].forEach((freq, i) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = i === 0 ? 'sine' : 'triangle';
             osc.frequency.setValueAtTime(freq, now);
             gain.gain.setValueAtTime(0, now);
-            gain.gain.linearRampToValueAtTime(i === 0 ? 0.3 : 0.1, now + 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 4);
+            gain.gain.linearRampToValueAtTime(0.1, now + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 3);
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(now); osc.stop(now + 4.1);
+            osc.start(now); osc.stop(now + 3.1);
         });
     }
 
     function toggleTimer() {
-        if (!audioCtx) audioCtx = new AudioContext();
         const el = document.getElementById('timerDisplay');
         if (timerInterval) { 
             clearInterval(timerInterval); timerInterval = null; 
             el.classList.remove('active'); document.body.classList.remove('focus-mode');
         } else {
-            if (timeLeft === 1500) playChime();
+            playChime();
             el.classList.add('active'); document.body.classList.add('focus-mode');
             timerInterval = setInterval(() => {
                 timeLeft--; updateTimerUI();
-                if (timeLeft <= 0) { clearInterval(timerInterval); resetTimer(); playChime(); alert("Session Complete!"); }
+                if (timeLeft <= 0) { clearInterval(timerInterval); resetTimer(); playChime(); alert("Focus complete."); }
             }, 1000);
         }
     }
     function resetTimer() { timeLeft = 1500; updateTimerUI(); document.body.classList.remove('focus-mode'); document.getElementById('timerDisplay').classList.remove('active'); }
     function updateTimerUI() { const m = Math.floor(timeLeft / 60); const s = timeLeft % 60; document.getElementById('timerDisplay').innerText = `${m}:${s < 10 ? '0' : ''}${s}`; }
 
-    // --- Cloud ---
+    // --- Cloud Logic ---
     function setupCloud() {
-        const key = prompt("Step 1: Paste Master Key:");
-        if (!key) return;
-        const bin = prompt("Step 2: Enter Bin ID (Leave BLANK if new):");
+        const key = prompt("Paste Master Key:"); if (!key) return;
+        const bin = prompt("Enter Bin ID (Leave blank if creating new):");
         localStorage.setItem('sync_key', key);
         if (bin) localStorage.setItem('sync_bin_id', bin); else localStorage.removeItem('sync_bin_id');
-        CLOUD_CONFIG.key = key; CLOUD_CONFIG.binId = bin || '';
-        updateSyncStatus("Ready"); alert("Keys saved! Click 'Sync' -> 'Cancel' to create your cloud locker.");
+        CLOUD_CONFIG = { key, binId: bin || '' }; updateSyncStatus("Ready");
     }
 
     function resetCloud() {
         if (confirm("Disconnect Cloud?")) {
             localStorage.removeItem('sync_key'); localStorage.removeItem('sync_bin_id');
-            CLOUD_CONFIG = {key:'', binId:''}; updateSyncStatus("Unlinked"); setupCloud();
-        }
-    }
-
-    async function cloudSyncCheck() {
-        if (confirm("Click OK to DOWNLOAD from Cloud.\nClick CANCEL to UPLOAD to Cloud.")) {
-            await cloudSync('download');
-        } else {
-            await cloudSync('upload');
+            CLOUD_CONFIG = { key: '', binId: '' }; updateSyncStatus("Unlinked");
         }
     }
 
@@ -273,28 +282,28 @@
                 if (data.metadata) {
                     localStorage.setItem('sync_bin_id', data.metadata.id);
                     CLOUD_CONFIG.binId = data.metadata.id;
-                    updateSyncStatus("Linked"); alert("SUCCESS! Bin ID Created: " + data.metadata.id);
+                    updateSyncStatus("Linked"); alert("Bin ID Created: " + data.metadata.id);
                 }
             } else {
-                const url = `https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`;
-                const res = await fetch(url + (type === 'download' ? '/latest' : ''), {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}${type === 'download' ? '/latest' : ''}`, {
                     method: type === 'upload' ? 'PUT' : 'GET',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
                     body: type === 'upload' ? JSON.stringify(state) : null
                 });
                 const data = await res.json();
                 if (type === 'download') { state = data.record; saveAndRender(); }
-                updateSyncStatus("Success");
+                updateSyncStatus("Synced");
             }
-        } catch (e) { updateSyncStatus("Error"); alert("Sync failed. Check keys."); }
+        } catch (e) { updateSyncStatus("Error"); }
     }
+
+    function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
 
     function clearAllData() {
-        const pass = prompt("Type 'DELETE' to wipe all history:");
-        if (pass === "DELETE") { state = { dailyData: {} }; saveAndRender(); }
+        if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {} }; saveAndRender(); }
     }
 
-    // --- Core Logic ---
+    // --- Task Logic ---
     function addHabit() {
         const input = document.getElementById('habitInput'); if (!input.value.trim()) return;
         const key = getTodayKey(viewingDate);
@@ -404,16 +413,27 @@
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateKey = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const dayData = state.dailyData[dateKey];
-                const score = dayData ? dayData.percent : 0;
-                if (dayData) { monthTotal += score; daysLogged++; }
-                const frogEaten = dayData && dayData.habits.some(h => h.isFrog && h.done);
-                monthHtml += `<div class="day-sq ${dateKey === getTodayKey(viewingDate) ? 'active' : ''}" onclick="jumpToDate('${dateKey}')" style="background: rgba(59, 130, 246, ${score > 0 ? 0.2 + (score/100)*0.8 : 0})">${frogEaten ? '🐸' : ''}</div>`;
+                
+                // --- FIX: Dynamic re-calculation for the grid ---
+                let score = 0;
+                let hasFrogAndDone = false;
+                if (dayData && dayData.habits && dayData.habits.length > 0) {
+                    const totalTasks = dayData.habits.length;
+                    const doneTasks = dayData.habits.filter(h => h.done).length;
+                    score = Math.round((doneTasks / totalTasks) * 100);
+                    hasFrogAndDone = dayData.habits.some(h => h.isFrog && h.done);
+                    monthTotal += score; 
+                    daysLogged++;
+                }
+                
+                monthHtml += `<div class="day-sq ${dateKey === getTodayKey(viewingDate) ? 'active' : ''}" onclick="jumpToDate('${dateKey}')" style="background: rgba(59, 130, 246, ${score > 0 ? 0.2 + (score/100)*0.8 : 0})">${hasFrogAndDone ? '🐸' : ''}</div>`;
             }
             grid.innerHTML += monthHtml + `</div></div>`;
-            setTimeout(() => { 
-                const label = document.getElementById(`m-pct-${mIdx}`);
-                if (label) label.innerText = (daysLogged > 0 ? Math.round(monthTotal / daysLogged) : 0) + '%';
-            }, 0);
+            
+            // Apply month average
+            const finalAvg = daysLogged > 0 ? Math.round(monthTotal / daysLogged) : 0;
+            const label = document.getElementById(`m-pct-${mIdx}`);
+            if (label) label.innerText = finalAvg + '%';
         });
     }
 
