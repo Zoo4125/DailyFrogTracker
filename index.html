@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline Dashboard Pro V2</title>
+    <title>Daily Frog Dashboard</title>
     <style>
-        :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --border: #27272a; --success: #22c55e; --frog: #facc15; }
+        :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --border: #27272a; --success: #22c55e; --frog: #facc15; --milestone: #60a5fa; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; transition: background 1s ease; }
         
         body.focus-mode { background: #040405; }
@@ -16,17 +16,60 @@
         .particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; animation: explode 1.2s ease-out forwards; }
         @keyframes explode { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--x), var(--y)); opacity: 0; } }
 
-        /* Custom Sync Modal */
+        /* TOAST NOTIFICATION */
+        .toast {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(24, 24, 27, 0.95); border: 1px solid var(--primary);
+            color: #fff; padding: 20px 40px; border-radius: 50px;
+            font-size: 1rem; font-weight: bold; pointer-events: none;
+            opacity: 0; transition: opacity 0.4s ease; z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;
+        }
+        .toast.show { opacity: 1; }
+
+        /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
+        
         .modal-close { position: absolute; top: 20px; right: 20px; color: var(--success); cursor: pointer; font-weight: bold; font-size: 1.4rem; transition: 0.2s; }
         .modal-close:hover { transform: scale(1.1); }
-        .modal-text { color: #a1a1aa; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.6; }
-        .modal-btns { display: flex; flex-direction: column; gap: 12px; }
+        
+        .modal-text { color: #a1a1aa; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.6; text-align: center; }
+        .modal-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 
-        /* Top Section */
+        .custom-input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 20px; text-align: center; }
+        .confirm-btn { background: var(--primary); color: white; border: none; padding: 10px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .confirm-btn:hover { opacity: 0.9; }
+        textarea.custom-input { min-height: 150px; text-align: left; resize: vertical; }
+
+        /* Routine List in Modal */
+        .routine-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
+        .routine-item { display: flex; justify-content: space-between; background: #111; padding: 10px; border-radius: 8px; border: 1px solid #333; font-size: 0.8rem; align-items: center; }
+        
+        /* Routine Icons */
+        .routine-icon-group { display: flex; gap: 12px; align-items: center; }
+        .routine-action.bolt { color: #facc15; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .routine-action.bolt:hover { transform: scale(1.2); color: #fff; }
+        .routine-action.del { color: var(--primary); cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: 0.2s; }
+        .routine-action.del:hover { transform: scale(1.2); color: #fff; }
+
+        /* Top Section & Quote Hover */
         .today-section { text-align: center; margin-top: 40px; }
-        .quote-text { font-size: 1.1rem; color: #a1a1aa; font-style: italic; display: block; margin-bottom: 20px; min-height: 3em; max-width: 600px; }
+        
+        .quote-wrapper { position: relative; display: inline-block; max-width: 600px; min-height: 3em; margin-bottom: 20px; }
+        .quote-text { font-size: 1.1rem; color: #a1a1aa; font-style: italic; cursor: help; transition: color 0.3s; }
+        .quote-text:hover { color: #fff; }
+        
+        /* Tooltip for Author */
+        .quote-text:hover::after {
+            content: attr(data-author);
+            position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            margin-top: 10px; padding: 6px 12px;
+            background: #000; border: 1px solid var(--primary); color: var(--primary);
+            font-size: 0.8rem; border-radius: 6px; white-space: nowrap; font-style: normal;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 100;
+        }
+
         .main-percent { font-size: 6rem; font-weight: 800; color: var(--primary); line-height: 1; transition: 0.5s; }
         .main-percent.complete { color: var(--success); text-shadow: 0 0 30px rgba(34, 197, 94, 0.6); transform: scale(1.1); }
         .label { text-transform: uppercase; font-size: 0.7rem; letter-spacing: 2px; color: #71717a; font-weight: 600; margin-top: 10px; }
@@ -63,13 +106,17 @@
         .is-frog.done .check { background: var(--frog); border-color: var(--frog); }
         .done .check::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
         
-        .action-btns { display: flex; gap: 12px; align-items: center; }
+        .action-btns { display: flex; gap: 8px; align-items: center; }
         .move-btn { color: var(--primary); cursor: pointer; font-size: 1.1rem; font-weight: bold; display: none; }
+        .pen-btn { color: #a1a1aa; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+        .pen-btn:hover { color: #fff; }
+        .routine-btn { color: #facc15; cursor: pointer; font-size: 1rem; transition: 0.2s; } 
+        .routine-btn:hover { color: #fff; transform: scale(1.1); }
+
         .delete-btn { color: var(--success); opacity: 0.8; cursor: pointer; font-size: 1.1rem; transition: 0.2s; min-width: 18px; text-align: center; }
         .delete-btn:hover { opacity: 1; }
         .delete-btn.confirm { color: var(--success); font-weight: bold; opacity: 1; }
 
-        /* Restored Column Buttons */
         .col-selector-wrap { display: flex; justify-content: center; gap: 10px; border-top: 1px solid #27272a; padding-top: 10px; pointer-events: auto; }
         .sq-btn { width: 14px; height: 14px; border: 1px solid #3f3f46; border-radius: 3px; cursor: pointer; transition: 0.2s; }
         .sq-btn:hover { border-color: var(--primary); transform: scale(1.2); }
@@ -81,49 +128,77 @@
         .month-title { display: flex; justify-content: space-between; font-size: 0.6rem; color: #a1a1aa; margin-bottom: 8px; text-transform: uppercase; }
         .month-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         
-        /* New Spatial Jiggle Logic */
         .day-sq { 
-            width: 100%; aspect-ratio: 1; 
-            background: rgba(255, 255, 255, 0.05); /* Visible empty state */
-            border-radius: 2px; cursor: pointer; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 0.5rem; position: relative; 
+            width: 100%; aspect-ratio: 1; background: rgba(255, 255, 255, 0.05); border-radius: 2px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; font-size: 0.5rem; position: relative; 
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
         }
-        
-        /* 1. The target gets huge */
-        .day-sq:hover { 
-            transform: scale(1.5); 
-            z-index: 100; 
-            border-radius: 4px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-            border: 1px solid var(--text);
-        }
-
-        /* 2. Left & Right neighbors get slightly bigger (Spatial Effect) */
-        .day-sq:has(+ .day-sq:hover),
-        .day-sq:hover + .day-sq {
-            transform: scale(1.15);
-            z-index: 50;
-            border-radius: 3px;
-        }
-
-        /* 3. Everything else fades slightly to focus attention */
-        .month-days:has(.day-sq:hover) .day-sq:not(:hover):not(:has(+ .day-sq:hover)) {
-            opacity: 0.6;
-            transform: scale(0.95);
-        }
-
-        /* Grid Tooltip */
+        .day-sq:hover { transform: scale(1.5); z-index: 100; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); border: 1px solid var(--text); }
+        .day-sq:has(+ .day-sq:hover), .day-sq:hover + .day-sq { transform: scale(1.15); z-index: 50; border-radius: 3px; }
+        .month-days:has(.day-sq:hover) .day-sq:not(:hover):not(:has(+ .day-sq:hover)) { opacity: 0.6; transform: scale(0.95); }
         .day-sq:hover::after {
-            content: attr(data-pct);
-            position: absolute;
-            bottom: 120%; left: 50%; transform: translateX(-50%);
-            background: #000; border: 1px solid var(--primary);
-            color: #fff; padding: 4px 8px; border-radius: 6px;
-            font-size: 0.7rem; white-space: nowrap; pointer-events: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200;
+            content: attr(data-pct); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+            background: #000; border: 1px solid var(--primary); color: #fff; padding: 4px 8px; border-radius: 6px;
+            font-size: 0.7rem; white-space: nowrap; pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200;
         }
+
+        /* --- TROPHY & GOALS SECTION --- */
+        .trophy-section { width: 100%; display: flex; flex-direction: column; align-items: center; margin: 40px 0; }
+        .trophy-btn { 
+            font-size: 3rem; cursor: pointer; opacity: 0.3; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: inline-block; user-select: none;
+        }
+        .trophy-btn:hover { 
+            opacity: 0.8; transform: scale(1.5); 
+            text-shadow: 0 0 15px #ffd700; filter: drop-shadow(0 0 6px #ffd700); 
+        }
+
+        .goals-flex { 
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; 
+            width: 100%; max-width: 1000px; padding-bottom: 20px; 
+        }
+        
+        .goal-card { 
+            flex: 0 0 calc(25% - 12px); min-width: 200px; 
+            background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; 
+            display: flex; flex-direction: column; gap: 10px; position: relative; min-height: 100px;
+        }
+        .goal-card.done { border-color: var(--success); opacity: 0.7; }
+
+        /* Goal Header Add Button (Empty Square Style) */
+        .add-ms-header-btn {
+            width: 14px; height: 14px; 
+            border: 1px solid var(--milestone); border-radius: 3px;
+            background: transparent;
+            cursor: pointer; transition: 0.2s;
+        }
+        .add-ms-header-btn:hover { background: var(--milestone); transform: scale(1.25); }
+
+        .milestone-list { 
+            display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center;
+            min-height: 20px; 
+        }
+
+        .milestone-box {
+            width: 90%; background: #27272a; border: 1px solid #3f3f46;
+            border-radius: 6px; padding: 6px 8px; font-size: 0.7rem; color: #a1a1aa;
+            text-align: center; cursor: pointer; user-select: none; position: relative;
+            white-space: normal; word-wrap: break-word; /* Wrap text */
+            transition: 0.2s;
+        }
+        .milestone-box:hover { color: #fff; border-color: var(--text); z-index: 5; }
+        .milestone-box.done { background: var(--success); color: #000; border-color: var(--success); font-weight: bold; opacity: 1; }
+        .milestone-box.dragging { opacity: 0.2; background: var(--milestone); }
+        
+        /* Blue X Delete for Milestones */
+        .ms-del { 
+            position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
+            color: var(--primary); cursor: pointer; font-size: 0.8rem; font-weight: bold;
+            opacity: 0; transition: 0.2s; z-index: 6; padding: 2px;
+        }
+        .milestone-box:hover .ms-del { opacity: 1; }
+        .ms-del:hover { transform: scale(1.2); }
+        .ms-del.confirm { color: var(--success); }
 
         /* Nav Bar */
         .nav-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; margin: 40px auto; padding-top: 20px; border-top: 1px solid var(--border); }
@@ -149,21 +224,18 @@
         .expand-box.open { height: auto; opacity: 1; padding: 20px 0; }
         .instruction-box { background: rgba(17, 17, 17, 0.5); border: 1px solid rgba(39, 39, 42, 0.3); padding: 25px; border-radius: 15px; font-size: 0.75rem; color: #71717a; line-height: 1.6; }
 
-        @media (max-width: 800px) { .year-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 800px) { .year-grid, .goals-flex { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
 
 <div id="firework-container" class="firework-container"></div>
+<div id="toast" class="toast"></div>
 
 <div id="syncModal" class="modal-overlay">
     <div class="sync-modal">
         <div class="modal-close" onclick="closeSyncModal()">✕</div>
-        <div class="modal-text">
-            Click Download to Download from the Cloud<br>
-            or<br>
-            Click Upload to Upload to the Cloud
-        </div>
+        <div class="modal-text">Click Download to Download from the Cloud<br>or<br>Click Upload to Upload to the Cloud</div>
         <div class="modal-btns">
             <button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Download</button>
             <button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload</button>
@@ -171,9 +243,48 @@
     </div>
 </div>
 
+<div id="goalInputModal" class="modal-overlay">
+    <div class="sync-modal">
+        <div class="modal-close" onclick="closeGoalModal()">✕</div>
+        <div class="modal-text" style="font-size: 1.1rem; font-weight: bold;">Enter a longterm goal</div>
+        <input type="text" id="newGoalText" class="custom-input" placeholder="e.g. Run a Marathon">
+        <button onclick="confirmAddGoal()" class="confirm-btn">OK</button>
+    </div>
+</div>
+
+<div id="milestoneInputModal" class="modal-overlay">
+    <div class="sync-modal">
+        <div class="modal-close" onclick="closeMilestoneModal()">✕</div>
+        <div class="modal-text" style="font-size: 1.1rem; font-weight: bold;">Add Milestone</div>
+        <input type="text" id="newMilestoneText" class="custom-input" placeholder="e.g. Read Chapter 1">
+        <button onclick="confirmAddMilestone()" class="confirm-btn">Add</button>
+    </div>
+</div>
+
+<div id="goalNotesModal" class="modal-overlay">
+    <div class="sync-modal" style="max-width: 500px;">
+        <div class="modal-close" onclick="closeNotesModal()">✕</div>
+        <div class="modal-text" id="noteTitle">Goal Notes</div>
+        <textarea id="noteText" class="custom-input" placeholder="Type your notes here..."></textarea>
+        <button onclick="saveGoalNotes()" class="confirm-btn">Save Notes</button>
+    </div>
+</div>
+
+<div id="goalRoutineModal" class="modal-overlay">
+    <div class="sync-modal" style="max-width: 400px;">
+        <div class="modal-close" onclick="closeRoutineModal()">✕</div>
+        <div class="modal-text">Goal Routine</div>
+        <div class="routine-list" id="routineList"></div>
+        <input type="text" id="newRoutineTask" class="custom-input" placeholder="New task (e.g. Hangboard)" onkeypress="if(event.key==='Enter') addRoutineTask()">
+        <button onclick="addAllRoutinesToToday()" class="confirm-btn">Add All to Today</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="today-section">
-        <span class="quote-text" id="quoteText">"If you were to swallow a frog, do it first thing in the morning."</span>
+        <div class="quote-wrapper">
+            <span class="quote-text" id="quoteText" data-author=""></span>
+        </div>
         <div class="label" id="frogLabel">Today's Frog</div>
         <div class="main-percent" id="mainPercent">0%</div>
     </div>
@@ -190,6 +301,11 @@
     </div>
 
     <div class="year-grid" id="yearGrid"></div>
+
+    <div class="trophy-section">
+        <div class="trophy-btn" onclick="openGoalModal()">🏆</div>
+    </div>
+    <div class="goals-flex" id="goalsGrid"></div>
 
     <div class="nav-bar">
         <button class="nav-btn" onclick="changeDate(-1)">← Yesterday</button>
@@ -214,7 +330,7 @@
         </div>
 
         <div class="toggle-section">
-            <button class="toggle-link" onclick="toggleElement('setupGuide')">Show Setup Guide ↓</button>
+            <button class="toggle-link" onclick="toggleElement('setupGuide', 'Setup Guide')">Show Setup Guide ↓</button>
             <div id="setupGuide" class="expand-box">
                 <div class="instruction-box">
                     <b>CLOUDSYNC SETUP</b><br>
@@ -227,7 +343,29 @@
         </div>
 
         <div class="toggle-section">
-            <button class="toggle-link" onclick="toggleElement('dangerZone')">Danger Zone ↓</button>
+            <button class="toggle-link" onclick="toggleElement('howToUse', 'How To Use')">Show How To Use ↓</button>
+            <div id="howToUse" class="expand-box">
+                <div class="instruction-box" style="text-align: left;">
+                    <strong style="color:var(--frog)">THE PHILOSOPHY</strong><br>
+                    "Eat the Frog" means doing your hardest, most important task first. That is your <b>Frog</b>. Put it in the top yellow box. It glows until it's done.<br><br>
+                    
+                    <strong style="color:var(--primary)">DAILY TASKS</strong><br>
+                    Add other tasks below. Use the squares to move them between columns (To Do, Doing, Done). Click the arrow (→) to push a task to tomorrow.<br><br>
+                    
+                    <strong style="color:var(--milestone)">LONG TERM GOALS</strong><br>
+                    Click the 🏆 to add a life goal. Click the small square in the goal header to add <b>Milestones</b>. Break big goals into small steps.<br><br>
+                    
+                    <strong style="color:#facc15">ROUTINES</strong><br>
+                    Click the Lightning Bolt (⚡) on a goal to save routine tasks (like "Gym" or "Study"). Click the bolt next to a task to instantly add it to your day.<br><br>
+                    
+                    <strong style="color:var(--success)">FOCUS</strong><br>
+                    Click the timer at the bottom for a 25-minute deep work session.
+                </div>
+            </div>
+        </div>
+
+        <div class="toggle-section">
+            <button class="toggle-link" onclick="toggleElement('dangerZone', 'Danger Zone')">Danger Zone ↓</button>
             <div id="dangerZone" class="expand-box">
                 <button onclick="clearAllData()" class="tool-btn" style="color: #ef4444; border-color: #ef4444; margin-top: 10px; font-size: 0.5rem; opacity: 0.4;">Wipe All History</button>
             </div>
@@ -236,44 +374,204 @@
 </div>
 
 <script>
-    const frogQuotes = [
-        "If you were to swallow a frog, do it first thing in the morning.",
-        "If you have to eat two frogs, eat the big one first.",
-        "Discipline is the bridge between goals and accomplishment.",
-        "The pain of discipline is far less than the pain of regret.",
-        "He who has a why to live can bear almost any how.",
-        "Focus on being productive instead of busy.",
-        "Excellence is not an act, but a habit.",
-        "Don't wish it were easier, wish you were better.",
-        "Your future self is watching you right now through memories.",
-        "Discipline equals freedom."
+    // --- Quote Data ---
+    const markTwainQuote = { text: "If it's your job to eat a frog, it's best to do it first thing in the morning. And If it's your job to eat two frogs, it's best to eat the biggest one first.", author: "Mark Twain" };
+    const quotesList = [
+        { text: "You do not rise to the level of your goals. You fall to the level of your systems.", author: "James Clear" },
+        { text: "A year from now you may wish you had started today.", author: "Karen Lamb" },
+        { text: "Start before you are ready.", author: "Steven Pressfield" },
+        { text: "Long-term consistency trumps short-term intensity.", author: "Bruce Lee" },
+        { text: "It is not that we have a short time to live, but that we waste a lot of it.", author: "Seneca" },
+        { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+        { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" },
+        { text: "You have power over your mind - not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
+        { text: "The man who moves a mountain begins by carrying away small stones.", author: "Confucius" },
+        { text: "I have been impressed with the urgency of doing. Knowing is not enough; we must apply.", author: "Leonardo da Vinci" },
+        { text: "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.", author: "Abraham Lincoln" },
+        { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" },
+        { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+        { text: "First say to yourself what you would be; and then do what you have to do.", author: "Epictetus" },
+        { text: "I’m a greater believer in luck, and I find the harder I work the more I have of it.", author: "Thomas Jefferson" },
+        { text: "The beginning is the most important part of the work.", author: "Plato" },
+        { text: "Opportunities multiply as they are seized.", author: "Sun Tzu" },
+        { text: "The secret of change is to focus all of your energy, not on fighting the old, but on building the new.", author: "Socrates" },
+        { text: "Don't wait. The time will never be just right.", author: "Napoleon Hill" },
+        markTwainQuote 
     ];
-    const victoryQuotes = ["Well done. You conquered the day.", "Consistency is power.", "Excellence is a habit.", "Discipline equals freedom.", "Rest easy. You earned it.", "The version of you tomorrow will thank you."];
+
+    // --- Victory Messages ---
+    const firstVictoryQuote = "The frog is eaten. The day is won.";
+    const randomVictoryQuotes = [
+        "Rest easy. You have earned it.",
+        "A day well spent brings happy sleep.",
+        "The standard has been set.",
+        "Chaos conquered.",
+        "Consistency is the only magic.",
+        "No regrets today.",
+        "Momentum is built one day at a time.",
+        "The Pain of growth is far less than the pain of regret.", // Modified #12
+        "Tomorrow starts with the victory of today.",
+        "You are what you repeatedly do.",
+        "Sleep the sleep of the just.",
+        "Another brick laid. Another step taken.",
+        "The mind commands, the body obeys.",
+        "Respect yourself. You kept your word.",
+        "Sharpen the axe. Rest now.",
+        "This is what progress feels like."
+    ];
     
     let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {} };
+    if (!state.longTermGoals) state.longTermGoals = []; 
+
     let viewingDate = new Date();
     let timerInterval, timeLeft = 1500, audioCtx;
     let deleteTimeouts = {};
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
+    let activeGoalId = null;
+    let currentGoalIdForMilestone = null;
+
+    // --- Toast Logic ---
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
 
     // --- Modal Logic ---
     function openSyncModal() { document.getElementById('syncModal').style.display = 'flex'; }
     function closeSyncModal() { document.getElementById('syncModal').style.display = 'none'; }
 
-    function toggleElement(id) {
+    function openGoalModal() { document.getElementById('goalInputModal').style.display = 'flex'; document.getElementById('newGoalText').focus(); }
+    function closeGoalModal() { document.getElementById('goalInputModal').style.display = 'none'; document.getElementById('newGoalText').value = ''; }
+
+    function openNotesModal(id) { 
+        activeGoalId = id; 
+        const goal = state.longTermGoals.find(g => g.id === id);
+        document.getElementById('noteText').value = goal.notes || '';
+        document.getElementById('goalNotesModal').style.display = 'flex'; 
+    }
+    function closeNotesModal() { document.getElementById('goalNotesModal').style.display = 'none'; activeGoalId = null; }
+
+    // --- Milestone Modal Logic ---
+    function openMilestoneModal(id) {
+        currentGoalIdForMilestone = id;
+        document.getElementById('milestoneInputModal').style.display = 'flex';
+        document.getElementById('newMilestoneText').focus();
+    }
+    function closeMilestoneModal() {
+        document.getElementById('milestoneInputModal').style.display = 'none';
+        document.getElementById('newMilestoneText').value = '';
+        currentGoalIdForMilestone = null;
+    }
+    function confirmAddMilestone() {
+        const text = document.getElementById('newMilestoneText').value;
+        if (text && currentGoalIdForMilestone) {
+            const goal = state.longTermGoals.find(g => g.id === currentGoalIdForMilestone);
+            if (goal) { 
+                goal.milestones.push({ id: Date.now(), text: text, done: false });
+                saveAndRender();
+                closeMilestoneModal();
+            }
+        }
+    }
+    document.getElementById('newMilestoneText').addEventListener('keypress', e => e.key === 'Enter' && confirmAddMilestone());
+
+
+    // --- Routine Modal Logic ---
+    function openRoutineModal(id) {
+        activeGoalId = id;
+        renderRoutineList();
+        document.getElementById('goalRoutineModal').style.display = 'flex';
+        document.getElementById('newRoutineTask').focus();
+    }
+    function closeRoutineModal() { document.getElementById('goalRoutineModal').style.display = 'none'; activeGoalId = null; }
+
+    function renderRoutineList() {
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        const list = document.getElementById('routineList');
+        list.innerHTML = '';
+        if(!goal.routine) goal.routine = [];
+        
+        goal.routine.forEach((task, idx) => {
+            list.innerHTML += `
+                <div class="routine-item">
+                    <span>${task}</span>
+                    <div class="routine-icon-group">
+                        <span class="routine-action bolt" onclick="addSingleRoutineTask('${task}')">⚡</span>
+                        <span class="routine-action del" onclick="deleteRoutineTask(${idx})">✕</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function addRoutineTask() {
+        const input = document.getElementById('newRoutineTask');
+        const text = input.value.trim();
+        if(text && activeGoalId) {
+            const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+            if(!goal.routine) goal.routine = [];
+            goal.routine.push(text);
+            input.value = '';
+            saveAndRender(); 
+            renderRoutineList();
+        }
+    }
+
+    function deleteRoutineTask(idx) {
+        if(activeGoalId) {
+            const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+            goal.routine.splice(idx, 1);
+            saveAndRender();
+            renderRoutineList();
+        }
+    }
+
+    function addSingleRoutineTask(taskText) {
+        const key = getTodayKey(viewingDate);
+        if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+        state.dailyData[key].habits.push({ id: Date.now() + Math.random(), text: taskText, done: false, col: 1, isFrog: false });
+        saveAndRender();
+        showToast(`Added "${taskText}" to Today!`);
+    }
+
+    function addAllRoutinesToToday() {
+        if(activeGoalId) {
+            const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+            if(goal && goal.routine && goal.routine.length > 0) {
+                const key = getTodayKey(viewingDate);
+                if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+                
+                goal.routine.forEach(taskText => {
+                    state.dailyData[key].habits.push({ id: Date.now() + Math.random(), text: taskText, done: false, col: 1, isFrog: false });
+                });
+                
+                saveAndRender();
+                showToast(`Added ${goal.routine.length} tasks to Today!`);
+                closeRoutineModal();
+            } else {
+                showToast("No tasks in routine.");
+            }
+        }
+    }
+
+    function toggleElement(id, baseName) {
         const el = document.getElementById(id);
         const btn = el.previousElementSibling;
         const isOpen = el.classList.toggle('open');
-        btn.innerText = isOpen ? `Hide ${btn.innerText.split(' ')[1]} ↑` : `Show ${btn.innerText.split(' ')[1]} ↓`;
+        
+        if (baseName === 'Danger Zone') {
+             // Keep "Danger Zone" text static, only toggle arrow
+             btn.innerText = `${baseName} ${isOpen ? '↑' : '↓'}`;
+        } else {
+             // Standard Show/Hide behavior
+             btn.innerText = `${isOpen ? 'Hide' : 'Show'} ${baseName} ${isOpen ? '↑' : '↓'}`;
+        }
     }
 
-    function playStretch() { 
-        window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); 
-    }
-
-    function playChillVibe() { 
-        window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=450,height=400'); 
-    }
+    function playStretch() { window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); }
+    function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=450,height=400'); }
 
     function playChime() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -346,7 +644,11 @@
                     body: type === 'upload' ? JSON.stringify(state) : null
                 });
                 const data = await res.json();
-                if (type === 'download') { state = data.record; saveAndRender(); }
+                if (type === 'download') { 
+                    state = data.record; 
+                    if (!state.longTermGoals) state.longTermGoals = []; 
+                    saveAndRender(); 
+                }
                 updateSyncStatus("Synced");
             }
         } catch (e) { updateSyncStatus("Error"); }
@@ -355,7 +657,7 @@
     function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
 
     function clearAllData() {
-        if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {} }; saveAndRender(); }
+        if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [] }; saveAndRender(); }
     }
 
     // --- Task Logic ---
@@ -376,13 +678,15 @@
     }
 
     function requestDelete(btn, id) {
-        const arrow = btn.previousElementSibling;
+        const arrow = btn.previousElementSibling; 
         if (btn.classList.contains('confirm')) { 
             clearTimeout(deleteTimeouts[id]); deleteHabit(id); 
         } else {
-            btn.classList.add('confirm'); btn.innerText = '✓'; arrow.style.display = 'block';
+            btn.classList.add('confirm'); btn.innerText = '✓'; 
+            if(arrow) arrow.style.display = 'block';
             deleteTimeouts[id] = setTimeout(() => { 
-                btn.classList.remove('confirm'); btn.innerText = '✕'; arrow.style.display = 'none'; 
+                btn.classList.remove('confirm'); btn.innerText = '✕'; 
+                if(arrow) arrow.style.display = 'none';
             }, 3000);
         }
     }
@@ -402,49 +706,37 @@
         saveAndRender();
     }
 
-    // --- Drag and Drop Logic ---
+    // --- Drag and Drop (Tasks) ---
     let draggedItem = null;
 
-    function handleDragStart(e) {
-        draggedItem = this;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', this.dataset.id);
-        setTimeout(() => this.classList.add('dragging'), 0);
-    }
-
-    function handleDragEnd(e) {
-        this.classList.remove('dragging');
-        draggedItem = null;
-    }
+    function handleDragStart(e) { draggedItem = this; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', this.dataset.id); setTimeout(() => this.classList.add('dragging'), 0); }
+    function handleDragEnd(e) { this.classList.remove('dragging'); draggedItem = null; }
 
     function handleDragOver(e) {
         e.preventDefault();
         const container = e.currentTarget;
+        if (!container.classList.contains('column')) return; 
         const afterElement = getDragAfterElement(container, e.clientY);
-        const draggable = document.querySelector('.dragging');
-        if (afterElement == null) {
-            container.appendChild(draggable);
-        } else {
-            container.insertBefore(draggable, afterElement);
+        const draggable = document.querySelector('.habit-item.dragging');
+        if (draggable) {
+            if (afterElement == null) container.appendChild(draggable);
+            else container.insertBefore(draggable, afterElement);
         }
     }
 
     function handleDrop(e) {
         e.preventDefault();
         const newColIndex = parseInt(e.currentTarget.dataset.col);
-        const id = parseInt(document.querySelector('.dragging').dataset.id);
+        const draggable = document.querySelector('.habit-item.dragging');
+        if(!draggable) return;
+        const id = parseInt(draggable.dataset.id);
         const key = getTodayKey(viewingDate);
         let habits = state.dailyData[key].habits;
-        
-        // Find dragged habit
         const habitIndex = habits.findIndex(h => h.id === id);
         if(habitIndex === -1) return;
-        const habit = habits[habitIndex];
+        
+        habits[habitIndex].col = newColIndex;
 
-        // Update column visually and in data
-        habit.col = newColIndex;
-
-        // Reorder Logic based on DOM
         const newHabitsOrder = [];
         [0, 1, 2].forEach(colIdx => {
             const colEl = document.getElementById(`col-${colIdx}`);
@@ -452,15 +744,11 @@
             itemEls.forEach(el => {
                 const itemId = parseInt(el.dataset.id);
                 const item = habits.find(h => h.id === itemId);
-                if (item) {
-                    item.col = colIdx; // ensure col matches
-                    newHabitsOrder.push(item);
-                }
+                if (item) { item.col = colIdx; newHabitsOrder.push(item); }
             });
         });
-        
         state.dailyData[key].habits = newHabitsOrder;
-        saveAndRender(false); // Save but don't re-render entire board to prevent flicker
+        saveAndRender(false); 
     }
 
     function getDragAfterElement(container, y) {
@@ -468,12 +756,191 @@
         return draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
             const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
+            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+            else return closest;
         }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // --- LONG TERM GOALS LOGIC ---
+    function confirmAddGoal() {
+        const text = document.getElementById('newGoalText').value;
+        if (state.longTermGoals.length >= 8) { showToast("Max 8 Goals reached."); return; }
+        if (text) {
+            state.longTermGoals.push({ id: Date.now(), text: text, done: false, milestones: [], notes: '', routine: [] });
+            saveAndRender();
+            closeGoalModal();
+        }
+    }
+
+    function toggleGoal(id) {
+        state.longTermGoals = state.longTermGoals.map(g => g.id === id ? { ...g, done: !g.done } : g);
+        saveAndRender();
+    }
+
+    function requestDeleteGoal(btn, id) {
+        if (btn.classList.contains('confirm')) { 
+            clearTimeout(deleteTimeouts['g'+id]); deleteGoal(id); 
+        } else {
+            btn.classList.add('confirm'); btn.innerText = '✓'; 
+            deleteTimeouts['g'+id] = setTimeout(() => { 
+                btn.classList.remove('confirm'); btn.innerText = '✕'; 
+            }, 3000);
+        }
+    }
+
+    function deleteGoal(id) {
+        state.longTermGoals = state.longTermGoals.filter(g => g.id !== id);
+        saveAndRender();
+    }
+
+    function saveGoalNotes() {
+        if(activeGoalId) {
+            const txt = document.getElementById('noteText').value;
+            state.longTermGoals = state.longTermGoals.map(g => g.id === activeGoalId ? { ...g, notes: txt } : g);
+            saveAndRender();
+            closeNotesModal();
+        }
+    }
+
+    function addMilestone(goalId) {
+        openMilestoneModal(goalId);
+    }
+
+    function toggleMilestone(goalId, msId) {
+        const goal = state.longTermGoals.find(g => g.id === goalId);
+        if (goal) {
+            goal.milestones = goal.milestones.map(m => m.id === msId ? { ...m, done: !m.done } : m);
+            saveAndRender();
+        }
+    }
+
+    function requestDeleteMilestone(btn, gId, mId, e) {
+        if(e) e.stopPropagation();
+        if (btn.classList.contains('confirm')) { 
+            clearTimeout(deleteTimeouts['m'+mId]); deleteMilestone(gId, mId); 
+        } else {
+            btn.classList.add('confirm'); btn.innerText = '✓'; 
+            deleteTimeouts['m'+mId] = setTimeout(() => { 
+                btn.classList.remove('confirm'); btn.innerText = '✕'; 
+            }, 3000);
+        }
+    }
+
+    function deleteMilestone(goalId, msId) {
+        const goal = state.longTermGoals.find(g => g.id === goalId);
+        if (goal) {
+            goal.milestones = goal.milestones.filter(m => m.id !== msId);
+            saveAndRender();
+        }
+    }
+
+    // Milestone Drag & Drop (Vertical)
+    let draggedMs = null;
+    let sourceGoalId = null;
+
+    function handleMsDragStart(e) {
+        draggedMs = this;
+        sourceGoalId = parseInt(this.closest('.goal-card').dataset.id);
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => this.classList.add('dragging'), 0);
+    }
+
+    function handleMsDragEnd(e) {
+        this.classList.remove('dragging');
+        draggedMs = null;
+        sourceGoalId = null;
+    }
+
+    function handleMsDragOver(e) {
+        e.preventDefault();
+        const container = e.currentTarget;
+        if (parseInt(container.dataset.goalId) !== sourceGoalId) return;
+
+        const afterElement = getMsDragAfterElement(container, e.clientY);
+        const draggable = document.querySelector('.milestone-box.dragging');
+        if (draggable) {
+            if (afterElement == null) container.appendChild(draggable);
+            else container.insertBefore(draggable, afterElement);
+        }
+    }
+
+    function handleMsDrop(e) {
+        e.preventDefault();
+        const container = e.currentTarget;
+        if (parseInt(container.dataset.goalId) !== sourceGoalId) return;
+
+        const goalId = sourceGoalId;
+        const goal = state.longTermGoals.find(g => g.id === goalId);
+        
+        const newMsOrder = [];
+        container.querySelectorAll('.milestone-box').forEach(el => {
+            const msId = parseInt(el.dataset.id);
+            const item = goal.milestones.find(m => m.id === msId);
+            if (item) newMsOrder.push(item);
+        });
+
+        goal.milestones = newMsOrder;
+        saveAndRender();
+    }
+
+    function getMsDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.milestone-box:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+            else return closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function renderGoals() {
+        const grid = document.getElementById('goalsGrid');
+        grid.innerHTML = '';
+        
+        state.longTermGoals.forEach(g => {
+            const card = document.createElement('div');
+            card.className = `goal-card ${g.done ? 'done' : ''}`;
+            card.dataset.id = g.id;
+            
+            let html = `
+                <div class="habit-row">
+                    <div class="add-ms-header-btn" onclick="addMilestone(${g.id}); event.stopPropagation();"></div>
+                    <div style="flex:1; margin-left:10px; cursor:pointer;" onclick="toggleGoal(${g.id})">
+                        <span style="font-weight:bold; font-size:0.9rem; color:#fff;">${g.text}</span>
+                    </div>
+                    <div class="action-btns">
+                        <div class="pen-btn" onclick="openNotesModal(${g.id})">✎</div>
+                        <div class="routine-btn" onclick="openRoutineModal(${g.id})">⚡</div>
+                        <div class="delete-btn" onclick="requestDeleteGoal(this, ${g.id})">✕</div>
+                    </div>
+                </div>
+            `;
+            
+            html += `<div class="milestone-list" data-goal-id="${g.id}">`;
+            g.milestones.forEach(m => {
+                html += `
+                    <div class="milestone-box ${m.done ? 'done' : ''}" 
+                         draggable="true" data-id="${m.id}"
+                         onclick="toggleMilestone(${g.id}, ${m.id})">
+                         ${m.text}
+                         <div class="ms-del" onclick="requestDeleteMilestone(this, ${g.id}, ${m.id}, event)">✕</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            card.innerHTML = html;
+            grid.appendChild(card);
+            
+            const msList = card.querySelector('.milestone-list');
+            msList.addEventListener('dragover', handleMsDragOver);
+            msList.addEventListener('drop', handleMsDrop);
+            
+            card.querySelectorAll('.milestone-box').forEach(box => {
+                box.addEventListener('dragstart', handleMsDragStart);
+                box.addEventListener('dragend', handleMsDragEnd);
+            });
+        });
     }
 
     // --- Core Render Logic ---
@@ -501,12 +968,41 @@
         state.dailyData[key] = dayData; localStorage.setItem('discipline_v12', JSON.stringify(state));
         if (shouldRenderBoard) renderBoard(dayData.habits); 
         renderYear();
+        renderGoals(); 
     }
 
+    // Quote Logic (Updated for First Visit & Hover & First Victory)
     function updateQuote(isComplete) {
         const textEl = document.getElementById('quoteText');
-        if (isComplete) textEl.innerText = `"${victoryQuotes[Math.floor(Math.random() * victoryQuotes.length)]}"`;
-        else textEl.innerText = `"${frogQuotes[viewingDate.getDate() % frogQuotes.length]}"`;
+        
+        if (isComplete) {
+            const hasWonBefore = localStorage.getItem('victory_first_done');
+            if (!hasWonBefore) {
+                // First ever victory
+                textEl.innerText = `"${firstVictoryQuote}"`;
+                localStorage.setItem('victory_first_done', 'true');
+            } else {
+                // Random victory message
+                textEl.innerText = `"${randomVictoryQuotes[Math.floor(Math.random() * randomVictoryQuotes.length)]}"`;
+            }
+            textEl.dataset.author = "You";
+        } else {
+            const hasVisited = localStorage.getItem('frog_first_visit_done');
+            let selectedQuote;
+            
+            if (!hasVisited) {
+                // First time ever visiting site: Force Mark Twain
+                selectedQuote = markTwainQuote;
+                localStorage.setItem('frog_first_visit_done', 'true');
+            } else {
+                // Random based on date to keep it consistent for the day
+                const idx = viewingDate.getDate() % quotesList.length;
+                selectedQuote = quotesList[idx];
+            }
+            
+            textEl.innerText = `"${selectedQuote.text}"`;
+            textEl.dataset.author = selectedQuote.author;
+        }
     }
 
     function renderBoard(habits) {
@@ -566,7 +1062,6 @@
                     daysLogged++;
                 }
 
-                // Grid Logic: 100%=Green, 1-99%=Blue, 0%=Transparent Gray
                 let bgStyle = 'background: rgba(255, 255, 255, 0.05)';
                 if (score === 100) {
                     bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);';
@@ -614,6 +1109,7 @@
 
     document.getElementById('habitInput').addEventListener('keypress', e => e.key === 'Enter' && addHabit());
     document.getElementById('frogInput').addEventListener('keypress', e => e.key === 'Enter' && addFrog());
+    document.getElementById('newGoalText').addEventListener('keypress', e => e.key === 'Enter' && confirmAddGoal());
 
     if (CLOUD_CONFIG.key) updateSyncStatus("Ready");
     saveAndRender();
