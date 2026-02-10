@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discipline Dashboard</title>
+    <title>Discipline Dashboard Pro V2</title>
     <style>
         :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --border: #27272a; --success: #22c55e; --frog: #facc15; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; transition: background 1s ease; }
@@ -40,17 +40,24 @@
         @keyframes frogGlow { 0% { box-shadow: 0 0 5px rgba(250, 204, 21, 0.1); } 50% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.25); } 100% { box-shadow: 0 0 5px rgba(250, 204, 21, 0.1); } }
         .habit-item.is-frog:not(.done) { animation: frogGlow 3s infinite ease-in-out; }
 
-        /* Board Columns */
+        /* Board Columns & Dragging */
         .board { display: flex; justify-content: center; gap: 15px; width: 100%; margin-bottom: 50px; align-items: flex-start; flex-wrap: wrap; }
-        .column { flex: 1; min-width: 300px; max-width: 320px; border-radius: 16px; padding: 5px; }
+        .column { flex: 1; min-width: 300px; max-width: 320px; border-radius: 16px; padding: 5px; min-height: 100px; }
         
-        /* Task Cards */
-        .habit-item { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 12px; transition: 0.2s; position: relative; }
+        .habit-item { 
+            background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 10px; 
+            display: flex; flex-direction: column; gap: 12px; transition: 0.2s; position: relative; cursor: grab; 
+        }
+        .habit-item:active { cursor: grabbing; }
+        .habit-item.dragging { opacity: 0.4; border: 1px dashed var(--text); background: #000; }
+        
         .habit-item.is-frog { border: 1px solid var(--frog); background: linear-gradient(145deg, #18181b, #1e1b12); }
         .habit-item.done { opacity: 0.4; border-left: 4px solid var(--primary); }
         .habit-item.is-frog.done { border-left: 4px solid var(--frog); opacity: 0.6; }
         
-        .habit-row { display: flex; justify-content: space-between; align-items: center; }
+        .habit-row { display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+        .habit-row > * { pointer-events: auto; }
+
         .check { width: 24px; height: 24px; border: 2px solid #3f3f3f; border-radius: 7px; flex-shrink: 0; cursor: pointer; transition: 0.2s; }
         .done .check { background: var(--primary); border-color: var(--primary); display: flex; align-items: center; justify-content: center; }
         .is-frog.done .check { background: var(--frog); border-color: var(--frog); }
@@ -62,8 +69,10 @@
         .delete-btn:hover { opacity: 1; }
         .delete-btn.confirm { color: var(--success); font-weight: bold; opacity: 1; }
 
-        .col-selector-wrap { display: flex; justify-content: center; gap: 10px; border-top: 1px solid #27272a; padding-top: 10px; }
+        /* Restored Column Buttons */
+        .col-selector-wrap { display: flex; justify-content: center; gap: 10px; border-top: 1px solid #27272a; padding-top: 10px; pointer-events: auto; }
         .sq-btn { width: 14px; height: 14px; border: 1px solid #3f3f46; border-radius: 3px; cursor: pointer; transition: 0.2s; }
+        .sq-btn:hover { border-color: var(--primary); transform: scale(1.2); }
         .sq-btn.active { background: var(--success); border-color: var(--success); }
 
         /* Yearly Grid */
@@ -71,8 +80,50 @@
         .month-card { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; }
         .month-title { display: flex; justify-content: space-between; font-size: 0.6rem; color: #a1a1aa; margin-bottom: 8px; text-transform: uppercase; }
         .month-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .day-sq { width: 100%; aspect-ratio: 1; background: #27272a; border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; position: relative; }
-        .day-sq.active { outline: 2px solid var(--primary); }
+        
+        /* New Spatial Jiggle Logic */
+        .day-sq { 
+            width: 100%; aspect-ratio: 1; 
+            background: rgba(255, 255, 255, 0.05); /* Visible empty state */
+            border-radius: 2px; cursor: pointer; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 0.5rem; position: relative; 
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s;
+        }
+        
+        /* 1. The target gets huge */
+        .day-sq:hover { 
+            transform: scale(1.5); 
+            z-index: 100; 
+            border-radius: 4px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            border: 1px solid var(--text);
+        }
+
+        /* 2. Left & Right neighbors get slightly bigger (Spatial Effect) */
+        .day-sq:has(+ .day-sq:hover),
+        .day-sq:hover + .day-sq {
+            transform: scale(1.15);
+            z-index: 50;
+            border-radius: 3px;
+        }
+
+        /* 3. Everything else fades slightly to focus attention */
+        .month-days:has(.day-sq:hover) .day-sq:not(:hover):not(:has(+ .day-sq:hover)) {
+            opacity: 0.6;
+            transform: scale(0.95);
+        }
+
+        /* Grid Tooltip */
+        .day-sq:hover::after {
+            content: attr(data-pct);
+            position: absolute;
+            bottom: 120%; left: 50%; transform: translateX(-50%);
+            background: #000; border: 1px solid var(--primary);
+            color: #fff; padding: 4px 8px; border-radius: 6px;
+            font-size: 0.7rem; white-space: nowrap; pointer-events: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200;
+        }
 
         /* Nav Bar */
         .nav-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; margin: 40px auto; padding-top: 20px; border-top: 1px solid var(--border); }
@@ -133,9 +184,9 @@
     </div>
 
     <div class="board">
-        <div class="column" id="col-0"></div>
-        <div class="column" id="col-1"></div>
-        <div class="column" id="col-2"></div>
+        <div class="column" id="col-0" data-col="0"></div>
+        <div class="column" id="col-1" data-col="1"></div>
+        <div class="column" id="col-2" data-col="2"></div>
     </div>
 
     <div class="year-grid" id="yearGrid"></div>
@@ -216,13 +267,13 @@
         btn.innerText = isOpen ? `Hide ${btn.innerText.split(' ')[1]} ↑` : `Show ${btn.innerText.split(' ')[1]} ↓`;
     }
 
-   function playStretch() { 
-    window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); 
-}
+    function playStretch() { 
+        window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); 
+    }
 
-function playChillVibe() { 
-    window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=450,height=400'); 
-}
+    function playChillVibe() { 
+        window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=450,height=400'); 
+    }
 
     function playChime() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -351,7 +402,82 @@ function playChillVibe() {
         saveAndRender();
     }
 
-    function saveAndRender() {
+    // --- Drag and Drop Logic ---
+    let draggedItem = null;
+
+    function handleDragStart(e) {
+        draggedItem = this;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', this.dataset.id);
+        setTimeout(() => this.classList.add('dragging'), 0);
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        draggedItem = null;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        const container = e.currentTarget;
+        const afterElement = getDragAfterElement(container, e.clientY);
+        const draggable = document.querySelector('.dragging');
+        if (afterElement == null) {
+            container.appendChild(draggable);
+        } else {
+            container.insertBefore(draggable, afterElement);
+        }
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        const newColIndex = parseInt(e.currentTarget.dataset.col);
+        const id = parseInt(document.querySelector('.dragging').dataset.id);
+        const key = getTodayKey(viewingDate);
+        let habits = state.dailyData[key].habits;
+        
+        // Find dragged habit
+        const habitIndex = habits.findIndex(h => h.id === id);
+        if(habitIndex === -1) return;
+        const habit = habits[habitIndex];
+
+        // Update column visually and in data
+        habit.col = newColIndex;
+
+        // Reorder Logic based on DOM
+        const newHabitsOrder = [];
+        [0, 1, 2].forEach(colIdx => {
+            const colEl = document.getElementById(`col-${colIdx}`);
+            const itemEls = colEl.querySelectorAll('.habit-item');
+            itemEls.forEach(el => {
+                const itemId = parseInt(el.dataset.id);
+                const item = habits.find(h => h.id === itemId);
+                if (item) {
+                    item.col = colIdx; // ensure col matches
+                    newHabitsOrder.push(item);
+                }
+            });
+        });
+        
+        state.dailyData[key].habits = newHabitsOrder;
+        saveAndRender(false); // Save but don't re-render entire board to prevent flicker
+    }
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.habit-item:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // --- Core Render Logic ---
+    function saveAndRender(shouldRenderBoard = true) {
         const key = getTodayKey(viewingDate);
         const dayData = state.dailyData[key] || { habits: [], percent: 0 };
         const total = dayData.habits.length; const doneCount = dayData.habits.filter(h => h.done).length;
@@ -373,7 +499,8 @@ function playChillVibe() {
         }
 
         state.dailyData[key] = dayData; localStorage.setItem('discipline_v12', JSON.stringify(state));
-        renderBoard(dayData.habits); renderYear();
+        if (shouldRenderBoard) renderBoard(dayData.habits); 
+        renderYear();
     }
 
     function updateQuote(isComplete) {
@@ -384,10 +511,20 @@ function playChillVibe() {
 
     function renderBoard(habits) {
         const cols = [document.getElementById('col-0'), document.getElementById('col-1'), document.getElementById('col-2')];
-        cols.forEach(c => c.innerHTML = '');
+        cols.forEach(c => {
+            c.innerHTML = '';
+            c.addEventListener('dragover', handleDragOver);
+            c.addEventListener('drop', handleDrop);
+        });
+        
         habits.forEach(h => {
             const item = document.createElement('div');
             item.className = `habit-item ${h.done ? 'done' : ''} ${h.isFrog ? 'is-frog' : ''}`;
+            item.draggable = true;
+            item.dataset.id = h.id;
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragend', handleDragEnd);
+
             item.innerHTML = `
                 <div class="habit-row">
                     <div style="display:flex; align-items:center; flex:1;" onclick="toggleHabit(${h.id})">
@@ -418,7 +555,6 @@ function playChillVibe() {
                 const dateKey = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const dayData = state.dailyData[dateKey];
                 
-                // --- FIX: Dynamic re-calculation for the grid ---
                 let score = 0;
                 let hasFrogAndDone = false;
                 if (dayData && dayData.habits && dayData.habits.length > 0) {
@@ -429,12 +565,23 @@ function playChillVibe() {
                     monthTotal += score; 
                     daysLogged++;
                 }
-                
-                monthHtml += `<div class="day-sq ${dateKey === getTodayKey(viewingDate) ? 'active' : ''}" onclick="jumpToDate('${dateKey}')" style="background: rgba(59, 130, 246, ${score > 0 ? 0.2 + (score/100)*0.8 : 0})">${hasFrogAndDone ? '🐸' : ''}</div>`;
+
+                // Grid Logic: 100%=Green, 1-99%=Blue, 0%=Transparent Gray
+                let bgStyle = 'background: rgba(255, 255, 255, 0.05)';
+                if (score === 100) {
+                    bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);';
+                } else if (score > 0) {
+                    bgStyle = `background: rgba(59, 130, 246, ${0.2 + (score/100)*0.8})`;
+                }
+
+                monthHtml += `<div class="day-sq ${dateKey === getTodayKey(viewingDate) ? 'active' : ''}" 
+                                   onclick="jumpToDate('${dateKey}')" 
+                                   style="${bgStyle}"
+                                   data-pct="${score}% Completed">
+                                   ${hasFrogAndDone ? '🐸' : ''}</div>`;
             }
             grid.innerHTML += monthHtml + `</div></div>`;
             
-            // Apply month average
             const finalAvg = daysLogged > 0 ? Math.round(monthTotal / daysLogged) : 0;
             const label = document.getElementById(`m-pct-${mIdx}`);
             if (label) label.innerText = finalAvg + '%';
@@ -473,4 +620,3 @@ function playChillVibe() {
 </script>
 </body>
 </html>
-
