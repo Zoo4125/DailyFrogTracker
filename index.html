@@ -38,12 +38,18 @@
         .modal-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 
         .custom-input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 20px; text-align: center; }
+        
+        /* REMOVE SPINNERS from Number Input */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
         .confirm-btn { background: var(--primary); color: white; border: none; padding: 10px 30px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .confirm-btn:hover { opacity: 0.9; }
         textarea.custom-input { min-height: 150px; text-align: left; resize: vertical; }
 
         /* Routine List in Modal */
-        .routine-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; }
+        .routine-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; max-height: 350px; overflow-y: auto; }
         .routine-item { display: flex; justify-content: space-between; background: #111; padding: 10px; border-radius: 8px; border: 1px solid #333; font-size: 0.8rem; align-items: center; }
         
         /* Routine Icons */
@@ -60,7 +66,6 @@
         .quote-text { font-size: 1.1rem; color: #a1a1aa; font-style: italic; cursor: help; transition: color 0.3s; }
         .quote-text:hover { color: #fff; }
         
-        /* Tooltip for Author */
         .quote-text:hover::after {
             content: attr(data-author);
             position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
@@ -142,16 +147,26 @@
             font-size: 0.7rem; white-space: nowrap; pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200;
         }
 
-        /* --- TROPHY & GOALS SECTION --- */
-        .trophy-section { width: 100%; display: flex; flex-direction: column; align-items: center; margin: 40px 0; }
+        /* --- TROPHY & ACTIONS SECTION --- */
+        .trophy-section { 
+            width: 100%; display: flex; justify-content: center; align-items: center; gap: 30px; margin: 40px 0; 
+        }
         .trophy-btn { 
-            font-size: 3rem; cursor: pointer; opacity: 0.3; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            display: inline-block; user-select: none;
+            font-size: 3rem; cursor: pointer; opacity: 0.3; transition: all 0.3s; 
+            user-select: none;
         }
         .trophy-btn:hover { 
             opacity: 0.8; transform: scale(1.5); 
             text-shadow: 0 0 15px #ffd700; filter: drop-shadow(0 0 6px #ffd700); 
         }
+
+        .action-icon {
+            font-size: 1.8rem; cursor: pointer; opacity: 0.4; transition: all 0.3s;
+        }
+        .action-icon:hover { opacity: 1; transform: scale(1.2); }
+        .bolt-btn { color: #facc15; }
+        .broom-btn { color: #a1a1aa; } /* Gray broom */
+        .broom-btn:hover { color: #fff; }
 
         .goals-flex { 
             display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; 
@@ -165,7 +180,6 @@
         }
         .goal-card.done { border-color: var(--success); opacity: 0.7; }
 
-        /* Goal Header Add Button (Empty Square Style) */
         .add-ms-header-btn {
             width: 14px; height: 14px; 
             border: 1px solid var(--milestone); border-radius: 3px;
@@ -174,23 +188,17 @@
         }
         .add-ms-header-btn:hover { background: var(--milestone); transform: scale(1.25); }
 
-        .milestone-list { 
-            display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center;
-            min-height: 20px; 
-        }
-
+        .milestone-list { display: flex; flex-direction: column; gap: 6px; width: 100%; align-items: center; min-height: 20px; }
         .milestone-box {
             width: 90%; background: #27272a; border: 1px solid #3f3f46;
             border-radius: 6px; padding: 6px 8px; font-size: 0.7rem; color: #a1a1aa;
             text-align: center; cursor: pointer; user-select: none; position: relative;
-            white-space: normal; word-wrap: break-word; /* Wrap text */
-            transition: 0.2s;
+            white-space: normal; word-wrap: break-word; transition: 0.2s;
         }
         .milestone-box:hover { color: #fff; border-color: var(--text); z-index: 5; }
         .milestone-box.done { background: var(--success); color: #000; border-color: var(--success); font-weight: bold; opacity: 1; }
         .milestone-box.dragging { opacity: 0.2; background: var(--milestone); }
         
-        /* Blue X Delete for Milestones */
         .ms-del { 
             position: absolute; top: 50%; right: 8px; transform: translateY(-50%);
             color: var(--primary); cursor: pointer; font-size: 0.8rem; font-weight: bold;
@@ -208,10 +216,28 @@
 
         /* Footer Section */
         .footer-tools { margin-top: auto; padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
-        #timerDisplay { font-family: monospace; font-size: 1.4rem; color: var(--success); font-weight: bold; cursor: pointer; padding: 12px 40px; background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 12px; user-select: none; transition: 0.3s; }
-        #timerDisplay.active { animation: breathe 3s infinite; border-color: var(--success); }
-        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.98); } }
         
+        /* New Timer Row */
+        .timer-row { display: flex; gap: 15px; align-items: center; }
+        .timer-btn {
+            font-family: monospace; font-size: 1.2rem; color: var(--success); font-weight: bold; cursor: pointer; 
+            padding: 10px 20px; background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2); 
+            border-radius: 12px; user-select: none; transition: 0.3s; min-width: 80px; text-align: center;
+        }
+        .timer-btn:hover { background: rgba(34, 197, 94, 0.1); transform: translateY(-2px); }
+        .timer-btn.active { animation: breathe 3s infinite; border-color: var(--success); background: rgba(34, 197, 94, 0.2); }
+        .timer-btn.paused { animation: none; opacity: 0.5; border-style: dashed; }
+        
+        /* Blue Custom Timer Style */
+        #timerCustom { color: var(--primary); border-color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+        #timerCustom:hover { background: rgba(59, 130, 246, 0.1); }
+        #timerCustom.active { border-color: var(--primary); background: rgba(59, 130, 246, 0.2); }
+
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.98); } }
+
+        /* Frog Counter */
+        #frogCounter { font-size: 0.6rem; color: var(--success); opacity: 0.4; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+
         .button-row { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
         .tool-btn { text-decoration: none; color: #a1a1aa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; padding: 12px 24px; border: 1px solid #27272a; border-radius: 30px; transition: 0.3s; font-weight: bold; background: none; cursor: pointer; }
         .tool-btn:hover { background: #fff; color: #000; border-color: #fff; transform: translateY(-2px); }
@@ -280,6 +306,25 @@
     </div>
 </div>
 
+<div id="dailyRoutineModal" class="modal-overlay">
+    <div class="sync-modal" style="max-width: 400px;">
+        <div class="modal-close" onclick="closeDailyRoutineModal()">✕</div>
+        <div class="modal-text">Daily Routine</div>
+        <div class="routine-list" id="dailyRoutineList"></div>
+        <input type="text" id="newDailyRoutineTask" class="custom-input" placeholder="(e.g. take a hike)" onkeypress="if(event.key==='Enter') addDailyRoutineTask()">
+        <button onclick="addAllDailyRoutinesToToday()" class="confirm-btn">Add All to Today</button>
+    </div>
+</div>
+
+<div id="customTimerModal" class="modal-overlay">
+    <div class="sync-modal">
+        <div class="modal-close" onclick="closeCustomTimerModal()">✕</div>
+        <div class="modal-text" style="font-size: 1.1rem; font-weight: bold;">Set Timer Duration</div>
+        <input type="number" id="customTimerInput" class="custom-input" placeholder="Minutes (e.g. 45)" onkeypress="if(event.key==='Enter') confirmCustomTimer()">
+        <button onclick="confirmCustomTimer()" class="confirm-btn">Start</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="today-section">
         <div class="quote-wrapper">
@@ -303,18 +348,26 @@
     <div class="year-grid" id="yearGrid"></div>
 
     <div class="trophy-section">
-        <div class="trophy-btn" onclick="openGoalModal()">🏆</div>
+        <div class="action-icon bolt-btn" onclick="openDailyRoutineModal()" title="Daily Routine">⚡</div>
+        <div class="trophy-btn" onclick="openGoalModal()" title="Goals">🏆</div>
+        <div class="action-icon broom-btn" onclick="sweepIncompleteTasks()" title="Sweep to Tomorrow">🧹</div>
     </div>
+    
     <div class="goals-flex" id="goalsGrid"></div>
 
     <div class="nav-bar">
         <button class="nav-btn" onclick="changeDate(-1)">← Yesterday</button>
         <div class="current-date-display" id="dateDisplay" onclick="jumpToToday()">Date</div>
-        <button class="nav-btn" onclick="changeDate(1)">Next Day →</button>
+        <button class="nav-btn" onclick="changeDate(1)">Tomorrow →</button>
     </div>
 
     <div class="footer-tools">
-        <div id="timerDisplay" onclick="toggleTimer()" ondblclick="resetTimer()">25:00</div>
+        <div class="timer-row">
+            <div class="timer-btn" id="timer25" onclick="handleTimerClick(25, 'timer25')" ondblclick="resetTimer('timer25', 25)">25:00</div>
+            <div class="timer-btn" id="timerCustom" onclick="openCustomTimerModal()" ondblclick="resetTimer('timerCustom', 'Custom')">Custom</div>
+            <div class="timer-btn" id="timer5" onclick="handleTimerClick(5, 'timer5')" ondblclick="resetTimer('timer5', 5)">05:00</div>
+        </div>
+
         <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
         
         <div class="button-row">
@@ -328,6 +381,8 @@
             <button onclick="playChillVibe()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Chill</button>
             <a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Meditate</a>
         </div>
+
+        <div id="frogCounter">0 Frogs Eaten</div>
 
         <div class="toggle-section">
             <button class="toggle-link" onclick="toggleElement('setupGuide', 'Setup Guide')">Show Setup Guide ↓</button>
@@ -350,16 +405,16 @@
                     "Eat the Frog" means doing your hardest, most important task first. That is your <b>Frog</b>. Put it in the top yellow box. It glows until it's done.<br><br>
                     
                     <strong style="color:var(--primary)">DAILY TASKS</strong><br>
-                    Add other tasks below. Use the squares to move them between columns (To Do, Doing, Done). Click the arrow (→) to push a task to tomorrow.<br><br>
+                    Add other tasks below. Use the squares to move them between columns (To Do, Doing, Done).<br><br>
                     
-                    <strong style="color:var(--milestone)">LONG TERM GOALS</strong><br>
-                    Click the 🏆 to add a life goal. Click the small square in the goal header to add <b>Milestones</b>. Break big goals into small steps.<br><br>
+                    <strong style="color:#facc15">DAILY ROUTINE (⚡)</strong><br>
+                    Click the Lightning Bolt next to the Trophy to manage your daily recurring tasks.<br><br>
+
+                    <strong style="color:#fff">SWEEP (🧹)</strong><br>
+                    Click the Broom to move all incomplete tasks to tomorrow.<br><br>
                     
-                    <strong style="color:#facc15">ROUTINES</strong><br>
-                    Click the Lightning Bolt (⚡) on a goal to save routine tasks (like "Gym" or "Study"). Click the bolt next to a task to instantly add it to your day.<br><br>
-                    
-                    <strong style="color:var(--success)">FOCUS</strong><br>
-                    Click the timer at the bottom for a 25-minute deep work session.
+                    <strong style="color:var(--success)">TIMERS</strong><br>
+                    Single-click to Start/Pause. Double-click to Reset.
                 </div>
             </div>
         </div>
@@ -409,7 +464,7 @@
         "Consistency is the only magic.",
         "No regrets today.",
         "Momentum is built one day at a time.",
-        "The Pain of growth is far less than the pain of regret.", // Modified #12
+        "The Pain of growth is far less than the pain of regret.", 
         "Tomorrow starts with the victory of today.",
         "You are what you repeatedly do.",
         "Sleep the sleep of the just.",
@@ -422,9 +477,13 @@
     
     let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {} };
     if (!state.longTermGoals) state.longTermGoals = []; 
+    // New Daily Routine State
+    if (!state.dailyRoutine) state.dailyRoutine = [];
 
     let viewingDate = new Date();
-    let timerInterval, timeLeft = 1500, audioCtx;
+    // Timer State
+    let timerState = { interval: null, timeLeft: 0, activeId: null, isPaused: false };
+    
     let deleteTimeouts = {};
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
     let activeGoalId = null;
@@ -453,7 +512,6 @@
     }
     function closeNotesModal() { document.getElementById('goalNotesModal').style.display = 'none'; activeGoalId = null; }
 
-    // --- Milestone Modal Logic ---
     function openMilestoneModal(id) {
         currentGoalIdForMilestone = id;
         document.getElementById('milestoneInputModal').style.display = 'flex';
@@ -477,8 +535,7 @@
     }
     document.getElementById('newMilestoneText').addEventListener('keypress', e => e.key === 'Enter' && confirmAddMilestone());
 
-
-    // --- Routine Modal Logic ---
+    // --- Goal Routine Logic ---
     function openRoutineModal(id) {
         activeGoalId = id;
         renderRoutineList();
@@ -528,6 +585,65 @@
         }
     }
 
+    // --- NEW DAILY Routine Logic (The Left Bolt) ---
+    function openDailyRoutineModal() {
+        renderDailyRoutineList();
+        document.getElementById('dailyRoutineModal').style.display = 'flex';
+        document.getElementById('newDailyRoutineTask').focus();
+    }
+    function closeDailyRoutineModal() { document.getElementById('dailyRoutineModal').style.display = 'none'; }
+
+    function renderDailyRoutineList() {
+        const list = document.getElementById('dailyRoutineList');
+        list.innerHTML = '';
+        state.dailyRoutine.forEach((task, idx) => {
+            list.innerHTML += `
+                <div class="routine-item">
+                    <span>${task}</span>
+                    <div class="routine-icon-group">
+                        <span class="routine-action bolt" onclick="addSingleRoutineTask('${task}')">⚡</span>
+                        <span class="routine-action del" onclick="deleteDailyRoutineTask(${idx})">✕</span>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function addDailyRoutineTask() {
+        const input = document.getElementById('newDailyRoutineTask');
+        const text = input.value.trim();
+        if(text) {
+            state.dailyRoutine.push(text);
+            input.value = '';
+            saveAndRender();
+            renderDailyRoutineList();
+        }
+    }
+
+    function deleteDailyRoutineTask(idx) {
+        state.dailyRoutine.splice(idx, 1);
+        saveAndRender();
+        renderDailyRoutineList();
+    }
+
+    function addAllDailyRoutinesToToday() {
+        if(state.dailyRoutine.length > 0) {
+            const key = getTodayKey(viewingDate);
+            if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+            
+            state.dailyRoutine.forEach(taskText => {
+                state.dailyData[key].habits.push({ id: Date.now() + Math.random(), text: taskText, done: false, col: 1, isFrog: false });
+            });
+            
+            saveAndRender();
+            showToast(`Added ${state.dailyRoutine.length} tasks to Today!`);
+            closeDailyRoutineModal();
+        } else {
+            showToast("No daily routines set.");
+        }
+    }
+
+    // --- Common Routine Functions ---
     function addSingleRoutineTask(taskText) {
         const key = getTodayKey(viewingDate);
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
@@ -556,16 +672,50 @@
         }
     }
 
+    // --- SWEEP FEATURE (Broom) ---
+    function sweepIncompleteTasks() {
+        const currentKey = getTodayKey(viewingDate);
+        if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) {
+            showToast("No incomplete tasks.");
+            return;
+        }
+        
+        const habits = state.dailyData[currentKey].habits;
+        const incomplete = habits.filter(h => !h.done);
+        
+        if (incomplete.length === 0) {
+            showToast("No incomplete tasks.");
+            return;
+        }
+
+        // 1. Remove incomplete from current day
+        state.dailyData[currentKey].habits = habits.filter(h => h.done);
+
+        // 2. Add to tomorrow
+        let tomorrow = new Date(viewingDate); 
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const nextKey = getTodayKey(tomorrow);
+        
+        if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
+        
+        incomplete.forEach(h => {
+            state.dailyData[nextKey].habits.push({ ...h, col: 1 }); 
+        });
+
+        // 3. Save and re-render current day (Instant vanish)
+        saveAndRender();
+        showToast(`Swept ${incomplete.length} tasks to tomorrow.`);
+        // NOTE: We do NOT switch view (changeDate) here, per request.
+    }
+
     function toggleElement(id, baseName) {
         const el = document.getElementById(id);
         const btn = el.previousElementSibling;
         const isOpen = el.classList.toggle('open');
         
         if (baseName === 'Danger Zone') {
-             // Keep "Danger Zone" text static, only toggle arrow
              btn.innerText = `${baseName} ${isOpen ? '↑' : '↓'}`;
         } else {
-             // Standard Show/Hide behavior
              btn.innerText = `${isOpen ? 'Hide' : 'Show'} ${baseName} ${isOpen ? '↑' : '↓'}`;
         }
     }
@@ -588,22 +738,132 @@
         });
     }
 
-    function toggleTimer() {
-        const el = document.getElementById('timerDisplay');
-        if (timerInterval) { 
-            clearInterval(timerInterval); timerInterval = null; 
-            el.classList.remove('active'); document.body.classList.remove('focus-mode');
+    // --- UPDATED TIMER LOGIC (Pause/Resume/Reset) ---
+    function handleTimerClick(minutes, btnId) {
+        if (timerState.activeId !== btnId) {
+            // Start new timer
+            startTimer(minutes, btnId);
         } else {
-            playChime();
-            el.classList.add('active'); document.body.classList.add('focus-mode');
-            timerInterval = setInterval(() => {
-                timeLeft--; updateTimerUI();
-                if (timeLeft <= 0) { clearInterval(timerInterval); resetTimer(); playChime(); alert("Focus complete."); }
-            }, 1000);
+            // Toggle Pause/Resume on active timer
+            togglePause();
         }
     }
-    function resetTimer() { timeLeft = 1500; updateTimerUI(); document.body.classList.remove('focus-mode'); document.getElementById('timerDisplay').classList.remove('active'); }
-    function updateTimerUI() { const m = Math.floor(timeLeft / 60); const s = timeLeft % 60; document.getElementById('timerDisplay').innerText = `${m}:${s < 10 ? '0' : ''}${s}`; }
+
+    function startTimer(minutes, btnId) {
+        clearInterval(timerState.interval);
+        resetTimerUI(); 
+
+        timerState.timeLeft = minutes * 60;
+        timerState.activeId = btnId;
+        timerState.isPaused = false;
+        
+        const btn = document.getElementById(btnId);
+        if(btn) btn.classList.add('active');
+        
+        playChime();
+        document.body.classList.add('focus-mode');
+        
+        runInterval();
+    }
+
+    function togglePause() {
+        if (!timerState.activeId) return;
+        const btn = document.getElementById(timerState.activeId);
+        
+        if (timerState.isPaused) {
+            // Resume
+            timerState.isPaused = false;
+            if(btn) btn.classList.remove('paused');
+            runInterval();
+        } else {
+            // Pause
+            timerState.isPaused = true;
+            if(btn) btn.classList.add('paused');
+            clearInterval(timerState.interval);
+        }
+    }
+
+    function runInterval() {
+        updateTimerDisplay(); 
+        timerState.interval = setInterval(() => {
+            timerState.timeLeft--; 
+            updateTimerDisplay();
+            if (timerState.timeLeft <= 0) { 
+                timerComplete();
+            }
+        }, 1000);
+    }
+
+    function timerComplete() {
+        clearInterval(timerState.interval); 
+        resetTimerUI(); 
+        document.body.classList.remove('focus-mode');
+        playChime(); 
+        alert("Timer complete."); 
+    }
+
+    function resetTimer(btnId, defaultText) {
+        // Double click resets timer
+        if (timerState.activeId === btnId) {
+            clearInterval(timerState.interval);
+            resetTimerUI(defaultText);
+            document.body.classList.remove('focus-mode');
+        }
+    }
+
+    // Custom Timer Modal Logic
+    function openCustomTimerModal() {
+        // If clicking custom while active, toggle pause instead of opening modal
+        if(timerState.activeId === 'timerCustom') {
+            togglePause();
+            return;
+        }
+        document.getElementById('customTimerModal').style.display = 'flex';
+        document.getElementById('customTimerInput').focus();
+    }
+    function closeCustomTimerModal() {
+        document.getElementById('customTimerModal').style.display = 'none';
+        document.getElementById('customTimerInput').value = '';
+    }
+    function confirmCustomTimer() {
+        const input = document.getElementById('customTimerInput');
+        const mins = parseInt(input.value);
+        if (mins && mins > 0) {
+            const btn = document.getElementById('timerCustom');
+            btn.innerText = mins + ":00";
+            startTimer(mins, 'timerCustom');
+            closeCustomTimerModal();
+        }
+    }
+
+    function resetTimerUI(defaultVal) {
+        // If we pass a specific reset value/text
+        if(timerState.activeId) {
+             const btn = document.getElementById(timerState.activeId);
+             if(btn) {
+                 btn.classList.remove('active', 'paused');
+                 if(defaultVal) {
+                     btn.innerText = (typeof defaultVal === 'number') ? (defaultVal < 10 ? '0'+defaultVal+':00' : defaultVal+':00') : defaultVal;
+                 } else {
+                     // Fallback defaults if logic gets messy
+                     if(timerState.activeId === 'timer25') btn.innerText = "25:00";
+                     if(timerState.activeId === 'timer5') btn.innerText = "05:00";
+                     if(timerState.activeId === 'timerCustom') btn.innerText = "Custom";
+                 }
+             }
+        }
+        timerState.activeId = null;
+        timerState.isPaused = false;
+        timerState.interval = null;
+    }
+
+    function updateTimerDisplay() {
+        if(!timerState.activeId) return;
+        const btn = document.getElementById(timerState.activeId);
+        const m = Math.floor(timerState.timeLeft / 60); 
+        const s = timerState.timeLeft % 60; 
+        btn.innerText = `${m}:${s < 10 ? '0' : ''}${s}`; 
+    }
 
     // --- Cloud Logic ---
     function setupCloud() {
@@ -647,6 +907,7 @@
                 if (type === 'download') { 
                     state = data.record; 
                     if (!state.longTermGoals) state.longTermGoals = []; 
+                    if (!state.dailyRoutine) state.dailyRoutine = [];
                     saveAndRender(); 
                 }
                 updateSyncStatus("Synced");
@@ -657,7 +918,7 @@
     function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
 
     function clearAllData() {
-        if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [] }; saveAndRender(); }
+        if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [], dailyRoutine: [] }; saveAndRender(); }
     }
 
     // --- Task Logic ---
@@ -965,24 +1226,32 @@
             updateQuote(false);
         }
 
+        // --- LIFETIME COUNTER LOGIC ---
+        let totalFrogs = 0;
+        Object.values(state.dailyData).forEach(d => {
+            if(d.habits) {
+                d.habits.forEach(h => { if(h.isFrog && h.done) totalFrogs++; });
+            }
+        });
+        const frogCounter = document.getElementById('frogCounter');
+        if(frogCounter) frogCounter.innerText = `${totalFrogs} Frogs Eaten`;
+
         state.dailyData[key] = dayData; localStorage.setItem('discipline_v12', JSON.stringify(state));
         if (shouldRenderBoard) renderBoard(dayData.habits); 
         renderYear();
         renderGoals(); 
     }
 
-    // Quote Logic (Updated for First Visit & Hover & First Victory)
+    // Quote Logic
     function updateQuote(isComplete) {
         const textEl = document.getElementById('quoteText');
         
         if (isComplete) {
             const hasWonBefore = localStorage.getItem('victory_first_done');
             if (!hasWonBefore) {
-                // First ever victory
                 textEl.innerText = `"${firstVictoryQuote}"`;
                 localStorage.setItem('victory_first_done', 'true');
             } else {
-                // Random victory message
                 textEl.innerText = `"${randomVictoryQuotes[Math.floor(Math.random() * randomVictoryQuotes.length)]}"`;
             }
             textEl.dataset.author = "You";
@@ -991,11 +1260,9 @@
             let selectedQuote;
             
             if (!hasVisited) {
-                // First time ever visiting site: Force Mark Twain
                 selectedQuote = markTwainQuote;
                 localStorage.setItem('frog_first_visit_done', 'true');
             } else {
-                // Random based on date to keep it consistent for the day
                 const idx = viewingDate.getDate() % quotesList.length;
                 selectedQuote = quotesList[idx];
             }
@@ -1106,6 +1373,24 @@
     function changeDate(d) { viewingDate.setDate(viewingDate.getDate() + d); saveAndRender(); }
     function jumpToToday() { viewingDate = new Date(); saveAndRender(); }
     function jumpToDate(s) { viewingDate = new Date(s + 'T00:00:00'); saveAndRender(); }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; 
+        
+        if (e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            const frogInput = document.getElementById('frogInput');
+            if (frogInput && frogInput.style.display !== 'none') frogInput.focus();
+        } 
+        else if (e.key.toLowerCase() === 'n') {
+            e.preventDefault();
+            document.getElementById('habitInput').focus();
+        }
+        else if (e.key === 'Escape') {
+            closeSyncModal(); closeGoalModal(); closeNotesModal(); closeMilestoneModal(); closeRoutineModal(); closeDailyRoutineModal(); closeCustomTimerModal();
+        }
+    });
 
     document.getElementById('habitInput').addEventListener('keypress', e => e.key === 'Enter' && addHabit());
     document.getElementById('frogInput').addEventListener('keypress', e => e.key === 'Enter' && addFrog());
