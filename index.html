@@ -1246,7 +1246,9 @@
         dayData.percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
         
         document.getElementById('frogInput').style.display = dayData.habits.some(h => h.isFrog) ? 'none' : 'block';
-        document.getElementById('dateDisplay').innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        // --- MODIFIED DATE DISPLAY (Hides Year) ---
+        document.getElementById('dateDisplay').innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
         
         const mainEl = document.getElementById('mainPercent');
         const wasComplete = mainEl.classList.contains('complete');
