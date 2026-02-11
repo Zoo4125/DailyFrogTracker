@@ -8,9 +8,18 @@
         :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --border: #27272a; --success: #22c55e; --frog: #facc15; --milestone: #60a5fa; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; transition: background 1s ease; }
         
-        body.focus-mode { background: #040405; }
-        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; position: relative; z-index: 1; }
         
+        /* FOCUS OVERLAY (The Dimmer) - Updated V18 */
+        .focus-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; opacity: 0; pointer-events: none;
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2000;
+        }
+        /* Reduced opacity to 0.5 and ensure clicks pass through (pointer-events: none) */
+        body.focus-mode .focus-overlay { opacity: 0.5; }
+
         /* Fireworks */
         .firework-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 99; }
         .particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; animation: explode 1.2s ease-out forwards; }
@@ -22,13 +31,13 @@
             background: rgba(24, 24, 27, 0.95); border: 1px solid var(--primary);
             color: #fff; padding: 20px 40px; border-radius: 50px;
             font-size: 1rem; font-weight: bold; pointer-events: none;
-            opacity: 0; transition: opacity 0.4s ease; z-index: 2000;
+            opacity: 0; transition: opacity 0.4s ease; z-index: 3000;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;
         }
         .toast.show { opacity: 1; }
 
         /* MODALS */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 4000; }
         .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
         
         .modal-close { position: absolute; top: 20px; right: 20px; color: var(--success); cursor: pointer; font-weight: bold; font-size: 1.4rem; transition: 0.2s; }
@@ -215,7 +224,7 @@
         .current-date-display { font-weight: 800; color: var(--primary); cursor: pointer; }
 
         /* Footer Section */
-        .footer-tools { margin-top: auto; padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
+        .footer-tools { margin-top: auto; padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; position: relative; z-index: 2001; }
         
         /* New Timer Row */
         .timer-row { display: flex; gap: 15px; align-items: center; }
@@ -255,6 +264,7 @@
 </head>
 <body>
 
+<div class="focus-overlay"></div>
 <div id="firework-container" class="firework-container"></div>
 <div id="toast" class="toast"></div>
 
@@ -405,8 +415,11 @@
                     "Eat the Frog" means doing your hardest, most important task first. That is your <b>Frog</b>. Put it in the top yellow box. It glows until it's done.<br><br>
                     
                     <strong style="color:var(--primary)">DAILY TASKS</strong><br>
-                    Add other tasks below. Use the squares to move them between columns (To Do, Doing, Done).<br><br>
+                    Add other tasks below. Use the squares to move them between columns (To Do, Doing, Done) (Organized by catagory) (Or just how you're feeling).<br><br>
                     
+                    <strong style="color:#facc15">GOALS (🏆)</strong><br>
+                    Goals are persistent. Unlike daily tasks, they stay until deleted. Create milestones or set a 'Goal Routine' to quickly add related tasks to your day.<br><br>
+
                     <strong style="color:#facc15">DAILY ROUTINE (⚡)</strong><br>
                     Click the Lightning Bolt next to the Trophy to manage your daily recurring tasks.<br><br>
 
@@ -481,8 +494,14 @@
     if (!state.dailyRoutine) state.dailyRoutine = [];
 
     let viewingDate = new Date();
-    // Timer State
-    let timerState = { interval: null, timeLeft: 0, activeId: null, isPaused: false };
+    // Timer State (Robust)
+    let activeTimer = {
+        id: null,
+        totalSeconds: 0,
+        interval: null,
+        isPaused: false
+    };
+    let audioCtx;
     
     let deleteTimeouts = {};
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
@@ -705,7 +724,6 @@
         // 3. Save and re-render current day (Instant vanish)
         saveAndRender();
         showToast(`Swept ${incomplete.length} tasks to tomorrow.`);
-        // NOTE: We do NOT switch view (changeDate) here, per request.
     }
 
     function toggleElement(id, baseName) {
@@ -738,83 +756,128 @@
         });
     }
 
-    // --- UPDATED TIMER LOGIC (Pause/Resume/Reset) ---
+    // --- REBUILT TIMER LOGIC ---
+    // Handles single vs double click internally for robustness
+
     function handleTimerClick(minutes, btnId) {
-        if (timerState.activeId !== btnId) {
-            // Start new timer
+        // If this timer is not active, start it
+        if (activeTimer.id !== btnId) {
             startTimer(minutes, btnId);
         } else {
-            // Toggle Pause/Resume on active timer
+            // If active, toggle pause
             togglePause();
         }
     }
 
     function startTimer(minutes, btnId) {
-        clearInterval(timerState.interval);
-        resetTimerUI(); 
+        // Clear any existing timer first
+        stopTimerEngine();
 
-        timerState.timeLeft = minutes * 60;
-        timerState.activeId = btnId;
-        timerState.isPaused = false;
-        
+        // Set state
+        activeTimer.id = btnId;
+        activeTimer.totalSeconds = minutes * 60;
+        activeTimer.isPaused = false;
+
+        // Visuals
         const btn = document.getElementById(btnId);
         if(btn) btn.classList.add('active');
         
         playChime();
-        document.body.classList.add('focus-mode');
+        enableFocusMode(); // Dim screen
         
-        runInterval();
+        // Start Loop
+        updateTimerDisplay(); // show initial time immediately
+        activeTimer.interval = setInterval(tick, 1000);
+    }
+
+    function tick() {
+        if(!activeTimer.isPaused) {
+            activeTimer.totalSeconds--;
+            updateTimerDisplay();
+            
+            if (activeTimer.totalSeconds <= 0) {
+                timerComplete();
+            }
+        }
     }
 
     function togglePause() {
-        if (!timerState.activeId) return;
-        const btn = document.getElementById(timerState.activeId);
+        if (!activeTimer.id) return;
         
-        if (timerState.isPaused) {
+        const btn = document.getElementById(activeTimer.id);
+        if(activeTimer.isPaused) {
             // Resume
-            timerState.isPaused = false;
+            activeTimer.isPaused = false;
             if(btn) btn.classList.remove('paused');
-            runInterval();
+            enableFocusMode(); // Re-dim screen
         } else {
             // Pause
-            timerState.isPaused = true;
+            activeTimer.isPaused = true;
             if(btn) btn.classList.add('paused');
-            clearInterval(timerState.interval);
+            disableFocusMode(); // Undim screen
         }
-    }
-
-    function runInterval() {
-        updateTimerDisplay(); 
-        timerState.interval = setInterval(() => {
-            timerState.timeLeft--; 
-            updateTimerDisplay();
-            if (timerState.timeLeft <= 0) { 
-                timerComplete();
-            }
-        }, 1000);
     }
 
     function timerComplete() {
-        clearInterval(timerState.interval); 
-        resetTimerUI(); 
-        document.body.classList.remove('focus-mode');
-        playChime(); 
-        alert("Timer complete."); 
+        stopTimerEngine();
+        resetTimerUI(null); // Reset UI to defaults
+        disableFocusMode();
+        playChime();
+        alert("Timer Complete!");
     }
 
-    function resetTimer(btnId, defaultText) {
-        // Double click resets timer
-        if (timerState.activeId === btnId) {
-            clearInterval(timerState.interval);
-            resetTimerUI(defaultText);
-            document.body.classList.remove('focus-mode');
+    function resetTimer(btnId, defaultVal) {
+        // Double click handler
+        if(activeTimer.id === btnId) {
+            stopTimerEngine();
+            resetTimerUI(defaultVal); // Force reset text
+            disableFocusMode();
         }
     }
 
-    // Custom Timer Modal Logic
+    function stopTimerEngine() {
+        if(activeTimer.interval) clearInterval(activeTimer.interval);
+        activeTimer.interval = null;
+        activeTimer.isPaused = false;
+    }
+
+    function resetTimerUI(val) {
+        // Remove active classes from all buttons
+        ['timer25', 'timerCustom', 'timer5'].forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.remove('active', 'paused');
+            // Reset text if specific value passed (for the specific button)
+            if(val && id === activeTimer.id) {
+                 el.innerText = (typeof val === 'number') ? (val < 10 ? '0'+val+':00' : val+':00') : val;
+            }
+            // Fallback resets if no specific value passed
+            else if (id === 'timer25') el.innerText = "25:00";
+            else if (id === 'timer5') el.innerText = "05:00";
+            else if (id === 'timerCustom') el.innerText = "Custom";
+        });
+        activeTimer.id = null;
+    }
+
+    function updateTimerDisplay() {
+        if(!activeTimer.id) return;
+        const btn = document.getElementById(activeTimer.id);
+        const m = Math.floor(activeTimer.totalSeconds / 60); 
+        const s = activeTimer.totalSeconds % 60; 
+        btn.innerText = `${m}:${s < 10 ? '0' : ''}${s}`; 
+    }
+
+    function enableFocusMode() {
+        document.body.classList.add('focus-mode');
+    }
+
+    function disableFocusMode() {
+        document.body.classList.remove('focus-mode');
+    }
+
+    // Custom Timer Modal
     function openCustomTimerModal() {
-        // If clicking custom while active, toggle pause instead of opening modal
-        if(timerState.activeId === 'timerCustom') {
+        // If currently running this timer, pause instead of open
+        if(activeTimer.id === 'timerCustom') {
             togglePause();
             return;
         }
@@ -834,35 +897,6 @@
             startTimer(mins, 'timerCustom');
             closeCustomTimerModal();
         }
-    }
-
-    function resetTimerUI(defaultVal) {
-        // If we pass a specific reset value/text
-        if(timerState.activeId) {
-             const btn = document.getElementById(timerState.activeId);
-             if(btn) {
-                 btn.classList.remove('active', 'paused');
-                 if(defaultVal) {
-                     btn.innerText = (typeof defaultVal === 'number') ? (defaultVal < 10 ? '0'+defaultVal+':00' : defaultVal+':00') : defaultVal;
-                 } else {
-                     // Fallback defaults if logic gets messy
-                     if(timerState.activeId === 'timer25') btn.innerText = "25:00";
-                     if(timerState.activeId === 'timer5') btn.innerText = "05:00";
-                     if(timerState.activeId === 'timerCustom') btn.innerText = "Custom";
-                 }
-             }
-        }
-        timerState.activeId = null;
-        timerState.isPaused = false;
-        timerState.interval = null;
-    }
-
-    function updateTimerDisplay() {
-        if(!timerState.activeId) return;
-        const btn = document.getElementById(timerState.activeId);
-        const m = Math.floor(timerState.timeLeft / 60); 
-        const s = timerState.timeLeft % 60; 
-        btn.innerText = `${m}:${s < 10 ? '0' : ''}${s}`; 
     }
 
     // --- Cloud Logic ---
