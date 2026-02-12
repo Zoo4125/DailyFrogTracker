@@ -127,26 +127,24 @@
         .action-icon:hover { opacity: 1; transform: scale(1.2); }
         .bolt-btn { color: #facc15; } .broom-btn { color: #a1a1aa; } .broom-btn:hover { color: #fff; }
 
-        /* GOALS LAYOUT: FLEX - 3 COLUMNS */
+        /* GOALS LAYOUT: FORCED 3 COLUMNS */
         .goals-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 1000px; padding-bottom: 20px; }
         
         .goal-card { 
-            /* Strict 3-column calculation for Desktop */
+            /* Strict 3-column calculation for all screens larger than mobile */
             flex: 0 0 calc(33.333% - 15px);
-            min-width: 0; /* Prevents overflow issues */
-            
+            min-width: 0; 
             background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; 
             display: flex; flex-direction: column; gap: 10px; position: relative; min-height: 100px; 
         }
         
-        /* Tablet: 2 Columns */
+        /* Tablet/Desktop: Year Grid 2 columns for space, but Goals stay 3 */
         @media (max-width: 800px) {
             .year-grid { grid-template-columns: repeat(2, 1fr); } 
-            .goal-card { flex: 0 0 calc(50% - 15px); }
         }
         
-        /* Mobile: 1 Column */
-        @media (max-width: 500px) {
+        /* Mobile (Phones): 1 Column */
+        @media (max-width: 600px) {
             .goal-card { flex: 0 0 100%; }
         }
 
@@ -191,6 +189,10 @@
         .expand-box { height: 0; overflow: hidden; opacity: 0; transition: all 0.4s ease-in-out; text-align: center; }
         .expand-box.open { height: auto; opacity: 1; padding: 20px 0; }
         .instruction-box { background: rgba(17, 17, 17, 0.5); border: 1px solid rgba(39, 39, 42, 0.3); padding: 25px; border-radius: 15px; font-size: 0.75rem; color: #71717a; line-height: 1.6; }
+
+        #syncPulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-left: 5px; opacity: 0; }
+        .pulsing { animation: pulseDot 2s infinite; opacity: 1 !important; }
+        @keyframes pulseDot { 0% { transform: scale(0.95); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.5; } }
     </style>
 </head>
 <body>
@@ -319,12 +321,15 @@
             <div class="timer-btn" id="timer5" onclick="handleTimerClick(5, 'timer5')" ondblclick="resetTimer('timer5', 5)">05:00</div>
         </div>
 
-        <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
+        <div style="display:flex; align-items:center; gap:5px;">
+            <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
+            <div id="syncPulse"></div>
+        </div>
         
         <div class="button-row">
             <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
             <button onclick="setupCloud()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Link</button>
-            <button onclick="toggleRemoteListen()" id="listenBtn" class="tool-btn">Listen</button>
+            <button onclick="resetCloud()" class="tool-btn" style="border-color: #ef4444; color: #ef4444;">Reset</button>
         </div>
 
         <div class="button-row">
@@ -447,7 +452,6 @@
     let audioCtx;
     let alarmLoopInterval = null;
     let remoteListenInterval = null;
-    let wakeLock = null; // NEW: Screen Wake Lock
     
     let deleteTimeouts = {};
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
@@ -865,14 +869,17 @@
         const bin = prompt("Enter Bin ID (Leave blank if creating new):");
         localStorage.setItem('sync_key', key);
         if (bin) localStorage.setItem('sync_bin_id', bin); else localStorage.removeItem('sync_bin_id');
-        CLOUD_CONFIG = { key, binId: bin || '' }; updateSyncStatus("Ready");
+        CLOUD_CONFIG = { key, binId: bin || '' }; 
+        updateSyncStatus("Ready");
+        startPassiveListener(); // AUTO START
     }
 
     function resetCloud() {
         if (confirm("Disconnect Cloud?")) {
             localStorage.removeItem('sync_key'); localStorage.removeItem('sync_bin_id');
-            CLOUD_CONFIG = { key: '', binId: '' }; updateSyncStatus("Unlinked");
-            stopRemoteListen();
+            CLOUD_CONFIG = { key: '', binId: '' }; 
+            updateSyncStatus("Unlinked");
+            stopPassiveListener();
         }
     }
 
@@ -891,6 +898,7 @@
                     localStorage.setItem('sync_bin_id', data.metadata.id);
                     CLOUD_CONFIG.binId = data.metadata.id;
                     updateSyncStatus("Linked"); alert("Bin ID Created: " + data.metadata.id);
+                    startPassiveListener();
                 }
             } else {
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}${type === 'download' ? '/latest' : ''}`, {
@@ -910,41 +918,22 @@
         } catch (e) { updateSyncStatus("Error"); }
     }
 
-    // --- REMOTE TRIGGER LOGIC (IMPROVED with WakeLock and Safer Signal) ---
-    async function toggleRemoteListen() {
-        const btn = document.getElementById('listenBtn');
-        if (remoteListenInterval) {
-            stopRemoteListen();
-        } else {
-            if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
-            btn.classList.add('active-listen');
-            btn.innerText = "Listening...";
-            
-            // 1. Start Interval
-            remoteListenInterval = setInterval(checkRemoteSignal, 15000);
-            checkRemoteSignal(); // Check immediately
-            showToast("Listening... (Keep this tab open)");
+    // --- ALWAYS-ON PASSIVE LISTENER ---
+    function startPassiveListener() {
+        if (remoteListenInterval) clearInterval(remoteListenInterval);
+        if(!CLOUD_CONFIG.binId) return;
 
-            // 2. Request Wake Lock (Keep computer awake)
-            try {
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock active');
-                }
-            } catch (err) { console.log('Wake Lock failed:', err); }
-        }
+        document.getElementById('syncPulse').classList.add('pulsing');
+        
+        // Check every 20 seconds
+        remoteListenInterval = setInterval(checkRemoteSignal, 20000);
+        checkRemoteSignal(); // Check immediately
     }
 
-    function stopRemoteListen() {
-        clearInterval(remoteListenInterval);
+    function stopPassiveListener() {
+        if (remoteListenInterval) clearInterval(remoteListenInterval);
+        document.getElementById('syncPulse').classList.remove('pulsing');
         remoteListenInterval = null;
-        const btn = document.getElementById('listenBtn');
-        if(btn) {
-            btn.classList.remove('active-listen');
-            btn.innerText = "Listen";
-        }
-        // Release Wake Lock
-        if(wakeLock) { wakeLock.release().then(() => wakeLock = null); }
     }
 
     async function checkRemoteSignal() {
@@ -958,11 +947,10 @@
                 showToast("Remote Signal Received! Uploading...");
                 await cloudSync('upload');
             }
-        } catch(e) { console.log(e); }
+        } catch(e) { console.log("Listener error (benign):", e); }
     }
 
     // SAFER SIGNAL: Downloads cloud data first, adds flag, puts it back.
-    // Prevents overwriting cloud data with empty mobile state.
     async function sendRemoteSignal() {
         if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
         showToast("Sending Signal...");
@@ -1478,7 +1466,11 @@
     document.getElementById('frogInput').addEventListener('keypress', e => e.key === 'Enter' && addFrog());
     document.getElementById('newGoalText').addEventListener('keypress', e => e.key === 'Enter' && confirmAddGoal());
 
-    if (CLOUD_CONFIG.key) updateSyncStatus("Ready");
+    // START ON LOAD
+    if (CLOUD_CONFIG.key) {
+        updateSyncStatus("Ready");
+        if(CLOUD_CONFIG.binId) startPassiveListener(); // AUTO START
+    }
     saveAndRender();
 </script>
 </body>
