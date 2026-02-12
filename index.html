@@ -39,6 +39,11 @@
 
         /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 4000; }
+        
+        /* NOTE MODAL SPECIFIC (Large) */
+        #goalNotesModal .sync-modal { max-width: 800px; width: 95%; height: 80vh; }
+        #goalNotesModal textarea { height: 100%; text-align: left; font-family: monospace; line-height: 1.5; font-size: 1.1rem; resize: none; }
+
         .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
         
         .modal-close { position: absolute; top: 20px; right: 20px; color: var(--success); cursor: pointer; font-weight: bold; font-size: 1.4rem; transition: 0.2s; }
@@ -259,7 +264,7 @@
 </div>
 
 <div id="goalNotesModal" class="modal-overlay">
-    <div class="sync-modal" style="max-width: 500px;">
+    <div class="sync-modal">
         <div class="modal-close" onclick="closeNotesModal()">✕</div>
         <div class="modal-text" id="noteTitle">Goal Notes</div>
         <textarea id="noteText" class="custom-input" placeholder="Type your notes here..."></textarea>
@@ -462,9 +467,6 @@
     if (!state.longTermGoals || !Array.isArray(state.longTermGoals)) state.longTermGoals = []; 
     if (!state.dailyRoutine) state.dailyRoutine = [];
 
-    // --- UNIQUE DEVICE ID ---
-    const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9);
-
     let viewingDate = new Date();
     // Timer State (Robust)
     let activeTimer = {
@@ -476,6 +478,7 @@
     let audioCtx;
     let alarmLoopInterval = null;
     let remoteListenInterval = null;
+    let isIntentionallyPaused = false; // THE FIX FLAG
     
     let deleteTimeouts = {};
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
@@ -929,7 +932,8 @@
 
     // WAKE LOCK FOR MOBILE
     document.addEventListener('touchstart', () => {
-        if(!remoteListenInterval && CLOUD_CONFIG.binId) {
+        // Only wake lock if we aren't intentionally paused
+        if(!remoteListenInterval && CLOUD_CONFIG.binId && !isIntentionallyPaused) {
             startPassiveListener(); 
         }
     }, {passive: true});
@@ -955,15 +959,9 @@
             // --- HANDLE BOTH WRAPPED AND UNWRAPPED DATA ---
             const remoteState = data.record || data;
 
-            // 2. IF REQUEST FOUND (Receiver Logic)
+            // 2. IF REQUEST FOUND (Receiver Logic - Reverted to V36 Logic)
             if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
                 
-                // *** ECHO PREVENTION: IGNORE MY OWN REQUEST ***
-                if (remoteState._signalSource === DEVICE_ID) {
-                    console.log("Ignoring my own request.");
-                    return; 
-                }
-
                 // PLAY SOUND!
                 playChime();
 
@@ -998,6 +996,10 @@
         if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
         showToast("Sending Signal to Remote...");
         
+        // *** THE FIX: PAUSE OUR OWN LISTENER ***
+        isIntentionallyPaused = true;
+        stopPassiveListener();
+
         try {
             // 1. GET CURRENT CLOUD (WITH CACHE BUSTING)
             const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
@@ -1006,12 +1008,9 @@
             });
             const data = await resGet.json();
             
-            // 2. SET REQUEST FLAG (HANDLE BOTH FORMATS)
+            // 2. SET REQUEST FLAG
             let payload = data.record || data;
-            payload._remoteSignal = 'UPLOAD_REQUEST';
-            
-            // *** ADD SENDER ID TO PREVENT ECHO ***
-            payload._signalSource = DEVICE_ID;
+            payload._remoteSignal = 'UPLOAD_REQUEST'; // Reverted to V36 flag
 
             // 3. PUT BACK
             await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
@@ -1027,7 +1026,16 @@
             let attempts = 0;
             pollInterval = setInterval(async () => {
                 attempts++;
-                if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); return; }
+                
+                // TIMEOUT AFTER 60 SECONDS (20 * 3s)
+                if(attempts > 20) { 
+                    clearInterval(pollInterval); 
+                    showToast("Remote timed out."); 
+                    // Unpause listener
+                    isIntentionallyPaused = false;
+                    startPassiveListener();
+                    return; 
+                }
                 
                 const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
                     method: 'GET',
@@ -1035,18 +1043,24 @@
                 });
                 const pollData = await pollRes.json();
                 
-                // HANDLE BOTH FORMATS IN POLLING TOO
                 const pollState = pollData.record || pollData;
 
                 if (pollState && pollState._remoteSignal === 'UPLOAD_COMPLETE') {
                     clearInterval(pollInterval);
                     document.getElementById('newDataModal').style.display = 'flex'; // SHOW SUCCESS MODAL
                     playChime(); // Ding on success too
+                    
+                    // Unpause listener
+                    isIntentionallyPaused = false;
+                    startPassiveListener();
                 }
             }, 3000); // Check every 3 seconds
 
         } catch (e) { 
             alert("Signal Error: " + e.message); 
+            // Unpause listener on error
+            isIntentionallyPaused = false;
+            startPassiveListener();
         }
     }
 
