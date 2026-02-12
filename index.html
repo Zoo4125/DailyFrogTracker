@@ -918,6 +918,13 @@
         remoteListenInterval = null;
     }
 
+    // WAKE LOCK FOR MOBILE
+    document.addEventListener('touchstart', () => {
+        if(!remoteListenInterval && CLOUD_CONFIG.binId) {
+            startPassiveListener(); // Restart listener if it died
+        }
+    }, {passive: true});
+
     async function checkRemoteSignal() {
         try {
             // SHOW BLUE CHECK (HEARTBEAT)
