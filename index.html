@@ -6,7 +6,7 @@
     <title>Daily Frog Dashboard</title>
     <style>
         :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --border: #27272a; --success: #22c55e; --frog: #facc15; --milestone: #60a5fa; --danger: #ef4444; }
-        /* GLOBAL BOX SIZING FIX to prevent layout breakage */
+        /* GLOBAL BOX SIZING FIX */
         * { box-sizing: border-box; }
         
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; transition: background 1s ease; }
@@ -130,12 +130,12 @@
         .action-icon:hover { opacity: 1; transform: scale(1.2); }
         .bolt-btn { color: #facc15; } .broom-btn { color: #a1a1aa; } .broom-btn:hover { color: #fff; }
 
-        /* GOALS LAYOUT: FIXED 3 COLUMNS */
+        /* GOALS LAYOUT: FLEX - 3 COLUMNS FIXED WITH CALC */
         .goals-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 1000px; padding-bottom: 20px; }
         
         .goal-card { 
-            /* 32% width guarantees 3 items fit (32*3 = 96%, leaving 4% for gaps) */
-            flex: 0 0 32%;
+            /* Strict 3-column calculation subtracting the gap space */
+            flex: 0 0 calc(33.333% - 10px);
             min-width: 0; 
             background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; 
             display: flex; flex-direction: column; gap: 10px; position: relative; min-height: 100px; 
@@ -144,10 +144,9 @@
         /* Tablet: Keep year grid readable, but force goals to 3 columns still */
         @media (max-width: 800px) {
             .year-grid { grid-template-columns: repeat(2, 1fr); } 
-            /* No change to goal-card here, so it stays 32% (3 cols) */
         }
         
-        /* Mobile: 1 Column (Below 600px, 3 columns is unreadable) */
+        /* Mobile: 1 Column */
         @media (max-width: 600px) {
             .goal-card { flex: 0 0 100%; }
         }
@@ -954,32 +953,34 @@
         } catch(e) { console.log("Listener error (benign):", e); }
     }
 
-    // SAFER SIGNAL: Downloads cloud data first, adds flag, puts it back.
+    // SAFER SIGNAL: DEBUG VERSION
     async function sendRemoteSignal() {
         if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
         showToast("Sending Signal...");
         try {
-            // 1. Get Latest Cloud Data
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
+            // 1. GET
+            const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
                 method: 'GET',
                 headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
             });
-            const data = await res.json();
-            
-            // 2. Add Signal Flag to THAT data
-            const payload = data.record;
+            if (!resGet.ok) throw new Error(`GET Failed: ${resGet.status}`);
+            const data = await resGet.json();
+
+            // 2. MODIFY
+            let payload = data.record || data; // Fallback
             payload._remoteSignal = 'UPLOAD_REQUEST';
 
-            // 3. Upload it back
-            await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
+            // 3. PUT
+            const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
                 body: JSON.stringify(payload)
             });
-            
-            showToast("Signal Sent! Remote device should upload soon.");
-        } catch (e) { 
-            showToast("Signal Failed. Check Connection."); 
+            if (!resPut.ok) throw new Error(`PUT Failed: ${resPut.status}`);
+
+            showToast("Signal Sent!");
+        } catch (e) {
+            alert("Signal Error: " + e.message); // Explicit Alert
         }
     }
 
