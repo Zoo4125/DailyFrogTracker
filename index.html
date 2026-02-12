@@ -6,6 +6,9 @@
     <title>Daily Frog Dashboard</title>
     <style>
         :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --border: #27272a; --success: #22c55e; --frog: #facc15; --milestone: #60a5fa; --danger: #ef4444; }
+        /* GLOBAL BOX SIZING FIX to prevent layout breakage */
+        * { box-sizing: border-box; }
+        
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; transition: background 1s ease; }
         
         .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; position: relative; z-index: 1; }
@@ -127,23 +130,24 @@
         .action-icon:hover { opacity: 1; transform: scale(1.2); }
         .bolt-btn { color: #facc15; } .broom-btn { color: #a1a1aa; } .broom-btn:hover { color: #fff; }
 
-        /* GOALS LAYOUT: FORCED 3 COLUMNS */
+        /* GOALS LAYOUT: FIXED 3 COLUMNS */
         .goals-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 1000px; padding-bottom: 20px; }
         
         .goal-card { 
-            /* Strict 3-column calculation for all screens larger than mobile */
-            flex: 0 0 calc(33.333% - 15px);
+            /* 32% width guarantees 3 items fit (32*3 = 96%, leaving 4% for gaps) */
+            flex: 0 0 32%;
             min-width: 0; 
             background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; 
             display: flex; flex-direction: column; gap: 10px; position: relative; min-height: 100px; 
         }
         
-        /* Tablet/Desktop: Year Grid 2 columns for space, but Goals stay 3 */
+        /* Tablet: Keep year grid readable, but force goals to 3 columns still */
         @media (max-width: 800px) {
             .year-grid { grid-template-columns: repeat(2, 1fr); } 
+            /* No change to goal-card here, so it stays 32% (3 cols) */
         }
         
-        /* Mobile (Phones): 1 Column */
+        /* Mobile: 1 Column (Below 600px, 3 columns is unreadable) */
         @media (max-width: 600px) {
             .goal-card { flex: 0 0 100%; }
         }
@@ -329,7 +333,7 @@
         <div class="button-row">
             <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
             <button onclick="setupCloud()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Link</button>
-            <button onclick="resetCloud()" class="tool-btn" style="border-color: #ef4444; color: #ef4444;">Reset</button>
+            <button onclick="resetCloud()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Reset</button>
         </div>
 
         <div class="button-row">
