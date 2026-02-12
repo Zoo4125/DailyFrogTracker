@@ -119,7 +119,7 @@
         .delete-btn { color: var(--success); opacity: 0.8; cursor: pointer; font-size: 1.1rem; transition: 0.2s; min-width: 18px; text-align: center; } .delete-btn:hover { opacity: 1; }
         .delete-btn.confirm { color: var(--success); font-weight: bold; opacity: 1; }
 
-        /* --- COLUMN SELECTOR SQUARES (RESTORED) --- */
+        /* --- COLUMN SELECTOR SQUARES --- */
         .col-selector-wrap { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; pointer-events: auto; }
         .sq-btn { width: 16px; height: 16px; border: 1px solid #3f3f46; border-radius: 4px; cursor: pointer; transition: 0.2s; background: transparent; }
         .sq-btn:hover { border-color: var(--text); transform: scale(1.1); }
@@ -391,8 +391,7 @@
                     2. Click "Link" (Green) to enter your Key.<br>
                     3. Click "Sync" then "Upload" to create your first locker.<br>
                     4. Save the generated ID to link other devices!<br>
-                    5. Ensure that the ID: Under Cloud Ready is the same on both devices<br>
-                  
+                    5. Ensure that the ID: Under Cloud Ready is the same on both devices
                 </div>
             </div>
         </div>
@@ -401,30 +400,29 @@
             <button class="toggle-link" onclick="toggleElement('howToUse', 'How To Use')">Show How To Use ↓</button>
             <div id="howToUse" class="expand-box">
                 <div class="instruction-box" style="text-align: left;">
-                    <strong style="color:var(--primary)">THE PHILOSOPHY</strong><br>
+                    <strong style="color:var(--primary)">🐸 THE PHILOSOPHY</strong><br>
                     "Eat the Frog" means doing your hardest, most important task first. That is your <b>Frog</b>. Put it in the top yellow box. It glows until it's done.<br><br>
                     
-                    <strong style="color:var(--primary)">DAILY TASKS</strong><br>
+                    <strong style="color:var(--primary)">📝 DAILY TASKS</strong><br>
                     Add other tasks below. Use the squares to move them between columns (To Do, Doing, Done) (Organized by catagory) (Or just how you're feeling).<br><br>
                     
-                    <strong style="color:#facc15">GOALS (🏆)</strong><br>
+                    <strong style="color:#facc15">🏆 GOALS</strong><br>
                     Goals are persistent. Unlike daily tasks, they stay until deleted. Create milestones or set a 'Goal Routine' to quickly add related tasks to your day.<br><br>
 
-                    <strong style="color:#facc15">DAILY ROUTINE (⚡)</strong><br>
+                    <strong style="color:#facc15">⚡ DAILY ROUTINE</strong><br>
                     Click the Lightning Bolt next to the Trophy to manage your daily recurring tasks.<br><br>
 
-                    <strong style="color:#fff">SWEEP (🧹)</strong><br>
+                    <strong style="color:#fff">🧹 SWEEP</strong><br>
                     Click the Broom to move all incomplete tasks to tomorrow.<br><br>
                     
-                    <strong style="color:var(--success)">TIMERS</strong><br>
+                    <strong style="color:var(--success)">⏳ TIMERS</strong><br>
                     Single-click to Start/Pause. Double-click to Reset.<br>
                     When timer ends, click "Okay" on the popup to stop the sound.<br><br>
 
-                    <strong style="color:var(--success)">LINK & SYNC</strong><br>
+                    <strong style="color:var(--success)">☁️ LINK & SYNC</strong><br>
                     Follow the setup guide to link a JSONBin.io account to your task tracker.<br>
                     Download, Upload, Remotely or from the original device<br>
                     Keeping all your devices synced with the same tasks and goals.
-                    
                 </div>
             </div>
         </div>
@@ -1247,7 +1245,7 @@
             });
         });
         state.dailyData[key].habits = newHabitsOrder;
-        saveAndRender(false); 
+        saveAndRender(); // UPDATED: Trigger full render to update squares!
     }
 
     function getDragAfterElement(container, y) {
@@ -1652,7 +1650,3 @@
 </script>
 </body>
 </html>
-
-
-
-
