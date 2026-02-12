@@ -905,6 +905,9 @@
         const legend = document.getElementById('graphLegend');
         legend.innerHTML = '';
         goal.datasets.forEach((ds) => {
+             // HIDE "New Variable" from legend!
+             if(ds.label === 'New Variable') return;
+
              const div = document.createElement('div');
              div.className = 'legend-item';
              div.innerHTML = `<div class="legend-dot" style="background:${ds.color}"></div>${ds.label}`;
