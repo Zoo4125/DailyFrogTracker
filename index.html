@@ -152,7 +152,13 @@
         }
         
         @media (max-width: 800px) { .year-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .goal-card { flex: 0 0 100%; } }
+        
+        @media (max-width: 600px) { 
+            .goal-card { flex: 0 0 100%; } 
+            
+            /* MOBILE BUTTON COLORS override */
+            .mobile-blue { border-color: var(--primary) !important; color: var(--primary) !important; }
+        }
 
         .goal-card.done { border-color: var(--success); opacity: 0.7; }
         
@@ -370,13 +376,13 @@
         
         <div class="button-row" style="margin-top:10px;">
             <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
-            <button onclick="setupCloud()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Link</button>
+            <button onclick="setupCloud()" class="tool-btn mobile-blue" style="border-color: var(--success); color: var(--success);">Link</button>
             <button onclick="resetCloud()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Reset</button>
         </div>
 
         <div class="button-row">
             <button onclick="playStretch()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Stretch</button>
-            <button onclick="playChillVibe()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Chill</button>
+            <button onclick="playChillVibe()" class="tool-btn mobile-blue" style="border-color: var(--success); color: var(--success);">Chill</button>
             <a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Meditate</a>
         </div>
 
