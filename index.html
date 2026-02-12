@@ -6,6 +6,7 @@
     <title>Daily Frog Dashboard</title>
     <style>
         :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --success: #22c55e; --frog: #facc15; --milestone: #60a5fa; --danger: #ef4444; --border: #27272a; }
+        
         * { box-sizing: border-box; }
         
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; transition: background 1s ease; }
@@ -45,14 +46,33 @@
         #goalNotesModal textarea { height: 100%; text-align: left; font-family: monospace; line-height: 1.5; font-size: 1.1rem; resize: none; }
 
         /* GRAPH MODAL SPECIFIC */
-        #goalStatsModal .sync-modal { max-width: 600px; width: 95%; }
-        .graph-container { width: 100%; height: 200px; background: #111; border: 1px solid #333; border-radius: 8px; margin-bottom: 20px; position: relative; display: flex; align-items: flex-end; padding: 10px; gap: 4px; overflow-x: auto; }
-        .graph-bar { background: var(--milestone); width: 100%; transition: height 0.3s; min-width: 20px; position: relative; border-radius: 2px 2px 0 0; }
-        .graph-bar:hover { background: #fff; }
-        .graph-bar:hover::after { content: attr(data-val); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #000; padding: 4px; font-size: 0.7rem; border-radius: 4px; pointer-events: none; white-space: nowrap; border: 1px solid #555; z-index: 10; }
-        .stats-history { max-height: 150px; overflow-y: auto; width: 100%; text-align: left; margin-top: 10px; font-size: 0.8rem; border-top: 1px solid #333; padding-top: 10px; }
-        .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #222; color: #a1a1aa; }
-        .stat-del { color: var(--danger); cursor: pointer; font-weight: bold; margin-left: 10px; }
+        #goalStatsModal .sync-modal { max-width: 700px; width: 95%; height: auto; max-height: 90vh; overflow-y: auto; }
+        
+        .graph-wrapper { width: 100%; background: #202022; border-radius: 12px; padding: 10px 10px 40px 40px; position: relative; height: 300px; border: 1px solid #333; margin-bottom: 20px; }
+        .graph-svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .axis-text { fill: #71717a; font-size: 10px; font-family: monospace; }
+        .grid-line { stroke: #333; stroke-width: 1; stroke-dasharray: 4; }
+        .data-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s; }
+        
+        /* Legend */
+        .legend-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 15px; width: 100%; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #a1a1aa; cursor: pointer; user-select: none; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* Collapsible Inputs */
+        .input-toggle { width: 100%; text-align: center; padding: 12px; background: #27272a; color: #fff; font-size: 0.8rem; cursor: pointer; border-radius: 8px; margin-bottom: 5px; user-select: none; display: flex; justify-content: center; align-items: center; gap: 10px; font-weight: bold; }
+        .collapsible-content { display: none; flex-direction: column; gap: 15px; background: #111; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid #27272a; border-top: none; margin-bottom: 15px; width: 100%; }
+        .collapsible-content.show { display: flex; }
+
+        .variable-row { display: flex; gap: 10px; align-items: center; width: 100%; }
+        .color-picker { width: 35px; height: 35px; border: none; background: none; cursor: pointer; padding: 0; }
+        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-picker::-webkit-color-swatch { border: 1px solid #333; border-radius: 50%; }
+
+        .section-header { font-size: 0.7rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px; width: 100%; text-align: left; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 5px; }
+
+        .series-select { width: 100%; background: #000; color: #fff; border: 1px solid #333; padding: 10px; border-radius: 6px; outline: none; }
 
         .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
         
@@ -62,7 +82,7 @@
         .modal-text { color: #a1a1aa; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.6; text-align: center; }
         .modal-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; }
 
-        .custom-input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 20px; text-align: center; }
+        .custom-input { width: 100%; background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 0; text-align: center; }
         
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
@@ -298,19 +318,39 @@
 <div id="goalStatsModal" class="modal-overlay">
     <div class="sync-modal">
         <div class="modal-close" onclick="closeStatsModal()">✕</div>
-        <div class="modal-text" id="statsTitle" style="font-weight:bold; color:#fff;">Goal Stats</div>
+        <div class="modal-text" id="statsTitle" style="font-weight:bold; color:#fff; margin-bottom:10px;">Goal Stats</div>
         
-        <div class="graph-container" id="graphContainer">
-            <span style="color:#555; width:100%; text-align:center; align-self:center;">No Data Yet</span>
+        <div class="graph-wrapper">
+            <svg id="graphSvg" class="graph-svg"></svg>
         </div>
 
-        <div style="display:flex; gap:10px; width:100%; margin-bottom:10px;">
-            <input type="number" id="statValue" class="custom-input" style="flex:1; margin-bottom:0;" placeholder="Value (e.g. 225)">
-            <input type="date" id="statDate" class="custom-input" style="flex:1; margin-bottom:0; font-family:sans-serif;">
+        <div id="graphLegend" class="legend-container"></div>
+
+        <div class="input-toggle" onclick="toggleCollapse('manageDataSection')">
+            Manage Data & Variables <span>▼</span>
         </div>
-        <button onclick="addStat()" class="confirm-btn" style="width:100%;">Add Entry</button>
         
-        <div class="stats-history" id="statsHistory"></div>
+        <div id="manageDataSection" class="collapsible-content">
+            
+            <div id="variableListContainer" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
+            
+            <button id="createVarBtn" onclick="createVariable()" class="confirm-btn" style="width:100%; background:#27272a; border:1px solid #3f3f46;">+ Add New Variable</button>
+
+            <hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;">
+
+            <div id="dataEntryContainer" style="display:none; width:100%; flex-direction:column; gap:10px;">
+                <div class="section-header">Add Data Entry</div>
+                <select id="seriesSelect" class="series-select"></select>
+                <div style="display:flex; gap:10px; width:100%;">
+                    <input type="number" id="statValue" class="custom-input" style="flex:1; margin-bottom:0;" placeholder="Value">
+                    <input type="date" id="statDate" class="custom-input" style="flex:1; margin-bottom:0; font-family:sans-serif;">
+                </div>
+                <button onclick="addStat()" class="confirm-btn" style="width:100%;">Add Entry</button>
+            </div>
+            
+            <div id="noVarsMsg" style="color:#555; font-size:0.8rem;">Create a variable above to add data.</div>
+
+        </div>
     </div>
 </div>
 
@@ -607,78 +647,268 @@
     }
     document.getElementById('newMilestoneText').addEventListener('keypress', e => e.key === 'Enter' && confirmAddMilestone());
 
-    // --- GRAPH LOGIC ---
+    // --- MULTI-LINE GRAPH LOGIC ---
+    const DEFAULT_COLORS = ['#f472b6', '#facc15', '#60a5fa', '#c084fc'];
+
+    function toggleCollapse(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('show');
+    }
+
     function openStatsModal(id) {
         activeGoalId = id;
         document.getElementById('goalStatsModal').style.display = 'flex';
         // Default date to today
         document.getElementById('statDate').valueAsDate = new Date();
         document.getElementById('statValue').value = '';
-        renderStats();
+        
+        // Populate inputs with goal data
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        
+        // Ensure data structure exists
+        if(!goal.datasets) {
+             if(goal.stats) {
+                 // Migrate old data
+                 goal.datasets = [{ label: "Variable 1", color: DEFAULT_COLORS[0], data: goal.stats }];
+                 delete goal.stats;
+             } else {
+                 goal.datasets = [];
+             }
+        }
+        // Patch for old datasets lacking color
+        goal.datasets.forEach((ds, i) => {
+            if(!ds.color) ds.color = DEFAULT_COLORS[i % 4];
+        });
+
+        renderMultiGraph();
+        renderManageSection();
     }
+    
     function closeStatsModal() { document.getElementById('goalStatsModal').style.display = 'none'; activeGoalId = null; }
+
+    // Render the list of existing variables and the add button
+    function renderManageSection() {
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        const container = document.getElementById('variableListContainer');
+        container.innerHTML = '';
+
+        if(goal.datasets.length > 0) {
+            // Render existing variables
+            goal.datasets.forEach((ds, i) => {
+                const row = document.createElement('div');
+                row.className = 'variable-row';
+                row.innerHTML = `
+                    <input type="color" class="color-picker" value="${ds.color}" onchange="updateVarColor(${i}, this.value)">
+                    <input type="text" class="custom-input" style="margin:0; flex:1; text-align:left;" value="${ds.label}" onchange="updateVarName(${i}, this.value)">
+                `;
+                container.appendChild(row);
+            });
+            
+            // Show Add Data Section
+            document.getElementById('dataEntryContainer').style.display = 'flex';
+            document.getElementById('noVarsMsg').style.display = 'none';
+            updateSeriesSelectDropdown();
+        } else {
+            // Hide Add Data Section
+            document.getElementById('dataEntryContainer').style.display = 'none';
+            document.getElementById('noVarsMsg').style.display = 'block';
+        }
+
+        // Toggle Add Button
+        const btn = document.getElementById('createVarBtn');
+        if(goal.datasets.length >= 4) {
+            btn.style.display = 'none';
+        } else {
+            btn.style.display = 'block';
+        }
+    }
+
+    function createVariable() {
+        if(!activeGoalId) return;
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        if(goal.datasets.length >= 4) return;
+
+        const newIdx = goal.datasets.length;
+        goal.datasets.push({
+            label: `New Variable`,
+            color: DEFAULT_COLORS[newIdx],
+            data: []
+        });
+        saveAndRender();
+        renderManageSection();
+        renderMultiGraph();
+    }
+
+    function updateVarName(idx, val) {
+        if(!activeGoalId) return;
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        goal.datasets[idx].label = val;
+        saveAndRender();
+        renderMultiGraph(); // Legend update
+        updateSeriesSelectDropdown();
+    }
+
+    function updateVarColor(idx, val) {
+        if(!activeGoalId) return;
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        goal.datasets[idx].color = val;
+        saveAndRender();
+        renderMultiGraph(); // Graph line color update
+    }
+
+    function updateSeriesSelectDropdown() {
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        const select = document.getElementById('seriesSelect');
+        const currentVal = select.value;
+        select.innerHTML = '';
+        
+        goal.datasets.forEach((ds, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = ds.label;
+            select.appendChild(opt);
+        });
+        // Try to keep selection
+        if(currentVal && currentVal < goal.datasets.length) select.value = currentVal;
+    }
 
     function addStat() {
         const val = parseFloat(document.getElementById('statValue').value);
         const date = document.getElementById('statDate').value;
-        if(val && date && activeGoalId) {
+        const seriesIdx = parseInt(document.getElementById('seriesSelect').value);
+        
+        if(val && date && activeGoalId !== null && !isNaN(seriesIdx)) {
             const goal = state.longTermGoals.find(g => g.id === activeGoalId);
-            if(!goal.stats) goal.stats = [];
-            goal.stats.push({ id: Date.now(), date: date, value: val });
-            goal.stats.sort((a,b) => new Date(a.date) - new Date(b.date)); // Keep sorted
+            
+            goal.datasets[seriesIdx].data.push({ id: Date.now(), date: date, value: val });
+            goal.datasets[seriesIdx].data.sort((a,b) => new Date(a.date) - new Date(b.date));
+            
             saveAndRender();
-            renderStats();
+            renderMultiGraph();
             document.getElementById('statValue').value = '';
+            showToast("Entry added.");
         }
     }
 
-    function deleteStat(idx) {
-        if(activeGoalId) {
-            const goal = state.longTermGoals.find(g => g.id === activeGoalId);
-            if(goal && goal.stats) {
-                goal.stats.splice(idx, 1);
-                saveAndRender();
-                renderStats();
-            }
-        }
-    }
-
-    function renderStats() {
+    function renderMultiGraph() {
         if(!activeGoalId) return;
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
-        const container = document.getElementById('graphContainer');
-        const history = document.getElementById('statsHistory');
+        const svg = document.getElementById('graphSvg');
+        const legend = document.getElementById('graphLegend');
         
-        container.innerHTML = '';
-        history.innerHTML = '';
-        
-        if(!goal.stats || goal.stats.length === 0) {
-            container.innerHTML = '<span style="color:#555; width:100%; text-align:center; align-self:center;">No Data Yet</span>';
-            return;
+        svg.innerHTML = '';
+        legend.innerHTML = '';
+
+        if(goal.datasets.length === 0) {
+             svg.innerHTML = '<text x="50%" y="50%" fill="#555" text-anchor="middle" font-size="12">Create a Variable below to start</text>';
+             return;
         }
 
-        // Draw Bars
-        const maxVal = Math.max(...goal.stats.map(s => s.value));
-        goal.stats.forEach(s => {
-            const h = (s.value / maxVal) * 100;
-            const bar = document.createElement('div');
-            bar.className = 'graph-bar';
-            bar.style.height = `${h}%`;
-            bar.dataset.val = `${s.value} (${s.date.slice(5)})`;
-            container.appendChild(bar);
+        // Flatten data to find min/max
+        let allPoints = [];
+        goal.datasets.forEach(ds => {
+            ds.data.forEach(p => allPoints.push(p));
         });
 
-        // Draw History List
-        // Reverse for history list (newest top)
-        [...goal.stats].reverse().forEach((s, i) => {
-            // Original index is needed for delete
-            const realIdx = goal.stats.length - 1 - i;
-            history.innerHTML += `
-                <div class="stat-row">
-                    <span>${s.date}: <b>${s.value}</b></span>
-                    <span class="stat-del" onclick="deleteStat(${realIdx})">✕</span>
-                </div>
-            `;
+        if(allPoints.length < 2) {
+             svg.innerHTML = '<text x="50%" y="50%" fill="#555" text-anchor="middle" font-size="12">Add more data to see graph</text>';
+             // Still render legend
+             renderLegend(goal);
+             return;
+        }
+
+        // SVG Dimensions
+        const width = svg.clientWidth || 600;
+        const height = svg.clientHeight || 300;
+        const pad = 40;
+        const graphW = width - (pad * 2);
+        const graphH = height - (pad * 2);
+
+        // Calculate Ranges
+        const dates = allPoints.map(p => new Date(p.date).getTime());
+        const values = allPoints.map(p => p.value);
+        
+        const minTime = Math.min(...dates);
+        const maxTime = Math.max(...dates);
+        const minVal = 0; // Always start Y at 0 for context, or Math.min(...values) * 0.9 for zoom
+        const maxVal = Math.max(...values) * 1.1; // Add 10% headroom
+
+        // Draw Grid & Axes
+        // Y-Axis Lines (4 lines)
+        for(let i=0; i<=4; i++) {
+            const yRatio = i / 4;
+            const y = (height - pad) - (graphH * yRatio);
+            const valLabel = Math.round(minVal + ((maxVal - minVal) * yRatio));
+            
+            // Line
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', pad); line.setAttribute('y1', y);
+            line.setAttribute('x2', width - pad); line.setAttribute('y2', y);
+            line.setAttribute('class', 'grid-line');
+            svg.appendChild(line);
+
+            // Label
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', 5); text.setAttribute('y', y + 3);
+            text.setAttribute('class', 'axis-text');
+            text.textContent = valLabel;
+            svg.appendChild(text);
+        }
+
+        // Helper to get X, Y coords
+        const getX = (dateStr) => {
+            const t = new Date(dateStr).getTime();
+            const pct = (t - minTime) / (maxTime - minTime);
+            return pad + (pct * graphW);
+        };
+        const getY = (val) => {
+            const pct = (val - minVal) / (maxVal - minVal);
+            return (height - pad) - (pct * graphH);
+        };
+
+        // Draw Lines
+        goal.datasets.forEach((ds) => {
+            if(ds.data.length === 0) return;
+            
+            let pathD = `M ${getX(ds.data[0].date)} ${getY(ds.data[0].value)}`;
+            ds.data.forEach(p => {
+                pathD += ` L ${getX(p.date)} ${getY(p.value)}`;
+            });
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathD);
+            path.setAttribute('stroke', ds.color); // Use dynamic color
+            path.setAttribute('class', 'data-line');
+            svg.appendChild(path);
+        });
+
+        // X-Axis Labels (First and Last date)
+        const dateFmt = (d) => new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+        
+        const startText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        startText.setAttribute('x', pad); startText.setAttribute('y', height - 10);
+        startText.setAttribute('class', 'axis-text');
+        startText.textContent = dateFmt(minTime);
+        svg.appendChild(startText);
+
+        const endText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        endText.setAttribute('x', width - pad); endText.setAttribute('y', height - 10);
+        endText.setAttribute('class', 'axis-text');
+        endText.setAttribute('text-anchor', 'end');
+        endText.textContent = dateFmt(maxTime);
+        svg.appendChild(endText);
+
+        renderLegend(goal);
+    }
+
+    function renderLegend(goal) {
+        const legend = document.getElementById('graphLegend');
+        legend.innerHTML = '';
+        goal.datasets.forEach((ds) => {
+             const div = document.createElement('div');
+             div.className = 'legend-item';
+             div.innerHTML = `<div class="legend-dot" style="background:${ds.color}"></div>${ds.label}`;
+             legend.appendChild(div);
         });
     }
 
@@ -1064,8 +1294,13 @@
                     state = data.record; 
                     if (!state.longTermGoals) state.longTermGoals = []; 
                     if (!state.dailyRoutine) state.dailyRoutine = [];
-                    // Ensure stats array exists on older goals
-                    state.longTermGoals.forEach(g => { if(!g.stats) g.stats = []; });
+                    // Ensure dataset structure exists on older goals
+                    state.longTermGoals.forEach(g => { 
+                         if(!g.datasets) {
+                             if(g.stats) g.datasets = [{label:'Variable 1', color:'#f472b6', data: g.stats}];
+                             else g.datasets = [];
+                         }
+                    });
                     saveAndRender(); 
                     addSyncLog("Manual Download Completed.");
                 } else {
@@ -1375,7 +1610,7 @@
         const text = document.getElementById('newGoalText').value;
         if (state.longTermGoals.length >= 9) { showToast("Max 9 Goals reached."); return; }
         if (text) {
-            state.longTermGoals.push({ id: Date.now(), text: text, done: false, milestones: [], notes: '', routine: [], stats: [] });
+            state.longTermGoals.push({ id: Date.now(), text: text, done: false, milestones: [], notes: '', routine: [], datasets: [] });
             saveAndRender();
             closeGoalModal();
         }
