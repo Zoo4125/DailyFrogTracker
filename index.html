@@ -6,7 +6,6 @@
     <title>Daily Frog Dashboard</title>
     <style>
         :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --border: #27272a; --success: #22c55e; --frog: #facc15; --milestone: #60a5fa; --danger: #ef4444; }
-        /* GLOBAL BOX SIZING FIX */
         * { box-sizing: border-box; }
         
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; transition: background 1s ease; }
@@ -130,26 +129,18 @@
         .action-icon:hover { opacity: 1; transform: scale(1.2); }
         .bolt-btn { color: #facc15; } .broom-btn { color: #a1a1aa; } .broom-btn:hover { color: #fff; }
 
-        /* GOALS LAYOUT: FLEX - 3 COLUMNS FIXED WITH CALC */
+        /* GOALS LAYOUT: FLEX - 3 COLUMNS */
         .goals-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 1000px; padding-bottom: 20px; }
         
         .goal-card { 
-            /* Strict 3-column calculation subtracting the gap space */
             flex: 0 0 calc(33.333% - 10px);
             min-width: 0; 
             background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; 
             display: flex; flex-direction: column; gap: 10px; position: relative; min-height: 100px; 
         }
         
-        /* Tablet: Keep year grid readable, but force goals to 3 columns still */
-        @media (max-width: 800px) {
-            .year-grid { grid-template-columns: repeat(2, 1fr); } 
-        }
-        
-        /* Mobile: 1 Column */
-        @media (max-width: 600px) {
-            .goal-card { flex: 0 0 100%; }
-        }
+        @media (max-width: 800px) { .year-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .goal-card { flex: 0 0 100%; } }
 
         .goal-card.done { border-color: var(--success); opacity: 0.7; }
         
@@ -161,8 +152,29 @@
         .milestone-box:hover { color: #fff; border-color: var(--text); z-index: 5; }
         .milestone-box.done { background: var(--success); color: #000; border-color: var(--success); font-weight: bold; opacity: 1; }
         .milestone-box.dragging { opacity: 0.2; background: var(--milestone); }
-        .ms-del { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); color: var(--primary); cursor: pointer; font-size: 0.8rem; font-weight: bold; opacity: 0; transition: 0.2s; z-index: 6; padding: 2px; }
-        .milestone-box:hover .ms-del { opacity: 1; } .ms-del:hover { transform: scale(1.2); } .ms-del.confirm { color: var(--success); }
+        
+        /* FIXED MS-DEL: Absolute position with fixed dimensions to prevent jumping */
+        .ms-del { 
+            position: absolute; 
+            top: 50%; 
+            right: 5px; 
+            transform: translateY(-50%); 
+            color: var(--primary); 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            font-weight: bold; 
+            opacity: 0; 
+            transition: 0.2s; 
+            z-index: 6; 
+            width: 20px; 
+            height: 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .milestone-box:hover .ms-del { opacity: 1; } 
+        .ms-del:hover { transform: translateY(-50%) scale(1.2); } 
+        .ms-del.confirm { color: var(--success); }
 
         .nav-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; margin: 40px auto; padding-top: 20px; border-top: 1px solid var(--border); }
         .nav-btn { background: none; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
@@ -222,6 +234,14 @@
         <div class="alarm-title">Timer Ended</div>
         <div class="modal-text">Frog time is over. Take a breath.</div>
         <button onclick="stopAlarmLoop()" class="confirm-btn">Okay</button>
+    </div>
+</div>
+
+<div id="newDataModal" class="modal-overlay">
+    <div class="sync-modal">
+        <div class="alarm-title" style="color:var(--success)">Success!</div>
+        <div class="modal-text">Remote Device Uploaded New Data.<br>Download it now?</div>
+        <button onclick="cloudSync('download'); document.getElementById('newDataModal').style.display='none'" class="confirm-btn">Download Now</button>
     </div>
 </div>
 
@@ -460,6 +480,7 @@
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
     let activeGoalId = null;
     let currentGoalIdForMilestone = null;
+    let pollInterval = null; // For Sender waiting for Receiver
 
     // --- Toast Logic ---
     function showToast(msg) {
@@ -710,36 +731,21 @@
     }
 
     // --- REBUILT TIMER LOGIC ---
-    // Handles single vs double click internally for robustness
-
     function handleTimerClick(minutes, btnId) {
-        // If this timer is not active, start it
-        if (activeTimer.id !== btnId) {
-            startTimer(minutes, btnId);
-        } else {
-            // If active, toggle pause
-            togglePause();
-        }
+        if (activeTimer.id !== btnId) startTimer(minutes, btnId);
+        else togglePause();
     }
 
     function startTimer(minutes, btnId) {
-        // Clear any existing timer first
         stopTimerEngine();
-
-        // Set state
         activeTimer.id = btnId;
         activeTimer.totalSeconds = minutes * 60;
         activeTimer.isPaused = false;
-
-        // Visuals
         const btn = document.getElementById(btnId);
         if(btn) btn.classList.add('active');
-        
         playChime();
-        enableFocusMode(); // Dim screen
-        
-        // Start Loop
-        updateTimerDisplay(); // show initial time immediately
+        enableFocusMode();
+        updateTimerDisplay();
         activeTimer.interval = setInterval(tick, 1000);
     }
 
@@ -747,43 +753,34 @@
         if(!activeTimer.isPaused) {
             activeTimer.totalSeconds--;
             updateTimerDisplay();
-            
-            if (activeTimer.totalSeconds <= 0) {
-                timerComplete();
-            }
+            if (activeTimer.totalSeconds <= 0) timerComplete();
         }
     }
 
     function togglePause() {
         if (!activeTimer.id) return;
-        
         const btn = document.getElementById(activeTimer.id);
         if(activeTimer.isPaused) {
-            // Resume
             activeTimer.isPaused = false;
             if(btn) btn.classList.remove('paused');
-            enableFocusMode(); // Re-dim screen
+            enableFocusMode();
         } else {
-            // Pause
             activeTimer.isPaused = true;
             if(btn) btn.classList.add('paused');
-            disableFocusMode(); // Undim screen
+            disableFocusMode();
         }
     }
 
     function timerComplete() {
         stopTimerEngine();
-        resetTimerUI(null); // Reset UI to defaults
+        resetTimerUI(null);
         disableFocusMode();
         startAlarmLoop();
     }
 
     function startAlarmLoop() {
-        // Show Modal
         document.getElementById('alarmModal').style.display = 'flex';
-        // Play sound immediately
         playChime();
-        // Loop sound every 2 seconds
         alarmLoopInterval = setInterval(playChime, 2000);
     }
 
@@ -794,10 +791,9 @@
     }
 
     function resetTimer(btnId, defaultVal) {
-        // Double click handler
         if(activeTimer.id === btnId) {
             stopTimerEngine();
-            resetTimerUI(defaultVal); // Force reset text
+            resetTimerUI(defaultVal);
             disableFocusMode();
         }
     }
@@ -809,15 +805,12 @@
     }
 
     function resetTimerUI(val) {
-        // Remove active classes from all buttons
         ['timer25', 'timerCustom', 'timer5'].forEach(id => {
             const el = document.getElementById(id);
             el.classList.remove('active', 'paused');
-            // Reset text if specific value passed (for the specific button)
             if(val && id === activeTimer.id) {
                  el.innerText = (typeof val === 'number') ? (val < 10 ? '0'+val+':00' : val+':00') : val;
             }
-            // Fallback resets if no specific value passed
             else if (id === 'timer25') el.innerText = "25:00";
             else if (id === 'timer5') el.innerText = "05:00";
             else if (id === 'timerCustom') el.innerText = "Custom";
@@ -833,21 +826,12 @@
         btn.innerText = `${m}:${s < 10 ? '0' : ''}${s}`; 
     }
 
-    function enableFocusMode() {
-        document.body.classList.add('focus-mode');
-    }
-
-    function disableFocusMode() {
-        document.body.classList.remove('focus-mode');
-    }
+    function enableFocusMode() { document.body.classList.add('focus-mode'); }
+    function disableFocusMode() { document.body.classList.remove('focus-mode'); }
 
     // Custom Timer Modal
     function openCustomTimerModal() {
-        // If currently running this timer, pause instead of open
-        if(activeTimer.id === 'timerCustom') {
-            togglePause();
-            return;
-        }
+        if(activeTimer.id === 'timerCustom') { togglePause(); return; }
         document.getElementById('customTimerModal').style.display = 'flex';
         document.getElementById('customTimerInput').focus();
     }
@@ -874,7 +858,7 @@
         if (bin) localStorage.setItem('sync_bin_id', bin); else localStorage.removeItem('sync_bin_id');
         CLOUD_CONFIG = { key, binId: bin || '' }; 
         updateSyncStatus("Ready");
-        startPassiveListener(); // AUTO START
+        startPassiveListener(); 
     }
 
     function resetCloud() {
@@ -907,7 +891,7 @@
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}${type === 'download' ? '/latest' : ''}`, {
                     method: type === 'upload' ? 'PUT' : 'GET',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
-                    body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null // clear signal on upload
+                    body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null 
                 });
                 const data = await res.json();
                 if (type === 'download') { 
@@ -921,16 +905,16 @@
         } catch (e) { updateSyncStatus("Error"); }
     }
 
-    // --- ALWAYS-ON PASSIVE LISTENER ---
+    // --- ALWAYS-ON PASSIVE LISTENER (RECEIVER) ---
     function startPassiveListener() {
         if (remoteListenInterval) clearInterval(remoteListenInterval);
         if(!CLOUD_CONFIG.binId) return;
 
         document.getElementById('syncPulse').classList.add('pulsing');
         
-        // Check every 20 seconds
-        remoteListenInterval = setInterval(checkRemoteSignal, 20000);
-        checkRemoteSignal(); // Check immediately
+        // Check every 15 seconds
+        remoteListenInterval = setInterval(checkRemoteSignal, 15000);
+        checkRemoteSignal(); 
     }
 
     function stopPassiveListener() {
@@ -941,46 +925,76 @@
 
     async function checkRemoteSignal() {
         try {
+            // 1. RECEIVER CHECKS
             const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
                 method: 'GET',
                 headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
             });
             const data = await res.json();
+            
+            // 2. IF REQUEST FOUND (Receiver Logic)
             if (data.record && data.record._remoteSignal === 'UPLOAD_REQUEST') {
-                showToast("Remote Signal Received! Uploading...");
-                await cloudSync('upload');
+                showToast("Remote Signal Received! Uploading my data...");
+                
+                // 3. UPLOAD LOCAL DATA + SET SIGNAL TO COMPLETE
+                const payload = { ...state, _remoteSignal: 'UPLOAD_COMPLETE' };
+                await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
+                    body: JSON.stringify(payload)
+                });
+                showToast("My Data Uploaded. Remote notified.");
             }
         } catch(e) { console.log("Listener error (benign):", e); }
     }
 
-    // SAFER SIGNAL: DEBUG VERSION
+    // --- SENDER LOGIC (PHONE) ---
     async function sendRemoteSignal() {
         if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
-        showToast("Sending Signal...");
+        showToast("Sending Signal to Remote...");
+        
         try {
-            // 1. GET
+            // 1. GET CURRENT CLOUD
             const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
                 method: 'GET',
                 headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
             });
-            if (!resGet.ok) throw new Error(`GET Failed: ${resGet.status}`);
             const data = await resGet.json();
-
-            // 2. MODIFY
-            let payload = data.record || data; // Fallback
+            
+            // 2. SET REQUEST FLAG
+            let payload = data.record || data;
             payload._remoteSignal = 'UPLOAD_REQUEST';
 
-            // 3. PUT
-            const resPut = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
+            // 3. PUT BACK
+            await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
                 body: JSON.stringify(payload)
             });
-            if (!resPut.ok) throw new Error(`PUT Failed: ${resPut.status}`);
+            
+            showToast("Signal Sent. Waiting for remote to reply...");
+            
+            // 4. START POLLING FOR COMPLETION
+            if (pollInterval) clearInterval(pollInterval);
+            let attempts = 0;
+            pollInterval = setInterval(async () => {
+                attempts++;
+                if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); return; }
+                
+                const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
+                    method: 'GET',
+                    headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
+                });
+                const pollData = await pollRes.json();
+                
+                if (pollData.record && pollData.record._remoteSignal === 'UPLOAD_COMPLETE') {
+                    clearInterval(pollInterval);
+                    document.getElementById('newDataModal').style.display = 'flex'; // SHOW SUCCESS MODAL
+                }
+            }, 3000); // Check every 3 seconds
 
-            showToast("Signal Sent!");
-        } catch (e) {
-            alert("Signal Error: " + e.message); // Explicit Alert
+        } catch (e) { 
+            alert("Signal Error: " + e.message); 
         }
     }
 
@@ -1286,7 +1300,6 @@
         
         document.getElementById('frogInput').style.display = dayData.habits.some(h => h.isFrog) ? 'none' : 'block';
         
-        // --- MODIFIED DATE DISPLAY (Hides Year) ---
         document.getElementById('dateDisplay').innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
         
         const mainEl = document.getElementById('mainPercent');
