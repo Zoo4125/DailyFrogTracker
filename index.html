@@ -949,8 +949,11 @@
             statusEl.classList.remove('blink-blue');
             statusEl.innerText = "Cloud: Ready";
             
+            // --- THE BUG FIX: HANDLE BOTH WRAPPED AND UNWRAPPED DATA ---
+            const remoteState = data.record || data;
+
             // 2. IF REQUEST FOUND (Receiver Logic)
-            if (data.record && data.record._remoteSignal === 'UPLOAD_REQUEST') {
+            if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
                 
                 // PLAY SOUND!
                 playChime();
@@ -994,7 +997,7 @@
             });
             const data = await resGet.json();
             
-            // 2. SET REQUEST FLAG
+            // 2. SET REQUEST FLAG (HANDLE BOTH FORMATS)
             let payload = data.record || data;
             payload._remoteSignal = 'UPLOAD_REQUEST';
 
@@ -1020,7 +1023,10 @@
                 });
                 const pollData = await pollRes.json();
                 
-                if (pollData.record && pollData.record._remoteSignal === 'UPLOAD_COMPLETE') {
+                // HANDLE BOTH FORMATS IN POLLING TOO
+                const pollState = pollData.record || pollData;
+
+                if (pollState && pollState._remoteSignal === 'UPLOAD_COMPLETE') {
                     clearInterval(pollInterval);
                     document.getElementById('newDataModal').style.display = 'flex'; // SHOW SUCCESS MODAL
                     playChime(); // Ding on success too
