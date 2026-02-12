@@ -339,12 +339,15 @@
             <div class="timer-btn" id="timer5" onclick="handleTimerClick(5, 'timer5')" ondblclick="resetTimer('timer5', 5)">05:00</div>
         </div>
 
-        <div style="display:flex; align-items:center; gap:5px;">
-            <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
-            <div id="syncPulse"></div>
+        <div style="display:flex; align-items:center; gap:5px; flex-direction: column;">
+            <div style="display:flex; align-items:center; gap:5px;">
+                <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
+                <div id="syncPulse"></div>
+            </div>
+            <div id="debugBinId" style="font-size: 0.5rem; color: #3f3f46; margin-top: 2px;">ID: None</div>
         </div>
         
-        <div class="button-row">
+        <div class="button-row" style="margin-top:10px;">
             <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
             <button onclick="setupCloud()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Link</button>
             <button onclick="resetCloud()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Reset</button>
@@ -853,6 +856,7 @@
         if (bin) localStorage.setItem('sync_bin_id', bin); else localStorage.removeItem('sync_bin_id');
         CLOUD_CONFIG = { key, binId: bin || '' }; 
         updateSyncStatus("Ready");
+        updateDebugId(CLOUD_CONFIG.binId);
         startPassiveListener(); 
     }
 
@@ -861,6 +865,7 @@
             localStorage.removeItem('sync_key'); localStorage.removeItem('sync_bin_id');
             CLOUD_CONFIG = { key: '', binId: '' }; 
             updateSyncStatus("Unlinked");
+            updateDebugId("None");
             stopPassiveListener();
         }
     }
@@ -880,6 +885,7 @@
                     localStorage.setItem('sync_bin_id', data.metadata.id);
                     CLOUD_CONFIG.binId = data.metadata.id;
                     updateSyncStatus("Linked"); alert("Bin ID Created: " + data.metadata.id);
+                    updateDebugId(data.metadata.id);
                     startPassiveListener();
                 }
             } else {
@@ -921,7 +927,7 @@
     // WAKE LOCK FOR MOBILE
     document.addEventListener('touchstart', () => {
         if(!remoteListenInterval && CLOUD_CONFIG.binId) {
-            startPassiveListener(); // Restart listener if it died
+            startPassiveListener(); 
         }
     }, {passive: true});
 
@@ -932,8 +938,8 @@
             statusEl.classList.add('blink-blue');
             statusEl.innerText = "Cloud: Checking...";
 
-            // 1. RECEIVER CHECKS
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
+            // CACHE BUSTING FIX: Add ?t=timestamp
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
                 method: 'GET',
                 headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
             });
@@ -945,6 +951,10 @@
             
             // 2. IF REQUEST FOUND (Receiver Logic)
             if (data.record && data.record._remoteSignal === 'UPLOAD_REQUEST') {
+                
+                // PLAY SOUND!
+                playChime();
+
                 // SHOW YELLOW ALERT (ACTION)
                 statusEl.classList.add('blink-yellow');
                 statusEl.innerText = "Cloud: Uploading...";
@@ -977,8 +987,8 @@
         showToast("Sending Signal to Remote...");
         
         try {
-            // 1. GET CURRENT CLOUD
-            const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
+            // 1. GET CURRENT CLOUD (WITH CACHE BUSTING)
+            const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
                 method: 'GET',
                 headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
             });
@@ -1004,7 +1014,7 @@
                 attempts++;
                 if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); return; }
                 
-                const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
+                const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
                     method: 'GET',
                     headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
                 });
@@ -1013,6 +1023,7 @@
                 if (pollData.record && pollData.record._remoteSignal === 'UPLOAD_COMPLETE') {
                     clearInterval(pollInterval);
                     document.getElementById('newDataModal').style.display = 'flex'; // SHOW SUCCESS MODAL
+                    playChime(); // Ding on success too
                 }
             }, 3000); // Check every 3 seconds
 
@@ -1022,6 +1033,7 @@
     }
 
     function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
+    function updateDebugId(id) { document.getElementById('debugBinId').innerText = `ID: ${id || 'None'}`; }
 
     function clearAllData() {
         if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [], dailyRoutine: [] }; saveAndRender(); }
@@ -1517,6 +1529,7 @@
     // START ON LOAD
     if (CLOUD_CONFIG.key) {
         updateSyncStatus("Ready");
+        updateDebugId(CLOUD_CONFIG.binId);
         if(CLOUD_CONFIG.binId) startPassiveListener(); // AUTO START
     }
     saveAndRender();
