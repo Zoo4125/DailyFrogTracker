@@ -462,6 +462,9 @@
     if (!state.longTermGoals || !Array.isArray(state.longTermGoals)) state.longTermGoals = []; 
     if (!state.dailyRoutine) state.dailyRoutine = [];
 
+    // --- UNIQUE DEVICE ID ---
+    const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9);
+
     let viewingDate = new Date();
     // Timer State (Robust)
     let activeTimer = {
@@ -949,12 +952,18 @@
             statusEl.classList.remove('blink-blue');
             statusEl.innerText = "Cloud: Ready";
             
-            // --- THE BUG FIX: HANDLE BOTH WRAPPED AND UNWRAPPED DATA ---
+            // --- HANDLE BOTH WRAPPED AND UNWRAPPED DATA ---
             const remoteState = data.record || data;
 
             // 2. IF REQUEST FOUND (Receiver Logic)
             if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
                 
+                // *** ECHO PREVENTION: IGNORE MY OWN REQUEST ***
+                if (remoteState._signalSource === DEVICE_ID) {
+                    console.log("Ignoring my own request.");
+                    return; 
+                }
+
                 // PLAY SOUND!
                 playChime();
 
@@ -1000,6 +1009,9 @@
             // 2. SET REQUEST FLAG (HANDLE BOTH FORMATS)
             let payload = data.record || data;
             payload._remoteSignal = 'UPLOAD_REQUEST';
+            
+            // *** ADD SENDER ID TO PREVENT ECHO ***
+            payload._signalSource = DEVICE_ID;
 
             // 3. PUT BACK
             await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
