@@ -112,11 +112,6 @@
         .delete-btn { color: var(--success); opacity: 0.8; cursor: pointer; font-size: 1.1rem; transition: 0.2s; min-width: 18px; text-align: center; } .delete-btn:hover { opacity: 1; }
         .delete-btn.confirm { color: var(--success); font-weight: bold; opacity: 1; }
 
-        .col-selector-wrap { display: flex; justify-content: center; gap: 10px; border-top: 1px solid #27272a; padding-top: 10px; pointer-events: auto; }
-        .sq-btn { width: 14px; height: 14px; border: 1px solid #3f3f46; border-radius: 3px; cursor: pointer; transition: 0.2s; }
-        .sq-btn:hover { border-color: var(--primary); transform: scale(1.2); }
-        .sq-btn.active { background: var(--success); border-color: var(--success); }
-
         .year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; border-top: 1px solid var(--border); padding-top: 60px; width: 100%; }
         .month-card { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; }
         .month-title { display: flex; justify-content: space-between; font-size: 0.6rem; color: #a1a1aa; margin-bottom: 8px; text-transform: uppercase; }
@@ -132,15 +127,29 @@
         .action-icon:hover { opacity: 1; transform: scale(1.2); }
         .bolt-btn { color: #facc15; } .broom-btn { color: #a1a1aa; } .broom-btn:hover { color: #fff; }
 
-        /* GOALS LAYOUT: FLEX (Repaired) */
-        /* Changed from fixed calc width to flexible grow/shrink */
+        /* GOALS LAYOUT: FLEX - 3 COLUMNS */
         .goals-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 1000px; padding-bottom: 20px; }
+        
         .goal-card { 
-            flex: 1 1 200px; /* Base width 200px, but can grow and shrink */
-            max-width: 400px; /* Prevents them from getting annoyingly wide on huge screens */
+            /* Strict 3-column calculation for Desktop */
+            flex: 0 0 calc(33.333% - 15px);
+            min-width: 0; /* Prevents overflow issues */
+            
             background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; 
             display: flex; flex-direction: column; gap: 10px; position: relative; min-height: 100px; 
         }
+        
+        /* Tablet: 2 Columns */
+        @media (max-width: 800px) {
+            .year-grid { grid-template-columns: repeat(2, 1fr); } 
+            .goal-card { flex: 0 0 calc(50% - 15px); }
+        }
+        
+        /* Mobile: 1 Column */
+        @media (max-width: 500px) {
+            .goal-card { flex: 0 0 100%; }
+        }
+
         .goal-card.done { border-color: var(--success); opacity: 0.7; }
         
         .add-ms-header-btn { width: 14px; height: 14px; border: 1px solid var(--milestone); border-radius: 3px; background: transparent; cursor: pointer; transition: 0.2s; }
@@ -182,8 +191,6 @@
         .expand-box { height: 0; overflow: hidden; opacity: 0; transition: all 0.4s ease-in-out; text-align: center; }
         .expand-box.open { height: auto; opacity: 1; padding: 20px 0; }
         .instruction-box { background: rgba(17, 17, 17, 0.5); border: 1px solid rgba(39, 39, 42, 0.3); padding: 25px; border-radius: 15px; font-size: 0.75rem; color: #71717a; line-height: 1.6; }
-
-        @media (max-width: 800px) { .year-grid, .goals-flex { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
@@ -440,6 +447,7 @@
     let audioCtx;
     let alarmLoopInterval = null;
     let remoteListenInterval = null;
+    let wakeLock = null; // NEW: Screen Wake Lock
     
     let deleteTimeouts = {};
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
@@ -902,8 +910,8 @@
         } catch (e) { updateSyncStatus("Error"); }
     }
 
-    // --- REMOTE TRIGGER LOGIC ---
-    function toggleRemoteListen() {
+    // --- REMOTE TRIGGER LOGIC (IMPROVED with WakeLock and Safer Signal) ---
+    async function toggleRemoteListen() {
         const btn = document.getElementById('listenBtn');
         if (remoteListenInterval) {
             stopRemoteListen();
@@ -911,10 +919,19 @@
             if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
             btn.classList.add('active-listen');
             btn.innerText = "Listening...";
-            // Check every 15 seconds
+            
+            // 1. Start Interval
             remoteListenInterval = setInterval(checkRemoteSignal, 15000);
             checkRemoteSignal(); // Check immediately
-            showToast("Listening for remote signals...");
+            showToast("Listening... (Keep this tab open)");
+
+            // 2. Request Wake Lock (Keep computer awake)
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake Lock active');
+                }
+            } catch (err) { console.log('Wake Lock failed:', err); }
         }
     }
 
@@ -926,6 +943,8 @@
             btn.classList.remove('active-listen');
             btn.innerText = "Listen";
         }
+        // Release Wake Lock
+        if(wakeLock) { wakeLock.release().then(() => wakeLock = null); }
     }
 
     async function checkRemoteSignal() {
@@ -937,20 +956,39 @@
             const data = await res.json();
             if (data.record && data.record._remoteSignal === 'UPLOAD_REQUEST') {
                 showToast("Remote Signal Received! Uploading...");
-                // We have a request! Upload our current local state immediately
                 await cloudSync('upload');
             }
         } catch(e) { console.log(e); }
     }
 
+    // SAFER SIGNAL: Downloads cloud data first, adds flag, puts it back.
+    // Prevents overwriting cloud data with empty mobile state.
     async function sendRemoteSignal() {
         if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
-        // We download current metadata first to not overwrite (ideal), but for simplicity we just push a flag
-        // NOTE: This might overwrite data if we aren't careful, so we just update the specific record if possible.
-        // JSONBin Free doesn't support PATCH well. We will Upload current state with the FLAG.
-        state._remoteSignal = 'UPLOAD_REQUEST';
-        await cloudSync('upload');
-        showToast("Signal Sent! Remote device should upload soon.");
+        showToast("Sending Signal...");
+        try {
+            // 1. Get Latest Cloud Data
+            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest`, {
+                method: 'GET',
+                headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
+            });
+            const data = await res.json();
+            
+            // 2. Add Signal Flag to THAT data
+            const payload = data.record;
+            payload._remoteSignal = 'UPLOAD_REQUEST';
+
+            // 3. Upload it back
+            await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
+                body: JSON.stringify(payload)
+            });
+            
+            showToast("Signal Sent! Remote device should upload soon.");
+        } catch (e) { 
+            showToast("Signal Failed. Check Connection."); 
+        }
     }
 
     function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
@@ -1063,7 +1101,8 @@
     // --- LONG TERM GOALS LOGIC ---
     function confirmAddGoal() {
         const text = document.getElementById('newGoalText').value;
-        if (state.longTermGoals.length >= 8) { showToast("Max 8 Goals reached."); return; }
+        // CHANGED: Max goals 9
+        if (state.longTermGoals.length >= 9) { showToast("Max 9 Goals reached."); return; }
         if (text) {
             state.longTermGoals.push({ id: Date.now(), text: text, done: false, milestones: [], notes: '', routine: [] });
             saveAndRender();
