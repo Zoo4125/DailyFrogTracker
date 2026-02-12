@@ -39,11 +39,6 @@
 
         /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 4000; }
-        
-        /* NOTE MODAL SPECIFIC */
-        #goalNotesModal .sync-modal { max-width: 800px; width: 95%; height: 80vh; }
-        #goalNotesModal textarea { height: 100%; text-align: left; font-family: monospace; line-height: 1.5; font-size: 1.1rem; resize: none; }
-
         .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
         
         .modal-close { position: absolute; top: 20px; right: 20px; color: var(--success); cursor: pointer; font-weight: bold; font-size: 1.4rem; transition: 0.2s; }
@@ -240,8 +235,8 @@
 
 <div id="uploadingModal" class="modal-overlay">
     <div class="sync-modal">
-        <div class="alarm-title" style="color:var(--frog)">Syncing...</div>
-        <div class="modal-text">Applying new data from remote.</div>
+        <div class="alarm-title" style="color:var(--frog)">Signal Received</div>
+        <div class="modal-text">Remote requested upload.<br>Uploading data now...</div>
     </div>
 </div>
 
@@ -264,7 +259,7 @@
 </div>
 
 <div id="goalNotesModal" class="modal-overlay">
-    <div class="sync-modal">
+    <div class="sync-modal" style="max-width: 500px;">
         <div class="modal-close" onclick="closeNotesModal()">✕</div>
         <div class="modal-text" id="noteTitle">Goal Notes</div>
         <textarea id="noteText" class="custom-input" placeholder="Type your notes here..."></textarea>
@@ -961,10 +956,11 @@
             const remoteState = data.record || data;
 
             // 2. IF REQUEST FOUND (Receiver Logic)
-            if (remoteState && remoteState._remoteSignal === 'SYNC_UPDATE') {
+            if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
                 
                 // *** ECHO PREVENTION: IGNORE MY OWN REQUEST ***
                 if (remoteState._signalSource === DEVICE_ID) {
+                    console.log("Ignoring my own request.");
                     return; 
                 }
 
@@ -973,29 +969,22 @@
 
                 // SHOW YELLOW ALERT (ACTION)
                 statusEl.classList.add('blink-yellow');
-                statusEl.innerText = "Cloud: Syncing...";
+                statusEl.innerText = "Cloud: Uploading...";
                 document.getElementById('uploadingModal').style.display = 'flex';
                 
-                // *** AUTO-DOWNLOAD THE NEW DATA ***
-                state = remoteState;
-                if (!state.longTermGoals) state.longTermGoals = []; 
-                if (!state.dailyRoutine) state.dailyRoutine = [];
-                saveAndRender();
-
-                // REMOVE THE FLAG SO WE DON'T LOOP
-                // We re-upload the same data but clear the signal
-                const cleanPayload = { ...state, _remoteSignal: 'SYNC_COMPLETE', _signalSource: DEVICE_ID };
+                // 3. UPLOAD LOCAL DATA + SET SIGNAL TO COMPLETE
+                const payload = { ...state, _remoteSignal: 'UPLOAD_COMPLETE' };
                 await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
-                    body: JSON.stringify(cleanPayload)
+                    body: JSON.stringify(payload)
                 });
                 
                 setTimeout(() => {
                     statusEl.classList.remove('blink-yellow');
                     statusEl.innerText = "Cloud: Synced";
                     document.getElementById('uploadingModal').style.display = 'none';
-                    showToast("Remote Changes Applied!");
+                    showToast("My Data Uploaded. Remote notified.");
                 }, 1500);
             }
         } catch(e) { 
@@ -1007,12 +996,21 @@
     // --- SENDER LOGIC (PHONE) ---
     async function sendRemoteSignal() {
         if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
-        showToast("Sending My Data to Desktop...");
+        showToast("Sending Signal to Remote...");
         
         try {
-            // *** THE FIX: UPLOAD *MY* LOCAL STATE ***
-            let payload = { ...state };
-            payload._remoteSignal = 'SYNC_UPDATE';
+            // 1. GET CURRENT CLOUD (WITH CACHE BUSTING)
+            const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
+                method: 'GET',
+                headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false' }
+            });
+            const data = await resGet.json();
+            
+            // 2. SET REQUEST FLAG (HANDLE BOTH FORMATS)
+            let payload = data.record || data;
+            payload._remoteSignal = 'UPLOAD_REQUEST';
+            
+            // *** ADD SENDER ID TO PREVENT ECHO ***
             payload._signalSource = DEVICE_ID;
 
             // 3. PUT BACK
@@ -1022,14 +1020,14 @@
                 body: JSON.stringify(payload)
             });
             
-            showToast("Data Sent! Waiting for remote to pick it up...");
+            showToast("Signal Sent. Waiting for remote to reply...");
             
             // 4. START POLLING FOR COMPLETION
             if (pollInterval) clearInterval(pollInterval);
             let attempts = 0;
             pollInterval = setInterval(async () => {
                 attempts++;
-                if(attempts > 20) { clearInterval(pollInterval); showToast("Remote didn't reply (Data sent anyway)."); return; }
+                if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); return; }
                 
                 const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
                     method: 'GET',
@@ -1040,11 +1038,10 @@
                 // HANDLE BOTH FORMATS IN POLLING TOO
                 const pollState = pollData.record || pollData;
 
-                if (pollState && pollState._remoteSignal === 'SYNC_COMPLETE') {
+                if (pollState && pollState._remoteSignal === 'UPLOAD_COMPLETE') {
                     clearInterval(pollInterval);
-                    document.getElementById('newDataModal').style.display = 'none'; 
-                    showToast("Success! Desktop is synced.");
-                    playChime(); 
+                    document.getElementById('newDataModal').style.display = 'flex'; // SHOW SUCCESS MODAL
+                    playChime(); // Ding on success too
                 }
             }, 3000); // Check every 3 seconds
 
