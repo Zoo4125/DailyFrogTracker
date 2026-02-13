@@ -42,8 +42,16 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 4000; }
         
         /* NOTE MODAL SPECIFIC (Large) */
-        #goalNotesModal .sync-modal { max-width: 800px; width: 95%; height: 80vh; }
-        #goalNotesModal textarea { height: 100%; text-align: left; font-family: monospace; line-height: 1.5; font-size: 1.1rem; resize: none; }
+        #richTextModal .sync-modal { max-width: 800px; width: 95%; height: 80vh; padding: 20px; }
+        
+        /* RICH TEXT EDITOR CSS */
+        .editor-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 10px; }
+        .editor-toolbar { display: flex; gap: 5px; background: #27272a; padding: 8px; border-radius: 8px; flex-wrap: wrap; }
+        .fmt-btn { background: #3f3f46; border: none; color: #fff; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; min-width: 30px; transition: 0.2s; }
+        .fmt-btn:hover { background: var(--primary); }
+        .editor-content { flex: 1; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 20px; overflow-y: auto; text-align: left; line-height: 1.6; color: #d4d4d8; outline: none; font-size: 1rem; }
+        .editor-content ul { padding-left: 20px; }
+        .editor-content b { color: #fff; }
 
         /* GRAPH MODAL SPECIFIC */
         #goalStatsModal .sync-modal { max-width: 700px; width: 95%; height: auto; max-height: 90vh; overflow-y: auto; }
@@ -51,9 +59,30 @@
         .graph-wrapper { width: 100%; background: #202022; border-radius: 12px; padding: 10px 10px 40px 40px; position: relative; height: 300px; border: 1px solid #333; margin-bottom: 20px; }
         .graph-svg { width: 100%; height: 100%; overflow: visible; }
         
+        /* Graph Tooltip */
+        .graph-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            transform: translate(-50%, -150%);
+        }
+        .graph-tooltip.visible { opacity: 1; }
+
         .axis-text { fill: #71717a; font-size: 10px; font-family: monospace; }
         .grid-line { stroke: #333; stroke-width: 1; stroke-dasharray: 4; }
         .data-line { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s; }
+        .data-dot { transition: r 0.2s, stroke-width 0.2s; cursor: crosshair; }
+        .data-dot:hover { r: 6; stroke: #fff; stroke-width: 2px; }
         
         /* Legend */
         .legend-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 15px; width: 100%; }
@@ -65,10 +94,22 @@
         .collapsible-content { display: none; flex-direction: column; gap: 15px; background: #111; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid #27272a; border-top: none; margin-bottom: 15px; width: 100%; }
         .collapsible-content.show { display: flex; }
 
+        /* Manage Variables UI */
         .variable-row { display: flex; gap: 10px; align-items: center; width: 100%; }
         .color-picker { width: 35px; height: 35px; border: none; background: none; cursor: pointer; padding: 0; }
         .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
         .color-picker::-webkit-color-swatch { border: 1px solid #333; border-radius: 50%; }
+        
+        /* GREEN X for Variables */
+        .var-del-btn { color: var(--success); font-weight: bold; cursor: pointer; padding: 5px 10px; border: 1px solid transparent; border-radius: 4px; transition: 0.2s; font-size: 1.1rem; }
+        .var-del-btn:hover { background: rgba(34, 197, 94, 0.1); border-color: var(--success); transform: scale(1.1); }
+
+        /* History List UI */
+        .history-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; border-bottom: 1px solid #222; padding: 8px 0; }
+        .history-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .history-input { background: #000; border: 1px solid #333; color: #fff; padding: 4px; border-radius: 4px; text-align: center; font-size: 0.75rem; outline: none; }
+        .history-del-btn { color: var(--success); font-weight: bold; cursor: pointer; padding: 4px 8px; margin-left: auto; font-size: 1rem; transition: 0.2s; }
+        .history-del-btn:hover { transform: scale(1.2); text-shadow: 0 0 5px var(--success); }
 
         .section-header { font-size: 0.7rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px; width: 100%; text-align: left; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 5px; }
 
@@ -158,7 +199,10 @@
 
         .year-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; border-top: 1px solid var(--border); padding-top: 60px; width: 100%; }
         .month-card { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; }
-        .month-title { display: flex; justify-content: space-between; font-size: 0.6rem; color: #a1a1aa; margin-bottom: 8px; text-transform: uppercase; }
+        .month-title { display: flex; justify-content: space-between; font-size: 0.6rem; color: #a1a1aa; margin-bottom: 8px; text-transform: uppercase; align-items: center; }
+        .month-name-btn { cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+        .month-name-btn:hover { color: var(--primary); text-decoration: underline; }
+        
         .month-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .day-sq { width: 100%; aspect-ratio: 1; background: rgba(255, 255, 255, 0.05); border-radius: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; position: relative; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s; }
         .day-sq:hover { transform: scale(1.5); z-index: 100; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); border: 1px solid var(--text); }
@@ -306,12 +350,25 @@
     </div>
 </div>
 
-<div id="goalNotesModal" class="modal-overlay">
+<div id="richTextModal" class="modal-overlay">
     <div class="sync-modal">
-        <div class="modal-close" onclick="closeNotesModal()">✕</div>
-        <div class="modal-text" id="noteTitle">Goal Notes</div>
-        <textarea id="noteText" class="custom-input" placeholder="Type your notes here..."></textarea>
-        <button onclick="saveGoalNotes()" class="confirm-btn">Save Notes</button>
+        <div class="modal-close" onclick="closeRichTextModal()">✕</div>
+        <div class="modal-text" id="richTextTitle">Notes</div>
+        
+        <div class="editor-wrapper">
+            <div class="editor-toolbar">
+                <button class="fmt-btn" onclick="fmt('bold')" title="Bold"><b>B</b></button>
+                <button class="fmt-btn" onclick="fmt('italic')" title="Italic"><i>I</i></button>
+                <button class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Bullet List">• List</button>
+                <div style="width:1px; background:#3f3f46; margin:0 5px;"></div>
+                <button class="fmt-btn" onclick="fmt('justifyLeft')" title="Align Left">⇐</button>
+                <button class="fmt-btn" onclick="fmt('justifyCenter')" title="Align Center">=</button>
+                <button class="fmt-btn" onclick="fmt('justifyRight')" title="Align Right">⇒</button>
+            </div>
+            <div id="richEditor" class="editor-content" contenteditable="true"></div>
+        </div>
+        
+        <button onclick="saveRichText()" class="confirm-btn">Save Notes</button>
     </div>
 </div>
 
@@ -322,6 +379,7 @@
         
         <div class="graph-wrapper">
             <svg id="graphSvg" class="graph-svg"></svg>
+            <div id="graphTooltip" class="graph-tooltip"></div>
         </div>
 
         <div id="graphLegend" class="legend-container"></div>
@@ -350,6 +408,13 @@
             
             <div id="noVarsMsg" style="color:#555; font-size:0.8rem;">Create a variable above to add data.</div>
 
+        </div>
+
+        <div class="input-toggle" onclick="toggleCollapse('editHistorySection')">
+            Edit Data Points <span>▼</span>
+        </div>
+        <div id="editHistorySection" class="collapsible-content">
+            <div id="dataHistoryContent" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
         </div>
     </div>
 </div>
@@ -562,6 +627,7 @@
     let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {} };
     if (!state.longTermGoals || !Array.isArray(state.longTermGoals)) state.longTermGoals = []; 
     if (!state.dailyRoutine) state.dailyRoutine = [];
+    if (!state.monthNotes) state.monthNotes = {}; // New storage for month notes
 
     // --- UNIQUE DEVICE ID ---
     const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9);
@@ -578,6 +644,8 @@
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
     let activeGoalId = null;
     let currentGoalIdForMilestone = null;
+    let activeRichContext = null; // 'goal' or 'month'
+    let activeRichId = null;
     let pollInterval = null; 
 
     // --- Logger Logic ---
@@ -616,13 +684,58 @@
     function openGoalModal() { document.getElementById('goalInputModal').style.display = 'flex'; document.getElementById('newGoalText').focus(); }
     function closeGoalModal() { document.getElementById('goalInputModal').style.display = 'none'; document.getElementById('newGoalText').value = ''; }
 
-    function openNotesModal(id) { 
-        activeGoalId = id; 
-        const goal = state.longTermGoals.find(g => g.id === id);
-        document.getElementById('noteText').value = goal.notes || '';
-        document.getElementById('goalNotesModal').style.display = 'flex'; 
+    // --- RICH TEXT EDITOR LOGIC ---
+    function openRichTextModal(context, id) {
+        activeRichContext = context;
+        activeRichId = id;
+        
+        const titleEl = document.getElementById('richTextTitle');
+        const editor = document.getElementById('richEditor');
+        
+        if(context === 'goal') {
+            const goal = state.longTermGoals.find(g => g.id === id);
+            titleEl.innerText = `Goal Notes: ${goal.text}`;
+            editor.innerHTML = goal.notes || '';
+        } else if (context === 'month') {
+            const [y, m] = id.split('-'); // 2026-0
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            titleEl.innerText = `${monthNames[parseInt(m)]} ${y} Notes`;
+            editor.innerHTML = state.monthNotes[id] || '';
+        }
+
+        document.getElementById('richTextModal').style.display = 'flex';
+        editor.focus();
     }
-    function closeNotesModal() { document.getElementById('goalNotesModal').style.display = 'none'; activeGoalId = null; }
+
+    function closeRichTextModal() { 
+        document.getElementById('richTextModal').style.display = 'none'; 
+        activeRichContext = null; 
+        activeRichId = null; 
+    }
+
+    function fmt(command, value = null) {
+        document.execCommand(command, false, value);
+        document.getElementById('richEditor').focus();
+    }
+
+    function saveRichText() {
+        const content = document.getElementById('richEditor').innerHTML;
+        
+        if(activeRichContext === 'goal') {
+            state.longTermGoals = state.longTermGoals.map(g => g.id === activeRichId ? { ...g, notes: content } : g);
+        } else if (activeRichContext === 'month') {
+            if(!state.monthNotes) state.monthNotes = {};
+            state.monthNotes[activeRichId] = content;
+        }
+        
+        saveAndRender();
+        closeRichTextModal();
+        showToast("Notes saved.");
+    }
+    
+    // Wrapper for old calls
+    function openNotesModal(id) { openRichTextModal('goal', id); }
+    function closeNotesModal() { closeRichTextModal(); } // Just in case
 
     function openMilestoneModal(id) {
         currentGoalIdForMilestone = id;
@@ -682,6 +795,7 @@
 
         renderMultiGraph();
         renderManageSection();
+        renderDataHistory();
     }
     
     function closeStatsModal() { document.getElementById('goalStatsModal').style.display = 'none'; activeGoalId = null; }
@@ -700,6 +814,7 @@
                 row.innerHTML = `
                     <input type="color" class="color-picker" value="${ds.color}" onchange="updateVarColor(${i}, this.value)">
                     <input type="text" class="custom-input" style="margin:0; flex:1; text-align:left;" value="${ds.label}" onchange="updateVarName(${i}, this.value)">
+                    <div class="var-del-btn" onclick="deleteVariable(${i})">✕</div>
                 `;
                 container.appendChild(row);
             });
@@ -723,6 +838,48 @@
         }
     }
 
+    // Render Data Points List
+    function renderDataHistory() {
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        const container = document.getElementById('dataHistoryContent');
+        container.innerHTML = '';
+        
+        let hasData = false;
+        
+        // Iterate through all datasets
+        goal.datasets.forEach((ds, sIdx) => {
+            if(ds.data.length === 0) return;
+            hasData = true;
+
+            // Header for the Series
+            const header = document.createElement('div');
+            header.className = 'section-header';
+            header.style.color = ds.color;
+            header.style.marginTop = '10px';
+            header.innerText = ds.label;
+            container.appendChild(header);
+
+            // Sort data by date (newest first for editing)
+            const sortedData = [...ds.data].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            sortedData.forEach(p => {
+                const row = document.createElement('div');
+                row.className = 'history-row';
+                
+                // We need the ORIGINAL index to delete properly, but id is safer
+                row.innerHTML = `
+                    <div class="history-dot" style="background:${ds.color}"></div>
+                    <input type="date" class="history-input" style="width:110px;" value="${p.date}" onchange="updateDataPoint(${sIdx}, ${p.id}, 'date', this.value)">
+                    <input type="number" class="history-input" style="width:70px;" value="${p.value}" onchange="updateDataPoint(${sIdx}, ${p.id}, 'value', this.value)">
+                    <div class="history-del-btn" onclick="deleteDataPoint(${sIdx}, ${p.id})">✕</div>
+                `;
+                container.appendChild(row);
+            });
+        });
+
+        if(!hasData) container.innerHTML = '<div style="color:#555; font-size:0.8rem; text-align:center;">No data points recorded yet.</div>';
+    }
+
     function createVariable() {
         if(!activeGoalId) return;
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
@@ -737,6 +894,26 @@
         saveAndRender();
         renderManageSection();
         renderMultiGraph();
+        renderDataHistory();
+    }
+
+    function deleteVariable(idx) {
+        if(!activeGoalId) return;
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        
+        // Prevent deleting the last variable
+        if (goal.datasets.length <= 1) {
+            showToast("Must have at least one variable.");
+            return;
+        }
+
+        if(confirm(`Delete variable "${goal.datasets[idx].label}" and all its data?`)) {
+            goal.datasets.splice(idx, 1);
+            saveAndRender();
+            renderManageSection();
+            renderMultiGraph();
+            renderDataHistory();
+        }
     }
 
     function updateVarName(idx, val) {
@@ -745,6 +922,7 @@
         goal.datasets[idx].label = val;
         saveAndRender();
         renderMultiGraph(); // Legend update
+        renderDataHistory(); // Update headers
         updateSeriesSelectDropdown();
     }
 
@@ -754,6 +932,8 @@
         goal.datasets[idx].color = val;
         saveAndRender();
         renderMultiGraph(); // Graph line color update
+        renderManageSection(); // Update picker UI if needed
+        renderDataHistory(); // Update dots
     }
 
     function updateSeriesSelectDropdown() {
@@ -785,9 +965,33 @@
             
             saveAndRender();
             renderMultiGraph();
+            renderDataHistory();
             document.getElementById('statValue').value = '';
             showToast("Entry added.");
         }
+    }
+
+    function updateDataPoint(sIdx, pId, field, val) {
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        const point = goal.datasets[sIdx].data.find(p => p.id === pId);
+        if(point) {
+            if(field === 'value') point.value = parseFloat(val);
+            if(field === 'date') point.date = val;
+            
+            // Re-sort in case date changed
+            goal.datasets[sIdx].data.sort((a,b) => new Date(a.date) - new Date(b.date));
+            
+            saveAndRender();
+            renderMultiGraph();
+        }
+    }
+
+    function deleteDataPoint(sIdx, pId) {
+        const goal = state.longTermGoals.find(g => g.id === activeGoalId);
+        goal.datasets[sIdx].data = goal.datasets[sIdx].data.filter(p => p.id !== pId);
+        saveAndRender();
+        renderMultiGraph();
+        renderDataHistory();
     }
 
     function renderMultiGraph() {
@@ -795,6 +999,7 @@
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
         const svg = document.getElementById('graphSvg');
         const legend = document.getElementById('graphLegend');
+        const tooltip = document.getElementById('graphTooltip');
         
         svg.innerHTML = '';
         legend.innerHTML = '';
@@ -830,24 +1035,21 @@
         
         const minTime = Math.min(...dates);
         const maxTime = Math.max(...dates);
-        const minVal = 0; // Always start Y at 0 for context, or Math.min(...values) * 0.9 for zoom
-        const maxVal = Math.max(...values) * 1.1; // Add 10% headroom
+        const minVal = 0; 
+        const maxVal = Math.max(...values) * 1.1; 
 
-        // Draw Grid & Axes
         // Y-Axis Lines (4 lines)
         for(let i=0; i<=4; i++) {
             const yRatio = i / 4;
             const y = (height - pad) - (graphH * yRatio);
             const valLabel = Math.round(minVal + ((maxVal - minVal) * yRatio));
             
-            // Line
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', pad); line.setAttribute('y1', y);
             line.setAttribute('x2', width - pad); line.setAttribute('y2', y);
             line.setAttribute('class', 'grid-line');
             svg.appendChild(line);
 
-            // Label
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', 5); text.setAttribute('y', y + 3);
             text.setAttribute('class', 'axis-text');
@@ -855,7 +1057,6 @@
             svg.appendChild(text);
         }
 
-        // Helper to get X, Y coords
         const getX = (dateStr) => {
             const t = new Date(dateStr).getTime();
             const pct = (t - minTime) / (maxTime - minTime);
@@ -866,37 +1067,66 @@
             return (height - pad) - (pct * graphH);
         };
 
-        // Draw Lines
+        // Draw Lines & Dots
         goal.datasets.forEach((ds) => {
             if(ds.data.length === 0) return;
             
+            // Path
             let pathD = `M ${getX(ds.data[0].date)} ${getY(ds.data[0].value)}`;
-            ds.data.forEach(p => {
-                pathD += ` L ${getX(p.date)} ${getY(p.value)}`;
-            });
+            ds.data.forEach(p => { pathD += ` L ${getX(p.date)} ${getY(p.value)}`; });
 
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', pathD);
-            path.setAttribute('stroke', ds.color); // Use dynamic color
+            path.setAttribute('stroke', ds.color);
             path.setAttribute('class', 'data-line');
             svg.appendChild(path);
+            
+            // Dots + Hover Tooltip
+            ds.data.forEach(p => {
+                const cx = getX(p.date);
+                const cy = getY(p.value);
+                
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', cx); circle.setAttribute('cy', cy);
+                circle.setAttribute('r', 4);
+                circle.setAttribute('fill', ds.color);
+                circle.setAttribute('class', 'data-dot');
+                
+                // Tooltip Events
+                circle.addEventListener('mouseenter', (e) => {
+                    tooltip.innerHTML = `
+                        <div style="font-weight:bold; color:${ds.color}">${ds.label}</div>
+                        <div>Date: ${new Date(p.date).toLocaleDateString()}</div>
+                        <div>Value: ${p.value}</div>
+                    `;
+                    tooltip.style.left = (e.offsetX) + 'px';
+                    tooltip.style.top = (e.offsetY - 10) + 'px';
+                    tooltip.classList.add('visible');
+                });
+                
+                circle.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('visible');
+                });
+                
+                svg.appendChild(circle);
+            });
         });
 
-        // X-Axis Labels (First and Last date)
-        const dateFmt = (d) => new Date(d).toLocaleDateString(undefined, {month:'short', day:'numeric'});
-        
-        const startText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        startText.setAttribute('x', pad); startText.setAttribute('y', height - 10);
-        startText.setAttribute('class', 'axis-text');
-        startText.textContent = dateFmt(minTime);
-        svg.appendChild(startText);
-
-        const endText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        endText.setAttribute('x', width - pad); endText.setAttribute('y', height - 10);
-        endText.setAttribute('class', 'axis-text');
-        endText.setAttribute('text-anchor', 'end');
-        endText.textContent = dateFmt(maxTime);
-        svg.appendChild(endText);
+        // X-Axis Labels (5 Ticks)
+        const totalDuration = maxTime - minTime;
+        for(let i=0; i<=4; i++) {
+             const t = minTime + (totalDuration * (i/4));
+             const x = pad + (graphW * (i/4));
+             const dateStr = new Date(t).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+             
+             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+             text.setAttribute('x', x); 
+             text.setAttribute('y', height - 10);
+             text.setAttribute('class', 'axis-text');
+             text.setAttribute('text-anchor', 'middle');
+             text.textContent = dateStr;
+             svg.appendChild(text);
+        }
 
         renderLegend(goal);
     }
@@ -905,9 +1135,7 @@
         const legend = document.getElementById('graphLegend');
         legend.innerHTML = '';
         goal.datasets.forEach((ds) => {
-             // HIDE "New Variable" from legend!
              if(ds.label === 'New Variable') return;
-
              const div = document.createElement('div');
              div.className = 'legend-item';
              div.innerHTML = `<div class="legend-dot" style="background:${ds.color}"></div>${ds.label}`;
@@ -1297,6 +1525,8 @@
                     state = data.record; 
                     if (!state.longTermGoals) state.longTermGoals = []; 
                     if (!state.dailyRoutine) state.dailyRoutine = [];
+                    if (!state.monthNotes) state.monthNotes = {};
+                    
                     // Ensure dataset structure exists on older goals
                     state.longTermGoals.forEach(g => { 
                          if(!g.datasets) {
@@ -1504,7 +1734,7 @@
     function updateDebugId(id) { document.getElementById('debugBinId').innerText = `ID: ${id || 'None'}`; }
 
     function clearAllData() {
-        if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [], dailyRoutine: [] }; saveAndRender(); addSyncLog("Local history wiped.");}
+        if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {} }; saveAndRender(); addSyncLog("Local history wiped.");}
     }
 
     // --- Task Logic ---
@@ -1638,15 +1868,6 @@
     function deleteGoal(id) {
         state.longTermGoals = state.longTermGoals.filter(g => g.id !== id);
         saveAndRender();
-    }
-
-    function saveGoalNotes() {
-        if(activeGoalId) {
-            const txt = document.getElementById('noteText').value;
-            state.longTermGoals = state.longTermGoals.map(g => g.id === activeGoalId ? { ...g, notes: txt } : g);
-            saveAndRender();
-            closeNotesModal();
-        }
     }
 
     function addMilestone(goalId) {
@@ -1901,7 +2122,18 @@
         ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].forEach((name, mIdx) => {
             const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
             let monthTotal = 0, daysLogged = 0;
-            let monthHtml = `<div class="month-card"><div class="month-title"><span>${name}</span><span id="m-pct-${mIdx}">0%</span></div><div class="month-days">`;
+            const monthKey = `${year}-${mIdx}`;
+            
+            // Month Header with Edit Icon
+            let monthHtml = `<div class="month-card">
+                <div class="month-title">
+                    <div class="month-name-btn" onclick="openRichTextModal('month', '${monthKey}')">
+                       ${name} <span>✎</span>
+                    </div>
+                    <span id="m-pct-${mIdx}">0%</span>
+                </div>
+                <div class="month-days">`;
+                
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateKey = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const dayData = state.dailyData[dateKey];
@@ -1971,7 +2203,7 @@
 
     // Keyboard Shortcuts
     document.addEventListener('keydown', (e) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return; 
+        if (e.target.tagName === 'INPUT' || (e.target.tagName === 'DIV' && e.target.isContentEditable)) return; 
         
         if (e.key.toLowerCase() === 'f') {
             e.preventDefault();
@@ -1983,7 +2215,7 @@
             document.getElementById('habitInput').focus();
         }
         else if (e.key === 'Escape') {
-            closeSyncModal(); closeGoalModal(); closeNotesModal(); closeMilestoneModal(); closeRoutineModal(); closeDailyRoutineModal(); closeCustomTimerModal(); closeStatsModal();
+            closeSyncModal(); closeGoalModal(); closeRichTextModal(); closeMilestoneModal(); closeRoutineModal(); closeDailyRoutineModal(); closeCustomTimerModal(); closeStatsModal();
         }
     });
 
