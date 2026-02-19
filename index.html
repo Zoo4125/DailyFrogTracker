@@ -229,9 +229,6 @@
         
         @media (max-width: 600px) { 
             .goal-card { flex: 0 0 100%; } 
-            
-            /* MOBILE BUTTON COLORS override */
-            .mobile-blue { border-color: var(--primary) !important; color: var(--primary) !important; }
         }
 
         .goal-card.done { border-color: var(--success); opacity: 0.7; }
@@ -458,8 +455,8 @@
     </div>
 
     <div class="input-group">
-        <input type="text" id="frogInput" placeholder="Set today's BIG FROG (one per day)...">
-        <input type="text" id="habitInput" placeholder="Add another task...">
+        <input type="text" id="frogInput" placeholder="Set today's BIG FROG (one per day)..." enterkeyhint="done">
+        <input type="text" id="habitInput" placeholder="Add another task..." enterkeyhint="done">
     </div>
 
     <div class="board">
@@ -516,9 +513,9 @@
 
         <div class="button-row">
             <button onclick="playStretch()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Stretch</button>
-            <button onclick="playChillVibe()" class="tool-btn mobile-blue" style="border-color: var(--success); color: var(--success);">Chill</button>
+            <button onclick="playChillVibe()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Chill</button>
             <a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Meditate</a>
-            <a href="mileage.html" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Mileage</a>
+            <a href="mileage.html" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Mileage</a>
         </div>
 
         <div id="frogCounter">0 Frogs Eaten</div>
@@ -1241,7 +1238,8 @@
             if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
             
             state.dailyRoutine.forEach(taskText => {
-                state.dailyData[key].habits.push({ id: Date.now() + Math.random(), text: taskText, done: false, col: 1, isFrog: false });
+                // UPDATE: Ensure ID is an integer to prevent drag-and-drop bug
+                state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false });
             });
             
             saveAndRender();
@@ -1256,7 +1254,8 @@
     function addSingleRoutineTask(taskText) {
         const key = getTodayKey(viewingDate);
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
-        state.dailyData[key].habits.push({ id: Date.now() + Math.random(), text: taskText, done: false, col: 1, isFrog: false });
+        // UPDATE: Ensure ID is an integer
+        state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false });
         saveAndRender();
         showToast(`Added "${taskText}" to Today!`);
     }
@@ -1269,7 +1268,8 @@
                 if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
                 
                 goal.routine.forEach(taskText => {
-                    state.dailyData[key].habits.push({ id: Date.now() + Math.random(), text: taskText, done: false, col: 1, isFrog: false });
+                    // UPDATE: Ensure ID is an integer
+                    state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false });
                 });
                 
                 saveAndRender();
@@ -1329,7 +1329,8 @@
     }
 
     function playStretch() { window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); }
-    function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=450,height=400'); }
+    // UPDATE: Changed popup dimensions
+    function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=400,height=750,left=50,top=50'); }
 
     function playChime() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1745,6 +1746,8 @@
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
         state.dailyData[key].habits.push({ id: Date.now(), text: input.value, done: false, col: 1, isFrog: false });
         input.value = ''; saveAndRender();
+        // UPDATE: Drops keyboard focus on mobile after submitting task
+        input.blur();
     }
 
     function addFrog() {
@@ -1753,6 +1756,8 @@
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
         state.dailyData[key].habits.unshift({ id: Date.now(), text: input.value, done: false, col: 1, isFrog: true });
         input.value = ''; saveAndRender();
+        // UPDATE: Drops keyboard focus on mobile after submitting frog
+        input.blur(); 
     }
 
     function requestDelete(btn, id) {
@@ -2220,8 +2225,21 @@
         }
     });
 
-    document.getElementById('habitInput').addEventListener('keypress', e => e.key === 'Enter' && addHabit());
-    document.getElementById('frogInput').addEventListener('keypress', e => e.key === 'Enter' && addFrog());
+    // UPDATE: Changed to keydown, added preventDefault() to stop jumping focus, and blur() to drop keyboard.
+    document.getElementById('habitInput').addEventListener('keydown', e => {
+        if(e.key === 'Enter') {
+            e.preventDefault();
+            addHabit();
+        }
+    });
+    
+    document.getElementById('frogInput').addEventListener('keydown', e => {
+        if(e.key === 'Enter') {
+            e.preventDefault();
+            addFrog();
+        }
+    });
+
     document.getElementById('newGoalText').addEventListener('keypress', e => e.key === 'Enter' && confirmAddGoal());
 
     // START ON LOAD
