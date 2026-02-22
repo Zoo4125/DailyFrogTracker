@@ -532,6 +532,10 @@
             <button onclick="playStretch()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Stretch</button>
             <button onclick="playChillVibe()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Chill</button>
             <a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Meditate</a>
+        </div>
+        
+        <div class="button-row" style="margin-top: 10px;">
+            <button id="btnDayOffToggle" onclick="toggleDayOff()" class="tool-btn" style="border-color: var(--milestone); color: var(--milestone);">Take Day Off 💤</button>
             <a href="mileage.html" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Mileage</a>
         </div>
 
@@ -642,7 +646,7 @@
     let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {} };
     if (!state.longTermGoals || !Array.isArray(state.longTermGoals)) state.longTermGoals = []; 
     if (!state.dailyRoutine) state.dailyRoutine = [];
-    if (!state.monthNotes) state.monthNotes = {}; // New storage for month notes
+    if (!state.monthNotes) state.monthNotes = {}; 
 
     // --- UNIQUE DEVICE ID ---
     const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9);
@@ -659,9 +663,19 @@
     let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
     let activeGoalId = null;
     let currentGoalIdForMilestone = null;
-    let activeRichContext = null; // 'goal' or 'month'
+    let activeRichContext = null; 
     let activeRichId = null;
     let pollInterval = null; 
+
+    // --- DAY OFF LOGIC ---
+    function toggleDayOff() {
+        const key = getTodayKey(viewingDate);
+        if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+        
+        state.dailyData[key].isDayOff = !state.dailyData[key].isDayOff;
+        saveAndRender();
+        showToast(state.dailyData[key].isDayOff ? "Day off set! 💤" : "Day off removed.");
+    }
 
     // --- Visual Rewards Logic ---
     function triggerPctDrop(amount, isFrog, is100) {
@@ -679,13 +693,13 @@
 
     function triggerFrogworks() {
         const container = document.getElementById('firework-container');
-        const numBursts = 6 + Math.floor(Math.random() * 3); // Spawns 6 to 8 bursts minimum
+        const numBursts = 6 + Math.floor(Math.random() * 3); // 6 to 8 bursts
         
         for (let b = 0; b < numBursts; b++) {
             setTimeout(() => {
                 const centerX = (20 + Math.random() * 60) + '%';
                 const centerY = (15 + Math.random() * 35) + '%';
-                const numFrogs = 8 + Math.floor(Math.random() * 5); // 8 to 12 frogs per burst (slightly reduced)
+                const numFrogs = 8 + Math.floor(Math.random() * 5); // 8 to 12 frogs per burst
                 
                 for (let i = 0; i < numFrogs; i++) {
                     const p = document.createElement('div'); 
@@ -693,7 +707,7 @@
                     p.style.left = centerX; p.style.top = centerY;
                     p.innerText = '🐸';
                     
-                    // Size variation from 1.2rem up to 3.2rem
+                    // Variation in Size
                     const size = 1.2 + Math.random() * 2; 
                     p.style.fontSize = size + 'rem';
                     
@@ -705,7 +719,7 @@
                     container.appendChild(p); 
                     setTimeout(() => p.remove(), 1200);
                 }
-            }, b * 200); // Stagger the explosions
+            }, b * 200); 
         }
     }
 
@@ -796,7 +810,7 @@
     
     // Wrapper for old calls
     function openNotesModal(id) { openRichTextModal('goal', id); }
-    function closeNotesModal() { closeRichTextModal(); } // Just in case
+    function closeNotesModal() { closeRichTextModal(); } 
 
     function openMilestoneModal(id) {
         currentGoalIdForMilestone = id;
@@ -832,24 +846,21 @@
     function openStatsModal(id) {
         activeGoalId = id;
         document.getElementById('goalStatsModal').style.display = 'flex';
-        // Default date to today
+        
         document.getElementById('statDate').valueAsDate = new Date();
         document.getElementById('statValue').value = '';
         
-        // Populate inputs with goal data
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
         
-        // Ensure data structure exists
         if(!goal.datasets) {
              if(goal.stats) {
-                 // Migrate old data
                  goal.datasets = [{ label: "Variable 1", color: DEFAULT_COLORS[0], data: goal.stats }];
                  delete goal.stats;
              } else {
                  goal.datasets = [];
              }
         }
-        // Patch for old datasets lacking color
+        
         goal.datasets.forEach((ds, i) => {
             if(!ds.color) ds.color = DEFAULT_COLORS[i % 4];
         });
@@ -861,14 +872,12 @@
     
     function closeStatsModal() { document.getElementById('goalStatsModal').style.display = 'none'; activeGoalId = null; }
 
-    // Render the list of existing variables and the add button
     function renderManageSection() {
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
         const container = document.getElementById('variableListContainer');
         container.innerHTML = '';
 
         if(goal.datasets.length > 0) {
-            // Render existing variables
             goal.datasets.forEach((ds, i) => {
                 const row = document.createElement('div');
                 row.className = 'variable-row';
@@ -880,17 +889,14 @@
                 container.appendChild(row);
             });
             
-            // Show Add Data Section
             document.getElementById('dataEntryContainer').style.display = 'flex';
             document.getElementById('noVarsMsg').style.display = 'none';
             updateSeriesSelectDropdown();
         } else {
-            // Hide Add Data Section
             document.getElementById('dataEntryContainer').style.display = 'none';
             document.getElementById('noVarsMsg').style.display = 'block';
         }
 
-        // Toggle Add Button
         const btn = document.getElementById('createVarBtn');
         if(goal.datasets.length >= 4) {
             btn.style.display = 'none';
@@ -899,7 +905,6 @@
         }
     }
 
-    // Render Data Points List
     function renderDataHistory() {
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
         const container = document.getElementById('dataHistoryContent');
@@ -907,12 +912,10 @@
         
         let hasData = false;
         
-        // Iterate through all datasets
         goal.datasets.forEach((ds, sIdx) => {
             if(ds.data.length === 0) return;
             hasData = true;
 
-            // Header for the Series
             const header = document.createElement('div');
             header.className = 'section-header';
             header.style.color = ds.color;
@@ -920,14 +923,12 @@
             header.innerText = ds.label;
             container.appendChild(header);
 
-            // Sort data by date (newest first for editing)
             const sortedData = [...ds.data].sort((a,b) => new Date(b.date) - new Date(a.date));
 
             sortedData.forEach(p => {
                 const row = document.createElement('div');
                 row.className = 'history-row';
                 
-                // We need the ORIGINAL index to delete properly, but id is safer
                 row.innerHTML = `
                     <div class="history-dot" style="background:${ds.color}"></div>
                     <input type="date" class="history-input" style="width:110px;" value="${p.date}" onchange="updateDataPoint(${sIdx}, ${p.id}, 'date', this.value)">
@@ -962,7 +963,6 @@
         if(!activeGoalId) return;
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
         
-        // Prevent deleting the last variable
         if (goal.datasets.length <= 1) {
             showToast("Must have at least one variable.");
             return;
@@ -982,8 +982,8 @@
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
         goal.datasets[idx].label = val;
         saveAndRender();
-        renderMultiGraph(); // Legend update
-        renderDataHistory(); // Update headers
+        renderMultiGraph(); 
+        renderDataHistory(); 
         updateSeriesSelectDropdown();
     }
 
@@ -992,9 +992,9 @@
         const goal = state.longTermGoals.find(g => g.id === activeGoalId);
         goal.datasets[idx].color = val;
         saveAndRender();
-        renderMultiGraph(); // Graph line color update
-        renderManageSection(); // Update picker UI if needed
-        renderDataHistory(); // Update dots
+        renderMultiGraph(); 
+        renderManageSection(); 
+        renderDataHistory(); 
     }
 
     function updateSeriesSelectDropdown() {
@@ -1009,7 +1009,7 @@
             opt.innerText = ds.label;
             select.appendChild(opt);
         });
-        // Try to keep selection
+        
         if(currentVal && currentVal < goal.datasets.length) select.value = currentVal;
     }
 
@@ -1039,7 +1039,6 @@
             if(field === 'value') point.value = parseFloat(val);
             if(field === 'date') point.date = val;
             
-            // Re-sort in case date changed
             goal.datasets[sIdx].data.sort((a,b) => new Date(a.date) - new Date(b.date));
             
             saveAndRender();
@@ -1070,7 +1069,6 @@
              return;
         }
 
-        // Flatten data to find min/max
         let allPoints = [];
         goal.datasets.forEach(ds => {
             ds.data.forEach(p => allPoints.push(p));
@@ -1078,19 +1076,16 @@
 
         if(allPoints.length < 2) {
              svg.innerHTML = '<text x="50%" y="50%" fill="#555" text-anchor="middle" font-size="12">Add more data to see graph</text>';
-             // Still render legend
              renderLegend(goal);
              return;
         }
 
-        // SVG Dimensions
         const width = svg.clientWidth || 600;
         const height = svg.clientHeight || 300;
         const pad = 40;
         const graphW = width - (pad * 2);
         const graphH = height - (pad * 2);
 
-        // Calculate Ranges
         const dates = allPoints.map(p => new Date(p.date).getTime());
         const values = allPoints.map(p => p.value);
         
@@ -1099,7 +1094,6 @@
         const minVal = 0; 
         const maxVal = Math.max(...values) * 1.1; 
 
-        // Y-Axis Lines (4 lines)
         for(let i=0; i<=4; i++) {
             const yRatio = i / 4;
             const y = (height - pad) - (graphH * yRatio);
@@ -1128,11 +1122,9 @@
             return (height - pad) - (pct * graphH);
         };
 
-        // Draw Lines & Dots
         goal.datasets.forEach((ds) => {
             if(ds.data.length === 0) return;
             
-            // Path
             let pathD = `M ${getX(ds.data[0].date)} ${getY(ds.data[0].value)}`;
             ds.data.forEach(p => { pathD += ` L ${getX(p.date)} ${getY(p.value)}`; });
 
@@ -1142,7 +1134,6 @@
             path.setAttribute('class', 'data-line');
             svg.appendChild(path);
             
-            // Dots + Hover Tooltip
             ds.data.forEach(p => {
                 const cx = getX(p.date);
                 const cy = getY(p.value);
@@ -1153,7 +1144,6 @@
                 circle.setAttribute('fill', ds.color);
                 circle.setAttribute('class', 'data-dot');
                 
-                // Tooltip Events
                 circle.addEventListener('mouseenter', (e) => {
                     tooltip.innerHTML = `
                         <div style="font-weight:bold; color:${ds.color}">${ds.label}</div>
@@ -1173,7 +1163,6 @@
             });
         });
 
-        // X-Axis Labels (5 Ticks)
         const totalDuration = maxTime - minTime;
         for(let i=0; i<=4; i++) {
              const t = minTime + (totalDuration * (i/4));
@@ -1357,10 +1346,8 @@
             return;
         }
 
-        // 1. Remove incomplete from current day
         state.dailyData[currentKey].habits = habits.filter(h => h.done);
 
-        // 2. Add to tomorrow
         let tomorrow = new Date(viewingDate); 
         tomorrow.setDate(tomorrow.getDate() + 1);
         const nextKey = getTodayKey(tomorrow);
@@ -1371,7 +1358,6 @@
             state.dailyData[nextKey].habits.push({ ...h, col: 1 }); 
         });
 
-        // 3. Save and re-render current day (Instant vanish)
         saveAndRender();
         showToast(`Swept ${incomplete.length} tasks to tomorrow.`);
     }
@@ -1389,7 +1375,7 @@
     }
 
     function playStretch() { window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); }
-    function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=400,height=730,left=50,top=50'); }
+    function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=400,height=750,left=50,top=50'); }
 
     function playChime() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1505,7 +1491,6 @@
     function enableFocusMode() { document.body.classList.add('focus-mode'); }
     function disableFocusMode() { document.body.classList.remove('focus-mode'); }
 
-    // Custom Timer Modal
     function openCustomTimerModal() {
         if(activeTimer.id === 'timerCustom') { togglePause(); return; }
         document.getElementById('customTimerModal').style.display = 'flex';
@@ -1588,7 +1573,6 @@
                     if (!state.dailyRoutine) state.dailyRoutine = [];
                     if (!state.monthNotes) state.monthNotes = {};
                     
-                    // Ensure dataset structure exists on older goals
                     state.longTermGoals.forEach(g => { 
                          if(!g.datasets) {
                              if(g.stats) g.datasets = [{label:'Variable 1', color:'#f472b6', data: g.stats}];
@@ -1608,19 +1592,18 @@
         }
     }
 
-    // --- WAKE LOCK & VISIBILITY (FIXES THE REFRESH ISSUE) ---
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible' && CLOUD_CONFIG.binId && !isIntentionallyPaused) {
             addSyncLog("App woken up. Checking cloud...");
             checkRemoteSignal();
-            startPassiveListener(); // Restart fresh
+            startPassiveListener(); 
         }
     });
 
     window.addEventListener('focus', () => {
         if (CLOUD_CONFIG.binId && !isIntentionallyPaused) {
             checkRemoteSignal();
-            startPassiveListener(); // Restart fresh
+            startPassiveListener(); 
         }
     });
 
@@ -1630,17 +1613,12 @@
         }
     }, {passive: true});
 
-
-    // --- ALWAYS-ON PASSIVE LISTENER (RECEIVER) ---
     function startPassiveListener() {
         if (remoteListenInterval) clearInterval(remoteListenInterval);
         if(!CLOUD_CONFIG.binId) return;
 
         document.getElementById('syncPulse').classList.add('pulsing');
-        
-        // Check every 15 seconds
         remoteListenInterval = setInterval(checkRemoteSignal, 15000);
-        // We do NOT call checkRemoteSignal() here to avoid spamming the log if they just touch the screen.
     }
 
     function stopPassiveListener() {
@@ -1655,7 +1633,6 @@
             statusEl.classList.add('blink-blue');
             statusEl.innerText = "Cloud: Checking...";
 
-            // CACHE NUKER FIX: cache: 'no-store' + Pragma headers
             const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
                 method: 'GET',
                 headers: { 
@@ -1673,10 +1650,7 @@
             
             const remoteState = data.record || data;
 
-            // IF REQUEST FOUND (Receiver Logic)
             if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
-                
-                // ECHO PREVENTION: IGNORE MY OWN REQUEST
                 if (remoteState._signalSource === DEVICE_ID) return; 
 
                 addSyncLog("Signal Received: Remote device requested upload.");
@@ -1686,7 +1660,6 @@
                 statusEl.innerText = "Cloud: Uploading...";
                 document.getElementById('uploadingModal').style.display = 'flex';
                 
-                // UPLOAD LOCAL DATA + SET SIGNAL TO COMPLETE
                 const payload = { ...state, _remoteSignal: 'UPLOAD_COMPLETE' };
                 await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
                     method: 'PUT',
@@ -1708,13 +1681,11 @@
         }
     }
 
-    // --- SENDER LOGIC (PHONE) ---
     async function sendRemoteSignal() {
         if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
         showToast("Sending Signal to Remote...");
         addSyncLog("Sent Upload Request to Remote.");
         
-        // PAUSE OUR OWN LISTENER
         isIntentionallyPaused = true;
         stopPassiveListener();
 
@@ -1743,7 +1714,6 @@
             
             showToast("Signal Sent. Waiting for remote to reply...");
             
-            // START POLLING FOR COMPLETION
             if (pollInterval) clearInterval(pollInterval);
             let attempts = 0;
             pollInterval = setInterval(async () => {
@@ -1833,7 +1803,6 @@
 
     function deleteHabit(id) { const key = getTodayKey(viewingDate); state.dailyData[key].habits = state.dailyData[key].habits.filter(h => h.id !== id); saveAndRender(); }
     
-    // UPDATE: Rewrote toggleHabit to trigger visual rewards
     function toggleHabit(id) { 
         const key = getTodayKey(viewingDate); 
         let habits = state.dailyData[key].habits;
@@ -1847,7 +1816,6 @@
             return h;
         });
         
-        // Trigger visual rewards if the task was just marked as done
         if (changedHabit && changedHabit.done) {
             const total = habits.length;
             const doneCount = state.dailyData[key].habits.filter(h => h.done).length;
@@ -1993,7 +1961,6 @@
         }
     }
 
-    // Milestone Drag & Drop (Vertical)
     let draggedMs = null;
     let sourceGoalId = null;
 
@@ -2109,28 +2076,57 @@
     function saveAndRender(shouldRenderBoard = true) {
         const key = getTodayKey(viewingDate);
         const dayData = state.dailyData[key] || { habits: [], percent: 0 };
-        const total = dayData.habits.length; const doneCount = dayData.habits.filter(h => h.done).length;
-        dayData.percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
         
-        document.getElementById('frogInput').style.display = dayData.habits.some(h => h.isFrog) ? 'none' : 'block';
+        // --- Day Off Button Logic ---
+        const btnDayOff = document.getElementById('btnDayOffToggle');
+        if (dayData.isDayOff) {
+            btnDayOff.innerText = "Resume Day";
+            btnDayOff.style.color = "var(--danger)";
+            btnDayOff.style.borderColor = "var(--danger)";
+        } else {
+            btnDayOff.innerText = "Take Day Off";
+            btnDayOff.style.color = "var(--milestone)";
+            btnDayOff.style.borderColor = "var(--milestone)";
+        }
+
+        // Setup Main UI depending on if it's a day off
+        const mainEl = document.getElementById('mainPercent');
+        const frogLabel = document.getElementById('frogLabel');
+        
+        if (dayData.isDayOff) {
+            mainEl.innerText = '💤';
+            mainEl.style.fontSize = '5rem';
+            mainEl.classList.remove('complete');
+            frogLabel.innerText = "DAY OFF";
+            updateQuote(false); 
+        } else {
+            const total = dayData.habits ? dayData.habits.length : 0; 
+            const doneCount = dayData.habits ? dayData.habits.filter(h => h.done).length : 0;
+            dayData.percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+            
+            mainEl.innerText = dayData.percent + '%';
+            mainEl.style.fontSize = '6rem';
+            frogLabel.innerText = "Today's Frog";
+            
+            const wasComplete = mainEl.classList.contains('complete');
+            if (dayData.percent === 100 && total > 0) {
+                if (!wasComplete) triggerFireworks();
+                mainEl.classList.add('complete');
+                updateQuote(true);
+            } else {
+                mainEl.classList.remove('complete');
+                updateQuote(false);
+            }
+        }
+        
+        // Hide frog input if a frog already exists
+        document.getElementById('frogInput').style.display = (dayData.habits && dayData.habits.some(h => h.isFrog)) ? 'none' : 'block';
         
         document.getElementById('dateDisplay').innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-        
-        const mainEl = document.getElementById('mainPercent');
-        const wasComplete = mainEl.classList.contains('complete');
-        mainEl.innerText = dayData.percent + '%';
-        if (dayData.percent === 100 && total > 0) {
-            if (!wasComplete) triggerFireworks(); // Standard particle explosion
-            mainEl.classList.add('complete');
-            updateQuote(true);
-        } else {
-            mainEl.classList.remove('complete');
-            updateQuote(false);
-        }
 
         let totalFrogs = 0;
         Object.values(state.dailyData).forEach(d => {
-            if(d.habits) {
+            if(d.habits && !d.isDayOff) {
                 d.habits.forEach(h => { if(h.isFrog && h.done) totalFrogs++; });
             }
         });
@@ -2138,7 +2134,7 @@
         if(frogCounter) frogCounter.innerText = `${totalFrogs} Frogs Eaten`;
 
         state.dailyData[key] = dayData; localStorage.setItem('discipline_v12', JSON.stringify(state));
-        if (shouldRenderBoard) renderBoard(dayData.habits); 
+        if (shouldRenderBoard) renderBoard(dayData.habits || []); 
         renderYear();
         renderGoals(); 
     }
@@ -2215,7 +2211,6 @@
             let monthTotal = 0, daysLogged = 0;
             const monthKey = `${year}-${mIdx}`;
             
-            // Month Header with Edit Icon
             let monthHtml = `<div class="month-card">
                 <div class="month-title">
                     <div class="month-name-btn" onclick="openRichTextModal('month', '${monthKey}')">
@@ -2229,29 +2224,43 @@
                 const dateKey = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 const dayData = state.dailyData[dateKey];
                 
-                let score = 0;
-                let hasFrogAndDone = false;
-                if (dayData && dayData.habits && dayData.habits.length > 0) {
-                    const totalTasks = dayData.habits.length;
-                    const doneTasks = dayData.habits.filter(h => h.done).length;
-                    score = Math.round((doneTasks / totalTasks) * 100);
-                    hasFrogAndDone = dayData.habits.some(h => h.isFrog && h.done);
-                    monthTotal += score; 
-                    daysLogged++;
-                }
-
                 let bgStyle = 'background: rgba(255, 255, 255, 0.05)';
-                if (score === 100) {
-                    bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);';
-                } else if (score > 0) {
-                    bgStyle = `background: rgba(59, 130, 246, ${0.2 + (score/100)*0.8})`;
+                let emoji = '';
+                let dataPctText = '';
+
+                // Day Off Logic
+                if (dayData && dayData.isDayOff) {
+                    bgStyle = 'background: rgba(59, 130, 246, 0.3); border: 1px solid var(--primary);';
+                    emoji = '💤';
+                    dataPctText = 'Day Off';
+                } else {
+                    let score = 0;
+                    let hasFrogAndDone = false;
+                    
+                    if (dayData && dayData.habits && dayData.habits.length > 0) {
+                        const totalTasks = dayData.habits.length;
+                        const doneTasks = dayData.habits.filter(h => h.done).length;
+                        score = Math.round((doneTasks / totalTasks) * 100);
+                        hasFrogAndDone = dayData.habits.some(h => h.isFrog && h.done);
+                        monthTotal += score; 
+                        daysLogged++;
+                    }
+
+                    if (score === 100) {
+                        bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);';
+                    } else if (score > 0) {
+                        bgStyle = `background: rgba(59, 130, 246, ${0.2 + (score/100)*0.8})`;
+                    }
+                    
+                    emoji = hasFrogAndDone ? '🐸' : '';
+                    dataPctText = `${score}% Completed`;
                 }
 
                 monthHtml += `<div class="day-sq ${dateKey === getTodayKey(viewingDate) ? 'active' : ''}" 
                                    onclick="jumpToDate('${dateKey}')" 
                                    style="${bgStyle}"
-                                   data-pct="${score}% Completed">
-                                   ${hasFrogAndDone ? '🐸' : ''}</div>`;
+                                   data-pct="${dataPctText}">
+                                   ${emoji}</div>`;
             }
             grid.innerHTML += monthHtml + `</div></div>`;
             
@@ -2259,25 +2268,6 @@
             const label = document.getElementById(`m-pct-${mIdx}`);
             if (label) label.innerText = finalAvg + '%';
         });
-    }
-
-    function triggerFireworks() {
-        const container = document.getElementById('firework-container');
-        for (let b = 0; b < 4; b++) {
-            setTimeout(() => {
-                const centerX = (20 + Math.random() * 60) + '%';
-                const centerY = (15 + Math.random() * 25) + '%';
-                for (let i = 0; i < 55; i++) {
-                    const p = document.createElement('div'); p.className = 'particle';
-                    p.style.left = centerX; p.style.top = centerY;
-                    const angle = Math.random() * Math.PI * 2; const dist = 100 + Math.random() * 250;
-                    p.style.setProperty('--x', Math.cos(angle) * dist + 'px');
-                    p.style.setProperty('--y', Math.sin(angle) * dist + 'px');
-                    p.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
-                    container.appendChild(p); setTimeout(() => p.remove(), 1200);
-                }
-            }, b * 250);
-        }
     }
 
     // --- TIMEZONE FIX ---
