@@ -113,8 +113,8 @@
             <div class="modal-close" style="top:20px;" onclick="closeSyncModal()">✕</div>
             <div class="modal-text">Cloud Sync</div>
             <div class="modal-btns">
-                <button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Download</button>
-                <button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload</button>
+                <button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Download All Data</button>
+                <button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload All Data</button>
                 <hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;">
                 <button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button>
             </div>
@@ -331,6 +331,44 @@
             }
         }
 
+        // --- ISOLATED AUTO-DOWNLOAD ON LOAD ---
+        async function isolatedAutoDownload() {
+            if (!CLOUD_CONFIG.key || !CLOUD_CONFIG.binId) return;
+            
+            const syncIcon = document.getElementById('syncPulse');
+            syncIcon.classList.add('pulsing');
+            updateSyncStatus("Fetching...");
+            
+            try {
+                const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
+                    method: 'GET',
+                    headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' },
+                    cache: 'no-store'
+                });
+                
+                const remoteData = await resGet.json();
+                let remoteState = remoteData.record || remoteData;
+
+                // Safely extract and inject ONLY the mileage-related data
+                if (remoteState.mileage) state.mileage = remoteState.mileage;
+                if (remoteState.favStarts) state.favStarts = remoteState.favStarts;
+                if (remoteState.favDests) state.favDests = remoteState.favDests;
+                if (remoteState.favPurps) state.favPurps = remoteState.favPurps;
+                if (remoteState.mileageDefaults) state.mileageDefaults = remoteState.mileageDefaults;
+
+                saveAndRender(false); // Render, but do not trigger another upload
+                
+                updateSyncStatus("Ready");
+                syncIcon.classList.remove('pulsing');
+                showToast("Latest Mileage Downloaded.");
+            } catch (e) {
+                console.error("Auto-download failed", e);
+                updateSyncStatus("Sync Error");
+                syncIcon.classList.remove('pulsing');
+            }
+        }
+
+        // Kept for manual overriding inside the sync modal
         async function cloudSync(type) {
             if (!CLOUD_CONFIG.key) { setupCloud(); return; }
             updateSyncStatus("Syncing...");
@@ -381,14 +419,14 @@
             }
         }
 
-        // --- ISOLATED AUTO-SYNC ---
+        // --- ISOLATED AUTO-SYNC (UPLOAD) ---
         // Fetches cloud data, updates ONLY mileage, and pushes back to prevent overwriting frog tracker logic.
         function triggerIsolatedAutoSync() {
             if (!CLOUD_CONFIG.key || !CLOUD_CONFIG.binId) return;
             
             clearTimeout(autoSyncTimeout);
             
-            // Wait 2 seconds before uploading to bundle rapid changes (like deleting multiple items)
+            // Wait 10 seconds before uploading to bundle rapid changes (like deleting multiple items)
             autoSyncTimeout = setTimeout(async () => {
                 const syncIcon = document.getElementById('syncPulse');
                 syncIcon.classList.add('pulsing');
@@ -425,7 +463,7 @@
                     updateSyncStatus("Sync Error");
                     syncIcon.classList.remove('pulsing');
                 }
-            }, 2000);
+            }, 10000); // 10 second debounce
         }
 
         // --- ALWAYS-ON PASSIVE LISTENER ---
@@ -755,7 +793,10 @@
             if (CLOUD_CONFIG.key) {
                 updateSyncStatus("Ready");
                 updateDebugId(CLOUD_CONFIG.binId);
-                if(CLOUD_CONFIG.binId) startPassiveListener(); 
+                if(CLOUD_CONFIG.binId) {
+                    startPassiveListener(); 
+                    isolatedAutoDownload(); // Fetches latest mileage data as soon as you open the page!
+                }
             }
         };
     </script>
