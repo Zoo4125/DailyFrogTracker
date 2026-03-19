@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Frog Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐸</text></svg>">
     <style>
         :root { 
             --bg: #09090b; 
@@ -232,13 +233,12 @@
         .done .check::after { content: '✓'; color: white; font-weight: bold; font-size: 14px; }
         
         .action-btns { display: flex; gap: 8px; align-items: center; }
-        /* Notice move-btn is now display: none by default */
         .move-btn { color: var(--primary); cursor: pointer; font-size: 1.1rem; font-weight: bold; opacity: 0.8; transition: 0.2s; display: none; }
         .move-btn:hover { opacity: 1; transform: translateX(2px); }
         .pen-btn { color: #a1a1aa; cursor: pointer; font-size: 1rem; transition: 0.2s; } .pen-btn:hover { color: #fff; }
         .routine-btn { color: #facc15; cursor: pointer; font-size: 1rem; transition: 0.2s; } .routine-btn:hover { color: #fff; transform: scale(1.1); }
         .delete-btn { color: var(--success); opacity: 0.8; cursor: pointer; font-size: 1.1rem; transition: 0.2s; min-width: 18px; text-align: center; } .delete-btn:hover { opacity: 1; }
-        .delete-btn.confirm { color: var(--danger); font-weight: bold; opacity: 1; } /* Added red for the checkmark delete */
+        .delete-btn.confirm { color: var(--danger); font-weight: bold; opacity: 1; } 
 
         .col-selector-wrap { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; pointer-events: auto; }
         .sq-btn { width: 16px; height: 16px; border: 1px solid #3f3f46; border-radius: 4px; cursor: pointer; transition: 0.2s; background: transparent; }
@@ -267,12 +267,56 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200; 
         }
 
-        .trophy-section { width: 100%; display: flex; justify-content: center; align-items: center; gap: 30px; margin: 40px 0; }
-        .trophy-btn { font-size: 3rem; cursor: pointer; opacity: 0.3; transition: all 0.3s; user-select: none; }
-        .trophy-btn:hover { opacity: 0.8; transform: scale(1.5); text-shadow: 0 0 15px #ffd700; filter: drop-shadow(0 0 6px #ffd700); }
-        .action-icon { font-size: 1.8rem; cursor: pointer; opacity: 0.4; transition: all 0.3s; }
-        .action-icon:hover { opacity: 1; transform: scale(1.2); }
-        .bolt-btn { color: #facc15; } .broom-btn { color: #a1a1aa; } .broom-btn:hover { color: #fff; }
+        /* --- TROPHY SECTION (UNIFIED SIZES) --- */
+        .trophy-section { 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 40px; /* slightly increased gap for the larger icons */
+            margin: 40px 0; 
+        }
+        
+        .dashboard-icon { 
+            font-size: 2.5rem; /* Unified Size */
+            cursor: pointer; 
+            opacity: 0.4; 
+            transition: all 0.3s ease; 
+            user-select: none; 
+        }
+
+        /* Base colors */
+        .dashboard-icon.icon-bolt { color: #facc15; }
+        .dashboard-icon.icon-pray { color: #f472b6; }
+        .dashboard-icon.icon-trophy { filter: grayscale(0.6); } /* Give trophy base style */
+        .dashboard-icon.icon-broom { color: #a1a1aa; }
+
+        /* Hover & Glow Effects */
+        .dashboard-icon.icon-bolt:hover { 
+            opacity: 1; 
+            transform: scale(1.3); 
+            text-shadow: 0 0 15px #facc15; 
+            filter: drop-shadow(0 0 6px #facc15); 
+        }
+        .dashboard-icon.icon-pray:hover { 
+            opacity: 1; 
+            transform: scale(1.3); 
+            text-shadow: 0 0 15px #f472b6; 
+            filter: drop-shadow(0 0 6px #f472b6); 
+        }
+        .dashboard-icon.icon-trophy:hover { 
+            opacity: 1; 
+            transform: scale(1.3); 
+            text-shadow: 0 0 15px #ffd700; 
+            filter: drop-shadow(0 0 6px #ffd700) grayscale(0); 
+        }
+        .dashboard-icon.icon-broom:hover { 
+            opacity: 1; 
+            transform: scale(1.3); 
+            text-shadow: 0 0 15px #ffffff; 
+            filter: drop-shadow(0 0 6px #ffffff); 
+            color: #fff; 
+        }
 
         .goals-flex { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 1000px; padding-bottom: 20px; }
         .goal-card { flex: 0 0 calc(33.333% - 10px); min-width: 0; background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; position: relative; min-height: 100px; }
@@ -346,6 +390,29 @@
             <hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;">
             <button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button>
         </div>
+    </div>
+</div>
+
+<div id="gratitudeModal" class="modal-overlay">
+    <div class="sync-modal" style="max-width: 500px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-close" onclick="closeGratitudeModal()">✕</div>
+        <div class="alarm-title" style="color:var(--primary); font-size:1.8rem; animation:none;">Daily Gratitude</div>
+        <div class="modal-text" style="margin-bottom: 15px;">What are 3 things you are grateful for today?</div>
+
+        <div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-bottom:20px;">
+            <input type="text" id="grat1" class="custom-input" placeholder="1. ...">
+            <input type="text" id="grat2" class="custom-input" placeholder="2. ...">
+            <input type="text" id="grat3" class="custom-input" placeholder="3. ...">
+            <button onclick="saveGratitude()" class="confirm-btn">Save Today's Entries</button>
+        </div>
+
+        <hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;">
+
+        <div class="input-toggle" onclick="toggleCollapse('gratitudeHistoryBox')" style="font-size: 0.9rem;">
+            View Gratitude Journal <span>▼</span>
+        </div>
+        <div id="gratitudeHistoryBox" class="collapsible-content" style="overflow-y:auto; flex:1; text-align:left; gap:10px; max-height: 300px;">
+            </div>
     </div>
 </div>
 
@@ -505,9 +572,10 @@
     <div class="year-grid" id="yearGrid"></div>
 
     <div class="trophy-section">
-        <div class="action-icon bolt-btn" onclick="openDailyRoutineModal()" title="Daily Routine">⚡</div>
-        <div class="trophy-btn" onclick="openGoalModal()" title="Goals">🏆</div>
-        <div class="action-icon broom-btn" onclick="sweepIncompleteTasks()" title="Sweep to Tomorrow">🧹</div>
+        <div class="dashboard-icon icon-bolt" onclick="openDailyRoutineModal()" title="Daily Routine">⚡</div>
+        <div class="dashboard-icon icon-pray" onclick="openGratitudeModal()" title="Gratitude Journal">🙏</div>
+        <div class="dashboard-icon icon-trophy" onclick="openGoalModal()" title="Goals">🏆</div>
+        <div class="dashboard-icon icon-broom" onclick="sweepIncompleteTasks()" title="Sweep to Tomorrow">🧹</div>
     </div>
     
     <div class="goals-flex" id="goalsGrid"></div>
@@ -667,6 +735,77 @@
         state.dailyData[key].isDayOff = !state.dailyData[key].isDayOff;
         saveAndRender();
         showToast(state.dailyData[key].isDayOff ? "Day off set! 💤" : "Day off removed.");
+    }
+
+    // --- Gratitude Logic ---
+    function openGratitudeModal() {
+        const key = getTodayKey(viewingDate);
+        if (!state.dailyData[key]) {
+            state.dailyData[key] = { habits: [], percent: 0 };
+        }
+        const grat = state.dailyData[key].gratitude || ['', '', ''];
+
+        document.getElementById('grat1').value = grat[0] || '';
+        document.getElementById('grat2').value = grat[1] || '';
+        document.getElementById('grat3').value = grat[2] || '';
+
+        renderGratitudeHistory();
+        document.getElementById('gratitudeModal').style.display = 'flex';
+    }
+
+    function closeGratitudeModal() {
+        document.getElementById('gratitudeModal').style.display = 'none';
+    }
+
+    function saveGratitude() {
+        const key = getTodayKey(viewingDate);
+        if (!state.dailyData[key]) {
+            state.dailyData[key] = { habits: [], percent: 0 };
+        }
+
+        const g1 = document.getElementById('grat1').value.trim();
+        const g2 = document.getElementById('grat2').value.trim();
+        const g3 = document.getElementById('grat3').value.trim();
+
+        state.dailyData[key].gratitude = [g1, g2, g3];
+        saveAndRender();
+        showToast("Gratitude saved!");
+        renderGratitudeHistory();
+    }
+
+    function renderGratitudeHistory() {
+        const box = document.getElementById('gratitudeHistoryBox');
+        box.innerHTML = '';
+
+        const keys = Object.keys(state.dailyData).sort((a,b) => new Date(b) - new Date(a));
+        let hasEntries = false;
+
+        keys.forEach(k => {
+            const day = state.dailyData[k];
+            if (day.gratitude && day.gratitude.some(g => g !== '')) {
+                hasEntries = true;
+                const dateParts = k.split('-');
+                const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                const dateStr = localDate.toLocaleDateString(undefined, {weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'});
+
+                let html = `<div style="background:#111; padding:15px; border-radius:8px; border:1px solid #27272a;">`;
+                html += `<div style="font-size:0.7rem; color:var(--primary); text-transform:uppercase; font-weight:bold; margin-bottom:8px;">${dateStr}</div>`;
+                html += `<ul style="margin:0; padding-left:20px; color:#d4d4d8; font-size:0.85rem; line-height:1.5;">`;
+                
+                day.gratitude.forEach(g => {
+                    if (g) {
+                        html += `<li>${g}</li>`;
+                    }
+                });
+                
+                html += `</ul></div>`;
+                box.innerHTML += html;
+            }
+        });
+
+        if (!hasEntries) {
+            box.innerHTML = `<div style="text-align:center; color:#555; font-size:0.8rem; margin-top: 10px;">No past entries found. Start today!</div>`;
+        }
     }
 
     // --- Visual Rewards Logic ---
@@ -878,6 +1017,7 @@
                  goal.datasets = []; 
              }
         }
+        
         goal.datasets.forEach((ds, i) => { 
             if(!ds.color) ds.color = DEFAULT_COLORS[i % 4]; 
         });
@@ -964,6 +1104,7 @@
             color: DEFAULT_COLORS[goal.datasets.length], 
             data: [] 
         }); 
+        
         saveAndRender(); 
         renderManageSection(); 
         renderMultiGraph(); 
@@ -973,10 +1114,12 @@
     function deleteVariable(idx) {
         if(!activeGoalId) return; 
         const goal = state.longTermGoals.find(g => g.id == activeGoalId);
+        
         if (goal.datasets.length <= 1) { 
             showToast("Must have at least one variable."); 
             return; 
         }
+        
         if(confirm(`Delete variable "${goal.datasets[idx].label}" and all its data?`)) { 
             goal.datasets.splice(idx, 1); 
             saveAndRender(); 
@@ -990,6 +1133,7 @@
         if(!activeGoalId) return; 
         const goal = state.longTermGoals.find(g => g.id == activeGoalId); 
         goal.datasets[idx].label = val; 
+        
         saveAndRender(); 
         renderMultiGraph(); 
         renderDataHistory(); 
@@ -1000,6 +1144,7 @@
         if(!activeGoalId) return; 
         const goal = state.longTermGoals.find(g => g.id == activeGoalId); 
         goal.datasets[idx].color = val; 
+        
         saveAndRender(); 
         renderMultiGraph(); 
         renderManageSection(); 
@@ -1010,6 +1155,7 @@
         const goal = state.longTermGoals.find(g => g.id == activeGoalId); 
         const select = document.getElementById('seriesSelect'); 
         const currentVal = select.value; 
+        
         select.innerHTML = '';
         
         goal.datasets.forEach((ds, i) => { 
@@ -1033,6 +1179,7 @@
             const goal = state.longTermGoals.find(g => g.id == activeGoalId);
             goal.datasets[seriesIdx].data.push({ id: Date.now(), date: date, value: val }); 
             goal.datasets[seriesIdx].data.sort((a,b) => new Date(a.date) - new Date(b.date));
+            
             saveAndRender(); 
             renderMultiGraph(); 
             renderDataHistory(); 
@@ -1044,9 +1191,11 @@
     function updateDataPoint(sIdx, pId, field, val) {
         const goal = state.longTermGoals.find(g => g.id == activeGoalId); 
         const point = goal.datasets[sIdx].data.find(p => p.id == pId);
+        
         if(point) { 
             if(field === 'value') point.value = parseFloat(val); 
             if(field === 'date') point.date = val; 
+            
             goal.datasets[sIdx].data.sort((a,b) => new Date(a.date) - new Date(b.date)); 
             saveAndRender(); 
             renderMultiGraph(); 
@@ -1056,6 +1205,7 @@
     function deleteDataPoint(sIdx, pId) { 
         const goal = state.longTermGoals.find(g => g.id == activeGoalId); 
         goal.datasets[sIdx].data = goal.datasets[sIdx].data.filter(p => p.id != pId); 
+        
         saveAndRender(); 
         renderMultiGraph(); 
         renderDataHistory(); 
@@ -1195,6 +1345,7 @@
     function renderLegend(goal) {
         const legend = document.getElementById('graphLegend'); 
         legend.innerHTML = '';
+        
         goal.datasets.forEach((ds) => { 
             if(ds.label === 'New Variable') return; 
             const div = document.createElement('div'); 
@@ -1221,6 +1372,7 @@
         const goal = state.longTermGoals.find(g => g.id == activeGoalId); 
         const list = document.getElementById('routineList'); 
         list.innerHTML = ''; 
+        
         if(!goal.routine) goal.routine = [];
         
         goal.routine.forEach((task, idx) => { 
@@ -1272,6 +1424,7 @@
     function renderDailyRoutineList() {
         const list = document.getElementById('dailyRoutineList'); 
         list.innerHTML = '';
+        
         state.dailyRoutine.forEach((task, idx) => { 
             list.innerHTML += `
                 <div class="routine-item">
@@ -1288,6 +1441,7 @@
     function addDailyRoutineTask() { 
         const input = document.getElementById('newDailyRoutineTask'); 
         const text = input.value.trim(); 
+        
         if(text) { 
             state.dailyRoutine.push(text); 
             input.value = ''; 
@@ -1306,9 +1460,11 @@
         if(state.dailyRoutine.length > 0) {
             const key = getTodayKey(viewingDate); 
             if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+            
             state.dailyRoutine.forEach(taskText => { 
                 state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false }); 
             });
+            
             saveAndRender(); 
             showToast(`Added ${state.dailyRoutine.length} tasks to Today!`); 
             closeDailyRoutineModal();
@@ -1320,6 +1476,7 @@
     function addSingleRoutineTask(taskText) {
         const key = getTodayKey(viewingDate); 
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+        
         state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false }); 
         saveAndRender(); 
         showToast(`Added "${taskText}" to Today!`);
@@ -1331,9 +1488,11 @@
             if(goal && goal.routine && goal.routine.length > 0) {
                 const key = getTodayKey(viewingDate); 
                 if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+                
                 goal.routine.forEach(taskText => { 
                     state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false }); 
                 });
+                
                 saveAndRender(); 
                 showToast(`Added ${goal.routine.length} tasks to Today!`); 
                 closeRoutineModal();
@@ -1349,6 +1508,7 @@
             showToast("No incomplete tasks."); 
             return; 
         }
+        
         const habits = state.dailyData[currentKey].habits; 
         const incomplete = habits.filter(h => !h.done);
         
@@ -1363,9 +1523,11 @@
         const nextKey = getTodayKey(tomorrow);
         
         if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
+        
         incomplete.forEach(h => { 
             state.dailyData[nextKey].habits.push({ ...h, col: 1 }); 
         });
+        
         saveAndRender(); 
         showToast(`Swept ${incomplete.length} tasks to tomorrow.`);
     }
@@ -1382,8 +1544,13 @@
         } 
     }
     
-    function playStretch() { window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); }
-    function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=400,height=750,left=50,top=50'); }
+    function playStretch() { 
+        window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); 
+    }
+    
+    function playChillVibe() { 
+        window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=400,height=750,left=50,top=50'); 
+    }
     
     function playChime() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1391,10 +1558,12 @@
         [174, 348, 522].forEach((freq, i) => { 
             const osc = audioCtx.createOscillator(); 
             const gain = audioCtx.createGain(); 
+            
             osc.frequency.setValueAtTime(freq, now); 
             gain.gain.setValueAtTime(0, now); 
             gain.gain.linearRampToValueAtTime(0.1, now + 0.05); 
             gain.gain.exponentialRampToValueAtTime(0.001, now + 3); 
+            
             osc.connect(gain); 
             gain.connect(audioCtx.destination); 
             osc.start(now); 
@@ -1403,8 +1572,11 @@
     }
 
     function handleTimerClick(minutes, btnId) { 
-        if (activeTimer.id !== btnId) startTimer(minutes, btnId); 
-        else togglePause(); 
+        if (activeTimer.id !== btnId) {
+            startTimer(minutes, btnId); 
+        } else {
+            togglePause(); 
+        }
     }
     
     function startTimer(minutes, btnId) { 
@@ -1412,11 +1584,14 @@
         activeTimer.id = btnId; 
         activeTimer.totalSeconds = minutes * 60; 
         activeTimer.isPaused = false; 
+        
         const btn = document.getElementById(btnId); 
         if(btn) btn.classList.add('active'); 
+        
         playChime(); 
         enableFocusMode(); 
         updateTimerDisplay(); 
+        
         activeTimer.interval = setInterval(tick, 1000); 
     }
     
@@ -1431,6 +1606,7 @@
     function togglePause() {
         if (!activeTimer.id) return; 
         const btn = document.getElementById(activeTimer.id);
+        
         if(activeTimer.isPaused) { 
             activeTimer.isPaused = false; 
             if(btn) btn.classList.remove('paused'); 
@@ -1479,13 +1655,14 @@
         ['timer25', 'timerCustom', 'timer5'].forEach(id => { 
             const el = document.getElementById(id); 
             el.classList.remove('active', 'paused'); 
+            
             if(val && id === activeTimer.id) { 
                 el.innerText = (typeof val === 'number') ? (val < 10 ? '0'+val+':00' : val+':00') : val; 
-            } else if (id === 'timer25') {
+            } else if (id === 'timer25') { 
                 el.innerText = "25:00"; 
-            } else if (id === 'timer5') {
+            } else if (id === 'timer5') { 
                 el.innerText = "05:00"; 
-            } else if (id === 'timerCustom') {
+            } else if (id === 'timerCustom') { 
                 el.innerText = "Custom"; 
             }
         });
@@ -1504,7 +1681,10 @@
     function disableFocusMode() { document.body.classList.remove('focus-mode'); }
     
     function openCustomTimerModal() { 
-        if(activeTimer.id === 'timerCustom') { togglePause(); return; } 
+        if(activeTimer.id === 'timerCustom') { 
+            togglePause(); 
+            return; 
+        } 
         document.getElementById('customTimerModal').style.display = 'flex'; 
         document.getElementById('customTimerInput').focus(); 
     }
@@ -1528,13 +1708,14 @@
     function setupCloud() {
         const key = prompt("Paste Master Key:"); 
         if (!key) return; 
-        const bin = prompt("Enter Bin ID (Leave blank if creating new):");
         
+        const bin = prompt("Enter Bin ID (Leave blank if creating new):");
         localStorage.setItem('sync_key', key); 
-        if (bin) {
+        
+        if (bin) { 
             localStorage.setItem('sync_bin_id', bin); 
-        } else {
-            localStorage.removeItem('sync_bin_id');
+        } else { 
+            localStorage.removeItem('sync_bin_id'); 
         }
         
         CLOUD_CONFIG = { key, binId: bin || '' }; 
@@ -1549,6 +1730,7 @@
             localStorage.removeItem('sync_key'); 
             localStorage.removeItem('sync_bin_id'); 
             CLOUD_CONFIG = { key: '', binId: '' }; 
+            
             updateSyncStatus("Unlinked"); 
             updateDebugId("None"); 
             addSyncLog("Cloud unlinked from this device."); 
@@ -1557,7 +1739,11 @@
     }
     
     async function cloudSync(type) {
-        if (!CLOUD_CONFIG.key) { setupCloud(); return; } 
+        if (!CLOUD_CONFIG.key) { 
+            setupCloud(); 
+            return; 
+        } 
+        
         updateSyncStatus("Syncing...");
         try {
             if (!CLOUD_CONFIG.binId && type === 'upload') {
@@ -1567,6 +1753,7 @@
                     body: JSON.stringify(state) 
                 });
                 const data = await res.json();
+                
                 if (data.metadata) { 
                     localStorage.setItem('sync_bin_id', data.metadata.id); 
                     CLOUD_CONFIG.binId = data.metadata.id; 
@@ -1597,7 +1784,6 @@
                             else g.datasets = []; 
                         } 
                     });
-                    
                     saveAndRender(); 
                     addSyncLog("Manual Download Completed.");
                 } else { 
@@ -1697,9 +1883,9 @@
             alert("Link cloud first!"); 
             return; 
         } 
-        showToast("Sending Signal to Remote..."); 
-        addSyncLog("Sent Upload Request to Remote.");
         
+        showToast("Sending Signal to Remote..."); 
+        addSyncLog("Sent Upload Request to Remote."); 
         isIntentionallyPaused = true; 
         stopPassiveListener();
         
@@ -1709,7 +1895,6 @@
                 headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, 
                 cache: 'no-store' 
             });
-            
             const data = await resGet.json(); 
             let payload = data.record || data; 
             payload._remoteSignal = 'UPLOAD_REQUEST'; 
@@ -1720,7 +1905,6 @@
                 headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, 
                 body: JSON.stringify(payload) 
             });
-            
             showToast("Signal Sent. Waiting for remote to reply...");
             
             if (pollInterval) clearInterval(pollInterval); 
@@ -1736,13 +1920,11 @@
                     startPassiveListener(); 
                     return; 
                 }
-                
                 const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, { 
                     method: 'GET', 
                     headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, 
                     cache: 'no-store' 
                 });
-                
                 const pollData = await pollRes.json(); 
                 const pollState = pollData.record || pollData;
                 
@@ -1763,14 +1945,19 @@
         }
     }
 
-    function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
-    function updateDebugId(id) { document.getElementById('debugBinId').innerText = `ID: ${id || 'None'}`; }
+    function updateSyncStatus(msg) { 
+        document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; 
+    }
+    
+    function updateDebugId(id) { 
+        document.getElementById('debugBinId').innerText = `ID: ${id || 'None'}`; 
+    }
     
     function clearAllData() { 
         if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { 
             state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {} }; 
             saveAndRender(); 
-            addSyncLog("Local history wiped.");
+            addSyncLog("Local history wiped."); 
         } 
     }
 
@@ -1778,7 +1965,8 @@
     function addHabit() {
         const input = document.getElementById('habitInput'); 
         if (!input.value.trim()) return; 
-        const key = getTodayKey(viewingDate);
+        
+        const key = getTodayKey(viewingDate); 
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
         
         state.dailyData[key].habits.push({ id: Date.now(), text: input.value, done: false, col: 1, isFrog: false }); 
@@ -1790,7 +1978,8 @@
     function addFrog() {
         const input = document.getElementById('frogInput'); 
         if (!input.value.trim()) return; 
-        const key = getTodayKey(viewingDate);
+        
+        const key = getTodayKey(viewingDate); 
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
         
         state.dailyData[key].habits.unshift({ id: Date.now(), text: input.value, done: false, col: 1, isFrog: true }); 
@@ -1801,6 +1990,7 @@
 
     function requestDelete(btn, id) {
         const moveBtn = document.getElementById(`move-btn-${id}`);
+        
         if (btn.classList.contains('confirm')) { 
             clearTimeout(deleteTimeouts[id]); 
             deleteHabit(id); 
@@ -1808,21 +1998,21 @@
             btn.classList.add('confirm'); 
             btn.innerText = '✓'; 
             if (moveBtn) moveBtn.style.display = 'block';
-
+            
             deleteTimeouts[id] = setTimeout(() => { 
                 btn.classList.remove('confirm'); 
                 btn.innerText = '✕'; 
-                if (moveBtn) moveBtn.style.display = 'none';
+                if (moveBtn) moveBtn.style.display = 'none'; 
             }, 3000);
         }
     }
     
     function deleteHabit(id) { 
         const key = getTodayKey(viewingDate); 
-        if (state.dailyData[key]) {
+        if (state.dailyData[key]) { 
             state.dailyData[key].habits = state.dailyData[key].habits.filter(h => h.id != id); 
             saveAndRender(); 
-        }
+        } 
     }
     
     function toggleHabit(id) { 
@@ -1830,17 +2020,17 @@
         let habits = state.dailyData[key].habits; 
         let changedHabit = null;
         
-        state.dailyData[key].habits = habits.map(h => {
+        state.dailyData[key].habits = habits.map(h => { 
             if (h.id == id) { 
                 changedHabit = {...h, done: !h.done}; 
                 return changedHabit; 
             } 
-            return h;
+            return h; 
         });
         
         if (changedHabit && changedHabit.done) {
             const total = habits.length; 
-            const doneCount = state.dailyData[key].habits.filter(h => h.done).length;
+            const doneCount = state.dailyData[key].habits.filter(h => h.done).length; 
             const pct = Math.round((1 / total) * 100); 
             const is100 = (doneCount === total);
             
@@ -1857,7 +2047,7 @@
     }
     
     function forwardHabit(id) {
-        clearTimeout(deleteTimeouts[id]);
+        clearTimeout(deleteTimeouts[id]); 
         const currentKey = getTodayKey(viewingDate); 
         const hToMove = state.dailyData[currentKey].habits.find(h => h.id == id);
         
@@ -1872,6 +2062,7 @@
     }
 
     let draggedItem = null;
+    
     function handleDragStart(e) { 
         draggedItem = this; 
         e.dataTransfer.effectAllowed = 'move'; 
@@ -1902,8 +2093,8 @@
         e.preventDefault(); 
         const newColIndex = parseInt(e.currentTarget.dataset.col); 
         const draggable = document.querySelector('.habit-item.dragging');
-        
         if(!draggable) return; 
+        
         const id = parseInt(draggable.dataset.id); 
         const key = getTodayKey(viewingDate);
         
@@ -1917,6 +2108,7 @@
         [0, 1, 2].forEach(colIdx => {
             const colEl = document.getElementById(`col-${colIdx}`); 
             const itemEls = colEl.querySelectorAll('.habit-item');
+            
             itemEls.forEach(el => { 
                 const itemId = parseInt(el.dataset.id); 
                 const item = habits.find(h => h.id == itemId); 
@@ -1926,6 +2118,7 @@
                 } 
             });
         });
+        
         state.dailyData[key].habits = newHabitsOrder; 
         saveAndRender(); 
     }
@@ -1935,25 +2128,26 @@
         return draggableElements.reduce((closest, child) => { 
             const box = child.getBoundingClientRect(); 
             const offset = y - box.top - box.height / 2; 
-            if (offset < 0 && offset > closest.offset) {
+            
+            if (offset < 0 && offset > closest.offset) { 
                 return { offset: offset, element: child }; 
-            } else {
+            } else { 
                 return closest; 
-            }
+            } 
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
-    function confirmAddGoal() {
+    function confirmAddGoal() { 
         const text = document.getElementById('newGoalText').value; 
         if (state.longTermGoals.length >= 9) { 
             showToast("Max 9 Goals reached."); 
             return; 
-        }
+        } 
         if (text) { 
             state.longTermGoals.push({ id: Date.now(), text: text, done: false, milestones: [], notes: '', routine: [], datasets: [] }); 
             saveAndRender(); 
             closeGoalModal(); 
-        }
+        } 
     }
     
     function toggleGoal(id) { 
@@ -1980,7 +2174,9 @@
         saveAndRender(); 
     }
     
-    function addMilestone(goalId) { openMilestoneModal(goalId); }
+    function addMilestone(goalId) { 
+        openMilestoneModal(goalId); 
+    }
     
     function toggleMilestone(goalId, msId) { 
         const goal = state.longTermGoals.find(g => g.id == goalId); 
@@ -2066,8 +2262,12 @@
         return draggableElements.reduce((closest, child) => { 
             const box = child.getBoundingClientRect(); 
             const offset = y - box.top - box.height / 2; 
-            if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; 
-            else return closest; 
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child }; 
+            } else {
+                return closest; 
+            } 
         }, { offset: Number.NEGATIVE_INFINITY }).element; 
     }
 
@@ -2123,83 +2323,84 @@
 
     // --- Core Render Logic ---
     function saveAndRender(shouldRenderBoard = true) {
-        const key = getTodayKey(viewingDate);
+        const key = getTodayKey(viewingDate); 
         const dayData = state.dailyData[key] || { habits: [], percent: 0 };
         
         const btnDayOff = document.getElementById('btnDayOffToggle');
-        if (dayData.isDayOff) {
-            btnDayOff.innerText = "Resume Day";
-            btnDayOff.style.color = "var(--danger)";
-            btnDayOff.style.borderColor = "var(--danger)";
-        } else {
-            btnDayOff.innerText = "Take Day Off 💤";
-            btnDayOff.style.color = "var(--milestone)";
-            btnDayOff.style.borderColor = "var(--milestone)";
+        if (dayData.isDayOff) { 
+            btnDayOff.innerText = "Resume Day"; 
+            btnDayOff.style.color = "var(--danger)"; 
+            btnDayOff.style.borderColor = "var(--danger)"; 
+        } else { 
+            btnDayOff.innerText = "Take Day Off 💤"; 
+            btnDayOff.style.color = "var(--milestone)"; 
+            btnDayOff.style.borderColor = "var(--milestone)"; 
         }
 
-        const mainEl = document.getElementById('mainPercent');
+        const mainEl = document.getElementById('mainPercent'); 
         const frogLabel = document.getElementById('frogLabel');
         const total = dayData.habits ? dayData.habits.length : 0; 
         const doneCount = dayData.habits ? dayData.habits.filter(h => h.done).length : 0;
         
-        if (dayData.isDayOff) {
-            mainEl.innerText = '💤';
-            mainEl.style.fontSize = '5rem';
-            mainEl.classList.remove('complete');
-            frogLabel.innerText = "DAY OFF";
+        if (dayData.isDayOff) { 
+            mainEl.innerText = '💤'; 
+            mainEl.style.fontSize = '5rem'; 
+            mainEl.classList.remove('complete'); 
+            frogLabel.innerText = "DAY OFF"; 
             updateQuote(false, true); 
         } else {
-            dayData.percent = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-            mainEl.innerText = dayData.percent + '%';
-            mainEl.style.fontSize = '6rem';
+            dayData.percent = total > 0 ? Math.round((doneCount / total) * 100) : 0; 
+            mainEl.innerText = dayData.percent + '%'; 
+            mainEl.style.fontSize = '6rem'; 
             frogLabel.innerText = "Today's Frog";
             
             const wasComplete = mainEl.classList.contains('complete');
-            if (dayData.percent === 100 && total > 0) {
-                if (!wasComplete) triggerFireworks();
-                mainEl.classList.add('complete');
-                updateQuote(true, false);
-            } else {
-                mainEl.classList.remove('complete');
-                updateQuote(false, false);
+            if (dayData.percent === 100 && total > 0) { 
+                if (!wasComplete) triggerFireworks(); 
+                mainEl.classList.add('complete'); 
+                updateQuote(true, false); 
+            } else { 
+                mainEl.classList.remove('complete'); 
+                updateQuote(false, false); 
             }
         }
         
         document.getElementById('frogInput').style.display = (dayData.habits && dayData.habits.some(h => h.isFrog)) ? 'none' : 'block';
         document.getElementById('dateDisplay').innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
-        let totalFrogs = 0;
-        Object.values(state.dailyData).forEach(d => {
+        let totalFrogs = 0; 
+        Object.values(state.dailyData).forEach(d => { 
             if(d.habits) { 
                 d.habits.forEach(h => { 
                     if(h.isFrog && h.done) totalFrogs++; 
                 }); 
-            }
+            } 
         });
         
-        const frogCounter = document.getElementById('frogCounter');
-        if(frogCounter) {
-            frogCounter.innerText = `${totalFrogs} Frogs Eaten`;
+        const frogCounter = document.getElementById('frogCounter'); 
+        if(frogCounter) { 
+            frogCounter.innerText = `${totalFrogs} Frogs Eaten`; 
         }
 
         state.dailyData[key] = dayData; 
         localStorage.setItem('discipline_v12', JSON.stringify(state));
         
-        if (shouldRenderBoard) {
+        if (shouldRenderBoard) { 
             renderBoard(dayData.habits || []); 
-        }
-        renderYear();
+        } 
+        
+        renderYear(); 
         renderGoals(); 
     }
 
     function updateQuote(isComplete, isDayOff) {
         const textEl = document.getElementById('quoteText');
         
-        if (isDayOff) {
-            const idx = viewingDate.getDate() % restQuotes.length;
-            const selectedQuote = restQuotes[idx];
-            textEl.innerText = `"${selectedQuote.text}"`;
-            textEl.dataset.author = selectedQuote.author;
+        if (isDayOff) { 
+            const idx = viewingDate.getDate() % restQuotes.length; 
+            const selectedQuote = restQuotes[idx]; 
+            textEl.innerText = `"${selectedQuote.text}"`; 
+            textEl.dataset.author = selectedQuote.author; 
         } else if (isComplete) {
             const hasWonBefore = localStorage.getItem('victory_first_done');
             if (!hasWonBefore) { 
@@ -2207,7 +2408,7 @@
                 localStorage.setItem('victory_first_done', 'true'); 
             } else { 
                 textEl.innerText = `"${randomVictoryQuotes[Math.floor(Math.random() * randomVictoryQuotes.length)]}"`; 
-            }
+            } 
             textEl.dataset.author = "You";
         } else {
             const hasVisited = localStorage.getItem('frog_first_visit_done'); 
@@ -2234,17 +2435,18 @@
         cols.forEach(c => c.innerHTML = '');
         
         habits.forEach(h => {
-            const item = document.createElement('div');
-            item.className = `habit-item ${h.done ? 'done' : ''} ${h.isFrog ? 'is-frog' : ''}`;
+            const item = document.createElement('div'); 
+            item.className = `habit-item ${h.done ? 'done' : ''} ${h.isFrog ? 'is-frog' : ''}`; 
             item.draggable = true; 
             item.dataset.id = h.id;
             item.addEventListener('dragstart', handleDragStart); 
             item.addEventListener('dragend', handleDragEnd);
-
+            
             item.innerHTML = `
                 <div class="habit-row">
                     <div style="display:flex; align-items:center; flex:1;" onclick="toggleHabit(${h.id})">
-                        <div class="check"></div><span style="margin-left:10px;">${h.isFrog ? '🐸 ' : ''}${h.text}</span>
+                        <div class="check"></div>
+                        <span style="margin-left:10px;">${h.isFrog ? '🐸 ' : ''}${h.text}</span>
                     </div>
                     <div class="action-btns" style="display: flex; gap: 8px; align-items: center;">
                         <div class="move-btn" id="move-btn-${h.id}" onclick="forwardHabit(${h.id}); event.stopPropagation();" title="Move to tomorrow">→</div>
@@ -2255,19 +2457,21 @@
                     <div class="sq-btn ${h.col === 0 ? 'active' : ''}" onclick="moveHabit(${h.id}, 0)"></div>
                     <div class="sq-btn ${h.col === 1 ? 'active' : ''}" onclick="moveHabit(${h.id}, 1)"></div>
                     <div class="sq-btn ${h.col === 2 ? 'active' : ''}" onclick="moveHabit(${h.id}, 2)"></div>
-                </div>`;
+                </div>
+            `;
+            
             cols[h.col ?? 1].appendChild(item);
         });
     }
 
     function renderYear() {
         const grid = document.getElementById('yearGrid'); 
-        grid.innerHTML = '';
+        grid.innerHTML = ''; 
         const year = new Date().getFullYear();
         
         ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].forEach((name, mIdx) => {
-            const daysInMonth = new Date(year, mIdx + 1, 0).getDate();
-            let monthTotal = 0, daysLogged = 0;
+            const daysInMonth = new Date(year, mIdx + 1, 0).getDate(); 
+            let monthTotal = 0, daysLogged = 0; 
             const monthKey = `${year}-${mIdx}`;
             
             let monthHtml = `
@@ -2278,42 +2482,43 @@
                     </div>
                     <div class="month-days">
             `;
-                
+            
             for (let d = 1; d <= daysInMonth; d++) {
-                const dateKey = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dateKey = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; 
                 const dayData = state.dailyData[dateKey];
                 
-                let bgStyle = 'background: rgba(255, 255, 255, 0.05)';
+                let bgStyle = 'background: rgba(255, 255, 255, 0.05)'; 
                 let emoji = ''; 
-                let dataPctText = '';
+                let dataPctText = ''; 
                 let score = 0; 
                 let hasFrogAndDone = false;
-
+                
                 if (dayData && dayData.habits && dayData.habits.length > 0) {
-                    const totalTasks = dayData.habits.length;
-                    const doneTasks = dayData.habits.filter(h => h.done).length;
+                    const totalTasks = dayData.habits.length; 
+                    const doneTasks = dayData.habits.filter(h => h.done).length; 
                     score = Math.round((doneTasks / totalTasks) * 100);
-                    hasFrogAndDone = dayData.habits.some(h => h.isFrog && h.done);
+                    hasFrogAndDone = dayData.habits.some(h => h.isFrog && h.done); 
+                    
                     if (!dayData.isDayOff) { 
                         monthTotal += score; 
                         daysLogged++; 
                     }
                 }
-
-                if (dayData && dayData.isDayOff) {
-                    bgStyle = 'background: rgba(59, 130, 246, 0.3); border: 1px solid var(--primary);';
-                    emoji = hasFrogAndDone ? '💤🐸' : '💤';
-                    dataPctText = 'Day Off';
+                
+                if (dayData && dayData.isDayOff) { 
+                    bgStyle = 'background: rgba(59, 130, 246, 0.3); border: 1px solid var(--primary);'; 
+                    emoji = hasFrogAndDone ? '💤🐸' : '💤'; 
+                    dataPctText = 'Day Off'; 
                 } else {
-                    if (score === 100 && dayData && dayData.habits && dayData.habits.length > 0) {
-                        bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);';
-                    } else if (score > 0) {
-                        bgStyle = `background: rgba(59, 130, 246, ${0.2 + (score/100)*0.8})`;
+                    if (score === 100 && dayData && dayData.habits && dayData.habits.length > 0) { 
+                        bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);'; 
+                    } else if (score > 0) { 
+                        bgStyle = `background: rgba(59, 130, 246, ${0.2 + (score/100)*0.8})`; 
                     }
-                    emoji = hasFrogAndDone ? '🐸' : '';
+                    emoji = hasFrogAndDone ? '🐸' : ''; 
                     dataPctText = `${score}% Completed`;
                 }
-
+                
                 monthHtml += `
                     <div class="day-sq ${dateKey === getTodayKey(viewingDate) ? 'active' : ''}" 
                          onclick="jumpToDate('${dateKey}')" 
@@ -2321,11 +2526,12 @@
                          data-pct="${dataPctText}">${emoji}</div>
                 `;
             }
+            
             grid.innerHTML += monthHtml + `</div></div>`;
-            const finalAvg = daysLogged > 0 ? Math.round(monthTotal / daysLogged) : 0;
+            const finalAvg = daysLogged > 0 ? Math.round(monthTotal / daysLogged) : 0; 
             const label = document.getElementById(`m-pct-${mIdx}`); 
-            if (label) {
-                label.innerText = finalAvg + '%';
+            if (label) { 
+                label.innerText = finalAvg + '%'; 
             }
         });
     }
@@ -2354,6 +2560,7 @@
 
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || (e.target.tagName === 'DIV' && e.target.isContentEditable)) return; 
+        
         if (e.key.toLowerCase() === 'f') { 
             e.preventDefault(); 
             const frogInput = document.getElementById('frogInput'); 
@@ -2370,6 +2577,7 @@
             closeDailyRoutineModal(); 
             closeCustomTimerModal(); 
             closeStatsModal(); 
+            closeGratitudeModal(); 
         }
     });
 
@@ -2387,18 +2595,18 @@
         } 
     });
     
-    document.getElementById('newGoalText').addEventListener('keypress', e => {
-        if (e.key === 'Enter') {
-            confirmAddGoal();
-        }
+    document.getElementById('newGoalText').addEventListener('keypress', e => { 
+        if (e.key === 'Enter') { 
+            confirmAddGoal(); 
+        } 
     });
 
     if (CLOUD_CONFIG.key) { 
         updateSyncStatus("Ready"); 
         updateDebugId(CLOUD_CONFIG.binId); 
-        if(CLOUD_CONFIG.binId) {
+        if(CLOUD_CONFIG.binId) { 
             startPassiveListener(); 
-        }
+        } 
     }
     
     saveAndRender();
