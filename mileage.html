@@ -23,11 +23,16 @@
         }
         .back-nav:hover { color: var(--frog); }
 
-        .card-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
-        .rate-badge { font-size: 0.9rem; color: #a1a1aa; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+        .rate-badge { font-size: 0.9rem; color: #a1a1aa; display: flex; align-items: center; gap: 10px; }
 
-        .input-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .triple-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        /* Fluid layout for mobile stacking */
+        .input-group, .triple-group { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 15px; 
+        }
         label { display: block; margin-bottom: 5px; color: #a1a1aa; font-size: 0.8rem; }
         
         input { background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 6px; width: 100%; font-size: 1rem; }
@@ -41,21 +46,24 @@
         
         .actions-cell { display: flex; gap: 8px; justify-content: center; align-items: center; min-width: 140px; }
         .btn-icon { background: #27272a; color: white; width: 35px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .btn-icon:hover { background: #3f3f46; transform: scale(1.05); }
         .btn-delete, .btn-confirm { color: var(--success); font-size: 0.9rem; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; padding: 12px 10px; border-bottom: 1px solid var(--border); }
+        /* Responsive Table Wrapper */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 700px; }
+        th { text-align: left; color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; padding: 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: middle; }
         
         .centered-col { text-align: center; }
         .miles-cell { text-align: center; font-weight: 500; }
-        .total-banner { font-size: 2.8rem; color: var(--success); font-weight: bold; margin-bottom: 5px; }
+        .total-banner { font-size: clamp(2rem, 8vw, 2.8rem); color: var(--success); font-weight: bold; margin-bottom: 5px; }
         .odo-detail { color: #71717a; font-size: 0.75rem; font-family: monospace; display: block; margin-top: 2px; }
 
         .fav-section { margin-bottom: 12px; }
         .fav-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
         .fav-chip { background: #27272a; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; border: 1px solid transparent; display: flex; align-items: center; }
-        .fav-chip:hover { border-color: var(--primary); }
+        .fav-chip:hover { border-color: var(--primary); background: #1f1f22; }
         .fav-del { margin-left: 8px; color: var(--success); font-size: 0.9rem; min-width: 14px; text-align: center; }
 
         /* Centered Cash Drop Animation */
@@ -65,22 +73,15 @@
             100% { transform: translate(-50%, -250%) scale(1); opacity: 0; }
         }
         .cash-reward {
-            position: fixed;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--success);
-            font-weight: bold;
-            font-size: 3.5rem;
-            pointer-events: none;
-            z-index: 2000;
+            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            color: var(--success); font-weight: bold; font-size: 3.5rem;
+            pointer-events: none; z-index: 2000;
             text-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
-            animation: cashDrop 1.5s ease-out forwards;
-            font-family: monospace;
+            animation: cashDrop 1.5s ease-out forwards; font-family: monospace;
         }
 
-        #editModal, #favModal, .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card); border: 1px solid var(--border); width: 90%; max-width: 500px; padding: 30px; border-radius: 12px; position: relative; }
+        #editModal, #favModal, #defaultsModal, .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card); border: 1px solid var(--border); width: 90%; max-width: 500px; padding: 30px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 15px; right: 15px; background: transparent; color: var(--primary); font-size: 1.2rem; cursor: pointer; border:none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
         
         /* SYNC AND CLOUD UI */
@@ -95,7 +96,7 @@
         @keyframes pulseText { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.95); } }
         .tool-btn { text-decoration: none; color: #a1a1aa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; padding: 12px 24px; border: 1px solid #27272a; border-radius: 30px; transition: 0.3s; font-weight: bold; background: none; cursor: pointer; }
         .tool-btn:hover { background: #fff; color: #000; border-color: #fff; transform: translateY(-2px); }
-        #syncPulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-left: 5px; opacity: 0; }
+        #syncPulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-left: 5px; opacity: 0; transition: opacity 0.3s; }
         .pulsing { animation: pulseDot 2s infinite; opacity: 1 !important; }
         @keyframes pulseDot { 0% { transform: scale(0.95); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.5; } }
         .blink-blue { animation: textBlinkBlue 1s infinite; color: var(--primary) !important; font-weight: bold; }
@@ -148,8 +149,11 @@
 
         <div class="card">
             <div class="card-header">
-                <h2>Log trip</h2>
-                <div class="rate-badge">72.5¢ / mi</div>
+                <h2 style="margin: 0;">Log trip</h2>
+                <div class="rate-badge">
+                    <span>72.5¢ / mi</span>
+                    <button class="btn-icon" onclick="openDefaultsModal()" title="Set Input Defaults">⚙️</button>
+                </div>
             </div>
             
             <div class="fav-section"><label>Favorite Start Locations</label><div id="startFavs" class="fav-container"></div></div>
@@ -162,9 +166,9 @@
                 <div><label>Odometer Start</label><input type="number" id="odoStart" placeholder="0"></div>
             </div>
             <div class="triple-group">
-                <div><label>Start Location</label><input type="text" id="startLoc" value="Dryden Electric LLC"></div>
-                <div><label>Destination</label><input type="text" id="dest" placeholder="e.g. Home Depot"></div>
-                <div><label>Purpose</label><input type="text" id="purpose" placeholder="e.g. Material Run"></div>
+                <div><label>Start Location</label><input type="text" id="startLoc"></div>
+                <div><label>Destination</label><input type="text" id="dest"></div>
+                <div><label>Purpose</label><input type="text" id="purpose"></div>
             </div>
 
             <button class="btn-blue" id="addTripBtn" onclick="addTrip()">Add Trip to Log</button>
@@ -172,20 +176,22 @@
         </div>
 
         <div class="card">
-            <table id="logTable">
-                <thead>
-                    <tr>
-                        <th width="40" class="centered-col">⭐</th>
-                        <th width="100">Date</th>
-                        <th>Start Location</th>
-                        <th>Destination</th>
-                        <th>Purpose</th>
-                        <th width="100" class="centered-col">Miles</th>
-                        <th width="150" class="centered-col">Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            <div class="table-responsive">
+                <table id="logTable">
+                    <thead>
+                        <tr>
+                            <th width="40" class="centered-col">⭐</th>
+                            <th width="100">Date</th>
+                            <th>Start Location</th>
+                            <th>Destination</th>
+                            <th>Purpose</th>
+                            <th width="100" class="centered-col">Miles</th>
+                            <th width="150" class="centered-col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
 
         <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; width: 100%;">
@@ -208,8 +214,16 @@
 
     <div id="editModal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">✕</button>
+            <button class="modal-close" onclick="closeEditModal()">✕</button>
             <h3 style="color:var(--primary); margin-top:0">✏️ Edit Trip Details</h3>
+            
+            <div class="fav-section" style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                <label style="color: var(--primary); font-weight: bold;">Quick Fill</label>
+                <div id="editStartFavs" class="fav-container"></div>
+                <div id="editDestFavs" class="fav-container"></div>
+                <div id="editPurpFavs" class="fav-container"></div>
+            </div>
+
             <div style="margin-bottom:10px;"><label>Date</label><input type="date" id="editDate"></div>
             <div style="display:flex; gap:10px; margin-bottom:10px;">
                 <div style="flex:1;"><label>Miles</label><input type="number" id="editMiles" step="0.1"></div>
@@ -232,28 +246,30 @@
         </div>
     </div>
 
+    <div id="defaultsModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeDefaultsModal()">✕</button>
+            <h3 style="color:var(--text); margin-top:0">⚙️ Set Default Inputs</h3>
+            <p style="font-size: 0.8rem; color: #a1a1aa; margin-bottom: 15px;">These values will automatically populate the form every time you log a new trip.</p>
+            <div style="margin-bottom:10px;"><label>Default Start Location</label><input type="text" id="defStart" placeholder="e.g. Home Office"></div>
+            <div style="margin-bottom:10px;"><label>Default Destination</label><input type="text" id="defDest" placeholder="Leave blank if variable"></div>
+            <div style="margin-bottom:10px;"><label>Default Purpose</label><input type="text" id="defPurp" placeholder="Leave blank if variable"></div>
+            <button class="btn-blue" onclick="saveDefaults()">Save Defaults</button>
+        </div>
+    </div>
+
     <script>
         const RATE = 0.725;
         
         // --- LOAD UNIFIED CLOUD STATE ---
         let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {} };
         
-        // --- DATA MIGRATION ---
-        // Seamlessly move old standalone tracking data into the unified cloud object
-        let oldTrips = JSON.parse(localStorage.getItem('frog_mileage_2026'));
-        if (oldTrips && (!state.mileage || state.mileage.length === 0)) {
-            state.mileage = oldTrips;
-            state.favStarts = JSON.parse(localStorage.getItem('frog_fav_starts')) || [];
-            state.favDests = JSON.parse(localStorage.getItem('frog_fav_dests')) || [];
-            state.favPurps = JSON.parse(localStorage.getItem('frog_fav_purps')) || [];
-            localStorage.setItem('discipline_v12', JSON.stringify(state)); // Save migration
-        }
-
         // Initialize nested structures if empty
         if (!state.mileage) state.mileage = [];
         if (!state.favStarts) state.favStarts = [];
         if (!state.favDests) state.favDests = [];
         if (!state.favPurps) state.favPurps = [];
+        if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
 
         let delTimers = {}, editingIdx = -1;
         const cashSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-purchase.mp3');
@@ -264,6 +280,7 @@
         let remoteListenInterval = null;
         let isIntentionallyPaused = false; 
         let pollInterval = null;
+        let autoSyncTimeout = null;
         let audioCtx;
 
         function showToast(msg) {
@@ -353,14 +370,62 @@
                         if (!state.favStarts) state.favStarts = [];
                         if (!state.favDests) state.favDests = [];
                         if (!state.favPurps) state.favPurps = [];
+                        if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
                         
-                        saveAndRender(); 
+                        saveAndRender(false); 
                     }
                     updateSyncStatus("Synced");
                 }
             } catch (e) { 
                 updateSyncStatus("Error"); 
             }
+        }
+
+        // --- ISOLATED AUTO-SYNC ---
+        // Fetches cloud data, updates ONLY mileage, and pushes back to prevent overwriting frog tracker logic.
+        function triggerIsolatedAutoSync() {
+            if (!CLOUD_CONFIG.key || !CLOUD_CONFIG.binId) return;
+            
+            clearTimeout(autoSyncTimeout);
+            
+            // Wait 2 seconds before uploading to bundle rapid changes (like deleting multiple items)
+            autoSyncTimeout = setTimeout(async () => {
+                const syncIcon = document.getElementById('syncPulse');
+                syncIcon.classList.add('pulsing');
+                updateSyncStatus("Auto-syncing...");
+                
+                try {
+                    // 1. Fetch latest to ensure we don't overwrite another device's daily frog inputs
+                    const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
+                        method: 'GET',
+                        headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' },
+                        cache: 'no-store'
+                    });
+                    const remoteData = await resGet.json();
+                    let payload = remoteData.record || remoteData;
+
+                    // 2. Merge our local mileage data into the remote object
+                    payload.mileage = state.mileage;
+                    payload.favStarts = state.favStarts;
+                    payload.favDests = state.favDests;
+                    payload.favPurps = state.favPurps;
+                    payload.mileageDefaults = state.mileageDefaults;
+
+                    // 3. Push it back up
+                    await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    updateSyncStatus("Ready");
+                    syncIcon.classList.remove('pulsing');
+                } catch (e) {
+                    console.error("Auto-sync failed", e);
+                    updateSyncStatus("Sync Error");
+                    syncIcon.classList.remove('pulsing');
+                }
+            }, 2000);
         }
 
         // --- ALWAYS-ON PASSIVE LISTENER ---
@@ -485,7 +550,6 @@
             }
         }
 
-        // --- WAKE LOCK & VISIBILITY ---
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && CLOUD_CONFIG.binId && !isIntentionallyPaused) {
                 checkRemoteSignal();
@@ -511,9 +575,34 @@
             setTimeout(() => reward.remove(), 1500);
         }
 
-        function setToday() {
+        function setInputsToDefault() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('date').value = today;
+            document.getElementById('startLoc').value = state.mileageDefaults.start || '';
+            document.getElementById('dest').value = state.mileageDefaults.dest || '';
+            document.getElementById('purpose').value = state.mileageDefaults.purpose || '';
+        }
+
+        // --- Defaults Modal Functions ---
+        function openDefaultsModal() {
+            document.getElementById('defStart').value = state.mileageDefaults.start || '';
+            document.getElementById('defDest').value = state.mileageDefaults.dest || '';
+            document.getElementById('defPurp').value = state.mileageDefaults.purpose || '';
+            document.getElementById('defaultsModal').style.display = 'flex';
+        }
+        
+        function closeDefaultsModal() { document.getElementById('defaultsModal').style.display = 'none'; }
+        
+        function saveDefaults() {
+            state.mileageDefaults = {
+                start: document.getElementById('defStart').value,
+                dest: document.getElementById('defDest').value,
+                purpose: document.getElementById('defPurp').value
+            };
+            saveAndRender(true);
+            setInputsToDefault(); // Apply defaults immediately
+            closeDefaultsModal();
+            showToast("Defaults Saved!");
         }
 
         function addTrip() {
@@ -527,10 +616,13 @@
             triggerCashEffect(m * RATE);
             
             state.mileage.unshift({ date: d, start: s, dest: dest, purpose: p, miles: m, odoStart: odoS });
-            saveAndRender();
+            
+            // Keep the ending Odometer for the next trip
             document.getElementById('odoStart').value = odoS + m;
-            document.getElementById('dest').value = ''; document.getElementById('purpose').value = ''; document.getElementById('miles').value = '';
-            setToday(); 
+            document.getElementById('miles').value = '';
+            
+            saveAndRender(true);
+            setInputsToDefault(); 
         }
 
         function copyTrip(idx) {
@@ -540,7 +632,10 @@
             document.getElementById('purpose').value = t.purpose;
             document.getElementById('miles').value = t.miles;
             document.getElementById('odoStart').value = t.odoStart;
-            setToday(); 
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today; 
+            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -552,7 +647,7 @@
                     else if (type === 'dest') state.favDests.splice(idx, 1);
                     else state.favPurps.splice(idx, 1);
                 } else state.mileage.splice(idx, 1);
-                clearTimeout(delTimers[btnId].timer); delete delTimers[btnId]; saveAndRender();
+                clearTimeout(delTimers[btnId].timer); delete delTimers[btnId]; saveAndRender(true);
             } else {
                 delTimers[btnId] = { timer: setTimeout(() => { delete delTimers[btnId]; render(); renderFavs(); }, 3000) };
                 render(); renderFavs();
@@ -579,36 +674,47 @@
                 dest: document.getElementById('editDest').value,
                 purpose: document.getElementById('editPurpose').value
             };
-            closeModal(); saveAndRender();
+            closeEditModal(); saveAndRender(true);
         }
 
-        function closeModal() { document.getElementById('editModal').style.display = 'none'; editingIdx = -1; }
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; editingIdx = -1; }
 
         function openFavModal(idx) {
             const t = state.mileage[idx];
             document.getElementById('favModal').style.display = 'flex';
-            document.getElementById('favBtnStart').onclick = () => { if(!state.favStarts.includes(t.start)) state.favStarts.push(t.start); closeFavModal(); saveAndRender(); };
-            document.getElementById('favBtnDest').onclick = () => { if(!state.favDests.includes(t.dest)) state.favDests.push(t.dest); closeFavModal(); saveAndRender(); };
-            document.getElementById('favBtnPurp').onclick = () => { if(t.purpose && !state.favPurps.includes(t.purpose)) state.favPurps.push(t.purpose); closeFavModal(); saveAndRender(); };
+            document.getElementById('favBtnStart').onclick = () => { if(!state.favStarts.includes(t.start)) state.favStarts.push(t.start); closeFavModal(); saveAndRender(true); };
+            document.getElementById('favBtnDest').onclick = () => { if(!state.favDests.includes(t.dest)) state.favDests.push(t.dest); closeFavModal(); saveAndRender(true); };
+            document.getElementById('favBtnPurp').onclick = () => { if(t.purpose && !state.favPurps.includes(t.purpose)) state.favPurps.push(t.purpose); closeFavModal(); saveAndRender(true); };
         }
         function closeFavModal() { document.getElementById('favModal').style.display = 'none'; }
 
         function renderFavs() {
+            // Main Panel Favs
             const sBox = document.getElementById('startFavs'), dBox = document.getElementById('destFavs'), pBox = document.getElementById('purpFavs');
-            sBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start')">🏠 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'start')">${delTimers['start-'+i] ? '✔️' : '✕'}</span></div>`).join('');
-            dBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest')">📍 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'dest')">${delTimers['dest-'+i] ? '✔️' : '✕'}</span></div>`).join('');
-            pBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp')">🔧 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'purp')">${delTimers['purp-'+i] ? '✔️' : '✕'}</span></div>`).join('');
+            sBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', false)">🏠 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'start')">${delTimers['start-'+i] ? '✔️' : '✕'}</span></div>`).join('');
+            dBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', false)">📍 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'dest')">${delTimers['dest-'+i] ? '✔️' : '✕'}</span></div>`).join('');
+            pBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', false)">🔧 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'purp')">${delTimers['purp-'+i] ? '✔️' : '✕'}</span></div>`).join('');
+
+            // Edit Panel Favs
+            const eSBox = document.getElementById('editStartFavs'), eDBox = document.getElementById('editDestFavs'), ePBox = document.getElementById('editPurpFavs');
+            eSBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', true)">🏠 ${f}</div>`).join('');
+            eDBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', true)">📍 ${f}</div>`).join('');
+            ePBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', true)">🔧 ${f}</div>`).join('');
         }
 
-        function applyFav(val, type) {
-            if (type === 'start') document.getElementById('startLoc').value = val;
-            else if (type === 'dest') document.getElementById('dest').value = val;
-            else document.getElementById('purpose').value = val;
+        function applyFav(val, type, isEditMode) {
+            const prefix = isEditMode ? 'edit' : '';
+            if (type === 'start') document.getElementById(prefix + (isEditMode ? 'Start' : 'startLoc')).value = val;
+            else if (type === 'dest') document.getElementById(prefix + (isEditMode ? 'Dest' : 'dest')).value = val;
+            else document.getElementById(prefix + (isEditMode ? 'Purpose' : 'purpose')).value = val;
         }
 
-        function saveAndRender() {
+        // Core save function. The boolean flag determines if we fire the cloud auto-sync
+        function saveAndRender(fireSync = false) {
             localStorage.setItem('discipline_v12', JSON.stringify(state));
-            render(); renderFavs();
+            render(); 
+            renderFavs();
+            if (fireSync) triggerIsolatedAutoSync();
         }
 
         function render() {
@@ -643,7 +749,7 @@
         }
 
         window.onload = () => { 
-            setToday(); 
+            setInputsToDefault(); 
             render(); 
             renderFavs(); 
             if (CLOUD_CONFIG.key) {
