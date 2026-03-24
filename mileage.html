@@ -26,7 +26,6 @@
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .rate-badge { font-size: 0.9rem; color: #a1a1aa; display: flex; align-items: center; gap: 10px; }
 
-        /* Fluid layout for mobile stacking */
         .input-group, .triple-group { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
@@ -49,7 +48,6 @@
         .btn-icon:hover { background: #3f3f46; transform: scale(1.05); }
         .btn-delete, .btn-confirm { color: var(--success); font-size: 0.9rem; }
 
-        /* Responsive Table Wrapper */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 700px; }
         th { text-align: left; color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; padding: 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
@@ -66,7 +64,6 @@
         .fav-chip:hover { border-color: var(--primary); background: #1f1f22; }
         .fav-del { margin-left: 8px; color: var(--success); font-size: 0.9rem; min-width: 14px; text-align: center; }
 
-        /* Centered Cash Drop Animation */
         @keyframes cashDrop {
             0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
             20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
@@ -84,7 +81,6 @@
         .modal-content { background: var(--card); border: 1px solid var(--border); width: 90%; max-width: 500px; padding: 30px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 15px; right: 15px; background: transparent; color: var(--primary); font-size: 1.2rem; cursor: pointer; border:none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
         
-        /* SYNC AND CLOUD UI */
         .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(24, 24, 27, 0.95); border: 1px solid var(--primary); color: #fff; padding: 20px 40px; border-radius: 50px; font-size: 1rem; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.4s ease; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
         .toast.show { opacity: 1; }
         .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
@@ -103,6 +99,17 @@
         @keyframes textBlinkBlue { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .blink-yellow { animation: textBlinkYellow 1s infinite; color: var(--frog) !important; font-weight: bold; }
         @keyframes textBlinkYellow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Filter & Toggle Menu Styles */
+        .filter-bar { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 12px 16px; border-radius: 8px; border: 1px solid #27272a; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .filter-input { background: #000; border: 1px solid #3f3f46; color: white; padding: 8px; border-radius: 6px; outline: none; }
+        .toggle-section { width: 100%; text-align: center; margin-top: 15px; }
+        .toggle-link { background: none; border: none; color: #71717a; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.3s; padding: 10px; }
+        .toggle-link:hover { color: #fff; }
+        .expand-box { height: 0; overflow: hidden; opacity: 0; transition: all 0.4s; text-align: center; }
+        .expand-box.open { height: auto; opacity: 1; padding: 15px 0; }
+        .backup-btn { display: inline-block; background: transparent; border: 1px solid #3f3f46; color: #a1a1aa; padding: 8px 16px; border-radius: 6px; font-size: 0.8rem; margin: 5px; cursor: pointer; transition: 0.2s; }
+        .backup-btn:hover { background: #1f1f22; color: #fff; border-color: var(--primary); }
     </style>
 </head>
 <body>
@@ -143,7 +150,7 @@
         
         <div class="card" style="text-align: center;">
             <div class="total-banner" id="totalDeduction">$0.00</div>
-            <div style="color:white; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">2026 Tax Deduction Earned</div>
+            <div style="color:white; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" id="totalsLabel">2026 Tax Deduction Earned</div>
             <div id="totalMiles" style="color: #a1a1aa; margin-top: 5px;">0.0 Total Miles</div>
         </div>
 
@@ -176,6 +183,15 @@
         </div>
 
         <div class="card">
+            <div class="filter-bar">
+                <div style="font-weight: bold; color: var(--primary);">Trip History</div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="margin:0;">Filter:</label>
+                    <input type="month" id="monthFilter" class="filter-input" onchange="render()">
+                    <button onclick="document.getElementById('monthFilter').value=''; render();" style="padding: 6px 12px; background: #27272a; border: 1px solid #3f3f46; color: #fff; border-radius: 6px; font-size:0.75rem;">Clear</button>
+                </div>
+            </div>
+
             <div class="table-responsive">
                 <table id="logTable">
                     <thead>
@@ -206,8 +222,17 @@
             <div style="margin-top:15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
                 <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
                 <button onclick="setupCloud()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Link</button>
-                <button onclick="resetCloud()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Reset</button>
             </div>
+
+            <div class="toggle-section">
+                <button class="toggle-link" onclick="toggleElement('backupMenu', 'Data & Backups')">Data & Backups ↓</button>
+                <div id="backupMenu" class="expand-box">
+                    <div style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 10px;">Restore a rolling snapshot. (This only overrides mileage data).</div>
+                    <div id="backupButtonsContainer">
+                        </div>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -261,10 +286,8 @@
     <script>
         const RATE = 0.725;
         
-        // --- LOAD UNIFIED CLOUD STATE ---
         let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {} };
         
-        // Initialize nested structures if empty
         if (!state.mileage) state.mileage = [];
         if (!state.favStarts) state.favStarts = [];
         if (!state.favDests) state.favDests = [];
@@ -274,7 +297,7 @@
         let delTimers = {}, editingIdx = -1;
         const cashSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-purchase.mp3');
 
-        // --- CLOUD SYNC LOGIC ---
+        // CLOUD SYNC
         const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9);
         let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
         let remoteListenInterval = null;
@@ -305,6 +328,90 @@
             });
         }
 
+        function toggleElement(id, baseName) { 
+            const el = document.getElementById(id); 
+            const btn = el.previousElementSibling; 
+            const isOpen = el.classList.toggle('open'); 
+            btn.innerText = `${baseName} ${isOpen ? '↑' : '↓'}`; 
+        }
+
+        // --- BACKUPS SYSTEM ---
+        function manageBackups() {
+            let backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || [];
+            const now = Date.now();
+            const todayStr = new Date().toDateString();
+
+            const currentData = {
+                mileage: state.mileage,
+                favStarts: state.favStarts,
+                favDests: state.favDests,
+                favPurps: state.favPurps,
+                mileageDefaults: state.mileageDefaults
+            };
+
+            // If no backups exist, or the newest backup is from a different calendar day, save a new snapshot
+            if (backups.length === 0 || new Date(backups[0].timestamp).toDateString() !== todayStr) {
+                backups.unshift({
+                    timestamp: now,
+                    dateStr: todayStr,
+                    data: JSON.stringify(currentData)
+                });
+                
+                if (backups.length > 8) backups.pop(); // Keep roughly 1 week of daily snapshots
+                localStorage.setItem('mileage_backups_v2', JSON.stringify(backups));
+            }
+            renderBackupUI();
+        }
+
+        function renderBackupUI() {
+            const backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || [];
+            const container = document.getElementById('backupButtonsContainer');
+            container.innerHTML = '';
+
+            if (backups.length < 2) {
+                container.innerHTML = '<div style="font-size:0.75rem; color:#555;">No historical backups available yet. Check back tomorrow.</div>';
+                return;
+            }
+
+            // Index 1 is the previous day's snapshot. 
+            if (backups[1]) {
+                const btn1 = document.createElement('button');
+                btn1.className = 'backup-btn';
+                btn1.innerText = `Restore ~1 Day Ago (${backups[1].dateStr})`;
+                btn1.onclick = () => restoreBackup(1);
+                container.appendChild(btn1);
+            }
+
+            // The last index (up to 7 days old) is the week snapshot
+            if (backups.length > 2) {
+                const oldestIndex = backups.length - 1;
+                const btn2 = document.createElement('button');
+                btn2.className = 'backup-btn';
+                btn2.innerText = `Restore Oldest (${backups[oldestIndex].dateStr})`;
+                btn2.onclick = () => restoreBackup(oldestIndex);
+                container.appendChild(btn2);
+            }
+        }
+
+        function restoreBackup(index) {
+            const backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || [];
+            if (!backups[index]) return;
+            
+            if (confirm(`Are you sure you want to restore mileage data from ${backups[index].dateStr}?\n\nThis will completely overwrite your current mileage log. (Your Daily Frog habits will NOT be affected).`)) {
+                const restoredData = JSON.parse(backups[index].data);
+                state.mileage = restoredData.mileage || [];
+                state.favStarts = restoredData.favStarts || [];
+                state.favDests = restoredData.favDests || [];
+                state.favPurps = restoredData.favPurps || [];
+                state.mileageDefaults = restoredData.mileageDefaults || { start: '', dest: '', purpose: '' };
+                
+                saveAndRender(true);
+                showToast("Backup Restored Successfully!");
+            }
+        }
+
+
+        // --- CLOUD FUNCTIONS ---
         function openSyncModal() { document.getElementById('syncModal').style.display = 'flex'; }
         function closeSyncModal() { document.getElementById('syncModal').style.display = 'none'; }
         function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
@@ -316,157 +423,95 @@
             localStorage.setItem('sync_key', key);
             if (bin) localStorage.setItem('sync_bin_id', bin); else localStorage.removeItem('sync_bin_id');
             CLOUD_CONFIG = { key, binId: bin || '' }; 
-            updateSyncStatus("Ready");
-            updateDebugId(CLOUD_CONFIG.binId);
+            updateSyncStatus("Ready"); updateDebugId(CLOUD_CONFIG.binId);
             startPassiveListener(); 
         }
 
-        function resetCloud() {
-            if (confirm("Disconnect Cloud?")) {
-                localStorage.removeItem('sync_key'); localStorage.removeItem('sync_bin_id');
-                CLOUD_CONFIG = { key: '', binId: '' }; 
-                updateSyncStatus("Unlinked");
-                updateDebugId("None");
-                stopPassiveListener();
-            }
-        }
-
-        // --- ISOLATED AUTO-DOWNLOAD ON LOAD ---
         async function isolatedAutoDownload() {
             if (!CLOUD_CONFIG.key || !CLOUD_CONFIG.binId) return;
-            
             const syncIcon = document.getElementById('syncPulse');
-            syncIcon.classList.add('pulsing');
-            updateSyncStatus("Fetching...");
-            
+            syncIcon.classList.add('pulsing'); updateSyncStatus("Fetching...");
             try {
                 const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                    method: 'GET',
-                    headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' },
-                    cache: 'no-store'
+                    method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store'
                 });
-                
                 const remoteData = await resGet.json();
                 let remoteState = remoteData.record || remoteData;
-
-                // Safely extract and inject ONLY the mileage-related data
                 if (remoteState.mileage) state.mileage = remoteState.mileage;
                 if (remoteState.favStarts) state.favStarts = remoteState.favStarts;
                 if (remoteState.favDests) state.favDests = remoteState.favDests;
                 if (remoteState.favPurps) state.favPurps = remoteState.favPurps;
                 if (remoteState.mileageDefaults) state.mileageDefaults = remoteState.mileageDefaults;
 
-                saveAndRender(false); // Render, but do not trigger another upload
-                
-                updateSyncStatus("Ready");
-                syncIcon.classList.remove('pulsing');
+                saveAndRender(false); 
+                updateSyncStatus("Ready"); syncIcon.classList.remove('pulsing');
                 showToast("Latest Mileage Downloaded.");
             } catch (e) {
-                console.error("Auto-download failed", e);
-                updateSyncStatus("Sync Error");
-                syncIcon.classList.remove('pulsing');
+                updateSyncStatus("Sync Error"); syncIcon.classList.remove('pulsing');
             }
         }
 
-        // Kept for manual overriding inside the sync modal
         async function cloudSync(type) {
             if (!CLOUD_CONFIG.key) { setupCloud(); return; }
             updateSyncStatus("Syncing...");
             try {
                 if (!CLOUD_CONFIG.binId && type === 'upload') {
                     const res = await fetch('https://api.jsonbin.io/v3/b', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Private': 'true' },
-                        body: JSON.stringify(state)
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Private': 'true' }, body: JSON.stringify(state)
                     });
                     const data = await res.json();
                     if (data.metadata) {
-                        localStorage.setItem('sync_bin_id', data.metadata.id);
-                        CLOUD_CONFIG.binId = data.metadata.id;
-                        updateSyncStatus("Linked"); alert("Bin ID Created: " + data.metadata.id);
-                        updateDebugId(data.metadata.id);
-                        startPassiveListener();
+                        localStorage.setItem('sync_bin_id', data.metadata.id); CLOUD_CONFIG.binId = data.metadata.id;
+                        updateSyncStatus("Linked"); alert("Bin ID Created: " + data.metadata.id); updateDebugId(data.metadata.id); startPassiveListener();
                     }
                 } else {
                     const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}${type === 'download' ? '/latest' : ''}?t=${Date.now()}`, {
                         method: type === 'upload' ? 'PUT' : 'GET',
-                        headers: { 
-                            'Content-Type': 'application/json', 
-                            'X-Master-Key': CLOUD_CONFIG.key,
-                            'Pragma': 'no-cache', 
-                            'Cache-Control': 'no-cache'
-                        },
-                        body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null,
-                        cache: 'no-store'
+                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache'},
+                        body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null, cache: 'no-store'
                     });
                     const data = await res.json();
                     if (type === 'download') { 
                         state = data.record; 
-                        
-                        // Fallback defaults
                         if (!state.mileage) state.mileage = [];
                         if (!state.favStarts) state.favStarts = [];
                         if (!state.favDests) state.favDests = [];
                         if (!state.favPurps) state.favPurps = [];
                         if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
-                        
                         saveAndRender(false); 
                     }
                     updateSyncStatus("Synced");
                 }
-            } catch (e) { 
-                updateSyncStatus("Error"); 
-            }
+            } catch (e) { updateSyncStatus("Error"); }
         }
 
-        // --- ISOLATED AUTO-SYNC (UPLOAD) ---
-        // Fetches cloud data, updates ONLY mileage, and pushes back to prevent overwriting frog tracker logic.
         function triggerIsolatedAutoSync() {
             if (!CLOUD_CONFIG.key || !CLOUD_CONFIG.binId) return;
-            
             clearTimeout(autoSyncTimeout);
-            
-            // Wait 10 seconds before uploading to bundle rapid changes (like deleting multiple items)
             autoSyncTimeout = setTimeout(async () => {
                 const syncIcon = document.getElementById('syncPulse');
-                syncIcon.classList.add('pulsing');
-                updateSyncStatus("Auto-syncing...");
-                
+                syncIcon.classList.add('pulsing'); updateSyncStatus("Auto-syncing...");
                 try {
-                    // 1. Fetch latest to ensure we don't overwrite another device's daily frog inputs
                     const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                        method: 'GET',
-                        headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' },
-                        cache: 'no-store'
+                        method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store'
                     });
                     const remoteData = await resGet.json();
                     let payload = remoteData.record || remoteData;
 
-                    // 2. Merge our local mileage data into the remote object
                     payload.mileage = state.mileage;
                     payload.favStarts = state.favStarts;
                     payload.favDests = state.favDests;
                     payload.favPurps = state.favPurps;
                     payload.mileageDefaults = state.mileageDefaults;
 
-                    // 3. Push it back up
                     await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
-                        body: JSON.stringify(payload)
+                        method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, body: JSON.stringify(payload)
                     });
-                    
-                    updateSyncStatus("Ready");
-                    syncIcon.classList.remove('pulsing');
-                } catch (e) {
-                    console.error("Auto-sync failed", e);
-                    updateSyncStatus("Sync Error");
-                    syncIcon.classList.remove('pulsing');
-                }
-            }, 10000); // 10 second debounce
+                    updateSyncStatus("Ready"); syncIcon.classList.remove('pulsing');
+                } catch (e) { updateSyncStatus("Sync Error"); syncIcon.classList.remove('pulsing'); }
+            }, 10000); 
         }
 
-        // --- ALWAYS-ON PASSIVE LISTENER ---
         function startPassiveListener() {
             if (remoteListenInterval) clearInterval(remoteListenInterval);
             if(!CLOUD_CONFIG.binId) return;
@@ -483,134 +528,72 @@
         async function checkRemoteSignal() {
             try {
                 const statusEl = document.getElementById('syncStatus');
-                statusEl.classList.add('blink-blue');
-                statusEl.innerText = "Cloud: Checking...";
-
+                statusEl.classList.add('blink-blue'); statusEl.innerText = "Cloud: Checking...";
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                    method: 'GET',
-                    headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' },
-                    cache: 'no-store' 
+                    method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store' 
                 });
                 const data = await res.json();
-                
-                statusEl.classList.remove('blink-blue');
-                statusEl.innerText = "Cloud: Ready";
-                
+                statusEl.classList.remove('blink-blue'); statusEl.innerText = "Cloud: Ready";
                 const remoteState = data.record || data;
 
                 if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
                     if (remoteState._signalSource === DEVICE_ID) return; 
-
-                    playChime();
-                    statusEl.classList.add('blink-yellow');
-                    statusEl.innerText = "Cloud: Uploading...";
+                    playChime(); statusEl.classList.add('blink-yellow'); statusEl.innerText = "Cloud: Uploading...";
                     document.getElementById('uploadingModal').style.display = 'flex';
                     
                     const payload = { ...state, _remoteSignal: 'UPLOAD_COMPLETE' };
                     await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
-                        body: JSON.stringify(payload)
+                        method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, body: JSON.stringify(payload)
                     });
                     
                     setTimeout(() => {
-                        statusEl.classList.remove('blink-yellow');
-                        statusEl.innerText = "Cloud: Synced";
-                        document.getElementById('uploadingModal').style.display = 'none';
-                        showToast("My Data Uploaded. Remote notified.");
+                        statusEl.classList.remove('blink-yellow'); statusEl.innerText = "Cloud: Synced";
+                        document.getElementById('uploadingModal').style.display = 'none'; showToast("My Data Uploaded.");
                     }, 1500);
                 }
-            } catch(e) { 
-                document.getElementById('syncStatus').classList.remove('blink-blue');
-            }
+            } catch(e) { document.getElementById('syncStatus').classList.remove('blink-blue'); }
         }
 
         async function sendRemoteSignal() {
             if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
-            showToast("Sending Signal to Remote...");
-            
-            isIntentionallyPaused = true;
-            stopPassiveListener();
-
+            showToast("Sending Signal to Remote..."); isIntentionallyPaused = true; stopPassiveListener();
             try {
                 const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                    method: 'GET',
-                    headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' },
-                    cache: 'no-store'
+                    method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store'
                 });
                 const data = await resGet.json();
-                
                 let payload = data.record || data;
-                payload._remoteSignal = 'UPLOAD_REQUEST'; 
-                payload._signalSource = DEVICE_ID;
+                payload._remoteSignal = 'UPLOAD_REQUEST'; payload._signalSource = DEVICE_ID;
 
                 await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key },
-                    body: JSON.stringify(payload)
+                    method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, body: JSON.stringify(payload)
                 });
                 
                 showToast("Signal Sent. Waiting for remote to reply...");
-                
                 if (pollInterval) clearInterval(pollInterval);
                 let attempts = 0;
                 pollInterval = setInterval(async () => {
                     attempts++;
-                    if(attempts > 20) { 
-                        clearInterval(pollInterval); 
-                        showToast("Remote timed out."); 
-                        isIntentionallyPaused = false;
-                        startPassiveListener();
-                        return; 
-                    }
-                    
+                    if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); isIntentionallyPaused = false; startPassiveListener(); return; }
                     const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                        method: 'GET',
-                        headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' },
-                        cache: 'no-store'
+                        method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store'
                     });
-                    const pollData = await pollRes.json();
-                    const pollState = pollData.record || pollData;
-
+                    const pollData = await pollRes.json(); const pollState = pollData.record || pollData;
                     if (pollState && pollState._remoteSignal === 'UPLOAD_COMPLETE') {
-                        clearInterval(pollInterval);
-                        document.getElementById('newDataModal').style.display = 'flex'; 
-                        playChime(); 
-                        isIntentionallyPaused = false;
-                        startPassiveListener();
+                        clearInterval(pollInterval); document.getElementById('newDataModal').style.display = 'flex'; playChime(); isIntentionallyPaused = false; startPassiveListener();
                     }
                 }, 3000); 
-
-            } catch (e) { 
-                alert("Signal Error: " + e.message); 
-                isIntentionallyPaused = false;
-                startPassiveListener();
-            }
+            } catch (e) { alert("Signal Error: " + e.message); isIntentionallyPaused = false; startPassiveListener(); }
         }
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && CLOUD_CONFIG.binId && !isIntentionallyPaused) {
-                checkRemoteSignal();
-                startPassiveListener(); 
-            }
-        });
-        window.addEventListener('focus', () => {
-            if (CLOUD_CONFIG.binId && !isIntentionallyPaused) {
-                checkRemoteSignal();
-                startPassiveListener(); 
-            }
-        });
-
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && CLOUD_CONFIG.binId && !isIntentionallyPaused) { checkRemoteSignal(); startPassiveListener(); } });
+        window.addEventListener('focus', () => { if (CLOUD_CONFIG.binId && !isIntentionallyPaused) { checkRemoteSignal(); startPassiveListener(); } });
 
         // --- TRACKER LOGIC ---
         function triggerCashEffect(amount) {
-            cashSound.currentTime = 0;
-            cashSound.play();
-            const reward = document.createElement('div');
-            reward.className = 'cash-reward';
-            reward.innerText = `+$${amount.toFixed(2)}`;
-            document.body.appendChild(reward);
-            setTimeout(() => reward.remove(), 1500);
+            cashSound.currentTime = 0; cashSound.play();
+            const reward = document.createElement('div'); reward.className = 'cash-reward'; reward.innerText = `+$${amount.toFixed(2)}`;
+            document.body.appendChild(reward); setTimeout(() => reward.remove(), 1500);
         }
 
         function setInputsToDefault() {
@@ -621,70 +604,56 @@
             document.getElementById('purpose').value = state.mileageDefaults.purpose || '';
         }
 
-        // --- Defaults Modal Functions ---
         function openDefaultsModal() {
             document.getElementById('defStart').value = state.mileageDefaults.start || '';
             document.getElementById('defDest').value = state.mileageDefaults.dest || '';
             document.getElementById('defPurp').value = state.mileageDefaults.purpose || '';
             document.getElementById('defaultsModal').style.display = 'flex';
         }
-        
         function closeDefaultsModal() { document.getElementById('defaultsModal').style.display = 'none'; }
         
         function saveDefaults() {
-            state.mileageDefaults = {
-                start: document.getElementById('defStart').value,
-                dest: document.getElementById('defDest').value,
-                purpose: document.getElementById('defPurp').value
-            };
-            saveAndRender(true);
-            setInputsToDefault(); // Apply defaults immediately
-            closeDefaultsModal();
-            showToast("Defaults Saved!");
+            state.mileageDefaults = { start: document.getElementById('defStart').value, dest: document.getElementById('defDest').value, purpose: document.getElementById('defPurp').value };
+            saveAndRender(true); setInputsToDefault(); closeDefaultsModal(); showToast("Defaults Saved!");
         }
 
         function addTrip() {
             const d = document.getElementById('date').value, s = document.getElementById('startLoc').value, 
                   dest = document.getElementById('dest').value, p = document.getElementById('purpose').value,
-                  m = parseFloat(document.getElementById('miles').value),
-                  odoS = parseFloat(document.getElementById('odoStart').value) || 0;
+                  m = parseFloat(document.getElementById('miles').value), odoS = parseFloat(document.getElementById('odoStart').value) || 0;
             
             if (!d || !dest || isNaN(m)) return;
-            
             triggerCashEffect(m * RATE);
             
-            state.mileage.unshift({ date: d, start: s, dest: dest, purpose: p, miles: m, odoStart: odoS });
+            state.mileage.push({ date: d, start: s, dest: dest, purpose: p, miles: m, odoStart: odoS });
             
-            // Keep the ending Odometer for the next trip
             document.getElementById('odoStart').value = odoS + m;
             document.getElementById('miles').value = '';
             
-            saveAndRender(true);
+            saveAndRender(true); 
             setInputsToDefault(); 
+            showToast("Trip Added & Saved!");
         }
 
         function copyTrip(idx) {
-            const t = state.mileage[idx];
-            document.getElementById('startLoc').value = t.start;
-            document.getElementById('dest').value = t.dest;
-            document.getElementById('purpose').value = t.purpose;
-            document.getElementById('miles').value = t.miles;
-            document.getElementById('odoStart').value = t.odoStart;
-            
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today; 
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // Because of filtering and sorting, idx matches displayList, not state.mileage directly.
+            // But we will grab the object directly from the button rendering later to be safe.
+            // Handled differently now in render()
         }
 
-        function toggleDelete(idx, isFav, type) {
-            const btnId = isFav ? `${type}-${idx}` : `trip-${idx}`;
+        function toggleDelete(idStr, isFav, type) {
+            const btnId = isFav ? `${type}-${idStr}` : `trip-${idStr}`;
             if (delTimers[btnId]) {
                 if (isFav) {
+                    const idx = parseInt(idStr);
                     if (type === 'start') state.favStarts.splice(idx, 1);
                     else if (type === 'dest') state.favDests.splice(idx, 1);
                     else state.favPurps.splice(idx, 1);
-                } else state.mileage.splice(idx, 1);
+                } else {
+                    // idStr is the actual unique timestamp or matched by properties
+                    // We will filter it out
+                    state.mileage = state.mileage.filter((_, idx) => idx !== parseInt(idStr));
+                }
                 clearTimeout(delTimers[btnId].timer); delete delTimers[btnId]; saveAndRender(true);
             } else {
                 delTimers[btnId] = { timer: setTimeout(() => { delete delTimers[btnId]; render(); renderFavs(); }, 3000) };
@@ -692,8 +661,8 @@
             }
         }
 
-        function openEdit(idx) {
-            editingIdx = idx; const t = state.mileage[idx];
+        function openEdit(actualIdx) {
+            editingIdx = actualIdx; const t = state.mileage[actualIdx];
             document.getElementById('editDate').value = t.date; 
             document.getElementById('editMiles').value = t.miles;
             document.getElementById('editOdoStart').value = t.odoStart || 0;
@@ -717,8 +686,8 @@
 
         function closeEditModal() { document.getElementById('editModal').style.display = 'none'; editingIdx = -1; }
 
-        function openFavModal(idx) {
-            const t = state.mileage[idx];
+        function openFavModal(actualIdx) {
+            const t = state.mileage[actualIdx];
             document.getElementById('favModal').style.display = 'flex';
             document.getElementById('favBtnStart').onclick = () => { if(!state.favStarts.includes(t.start)) state.favStarts.push(t.start); closeFavModal(); saveAndRender(true); };
             document.getElementById('favBtnDest').onclick = () => { if(!state.favDests.includes(t.dest)) state.favDests.push(t.dest); closeFavModal(); saveAndRender(true); };
@@ -727,13 +696,11 @@
         function closeFavModal() { document.getElementById('favModal').style.display = 'none'; }
 
         function renderFavs() {
-            // Main Panel Favs
             const sBox = document.getElementById('startFavs'), dBox = document.getElementById('destFavs'), pBox = document.getElementById('purpFavs');
-            sBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', false)">🏠 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'start')">${delTimers['start-'+i] ? '✔️' : '✕'}</span></div>`).join('');
-            dBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', false)">📍 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'dest')">${delTimers['dest-'+i] ? '✔️' : '✕'}</span></div>`).join('');
-            pBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', false)">🔧 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete(${i}, true, 'purp')">${delTimers['purp-'+i] ? '✔️' : '✕'}</span></div>`).join('');
+            sBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', false)">🏠 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'start')">${delTimers['start-'+i] ? '✔️' : '✕'}</span></div>`).join('');
+            dBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', false)">📍 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'dest')">${delTimers['dest-'+i] ? '✔️' : '✕'}</span></div>`).join('');
+            pBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', false)">🔧 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'purp')">${delTimers['purp-'+i] ? '✔️' : '✕'}</span></div>`).join('');
 
-            // Edit Panel Favs
             const eSBox = document.getElementById('editStartFavs'), eDBox = document.getElementById('editDestFavs'), ePBox = document.getElementById('editPurpFavs');
             eSBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', true)">🏠 ${f}</div>`).join('');
             eDBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', true)">📍 ${f}</div>`).join('');
@@ -747,21 +714,45 @@
             else document.getElementById(prefix + (isEditMode ? 'Purpose' : 'purpose')).value = val;
         }
 
-        // Core save function. The boolean flag determines if we fire the cloud auto-sync
         function saveAndRender(fireSync = false) {
+            // Auto Sort - Sorts by Date DESC, then Odometer DESC (keeps same day entries in correct order)
+            state.mileage.sort((a, b) => {
+                const dateDiff = new Date(b.date) - new Date(a.date);
+                if (dateDiff !== 0) return dateDiff;
+                return (b.odoStart || 0) - (a.odoStart || 0);
+            });
+
             localStorage.setItem('discipline_v12', JSON.stringify(state));
+            manageBackups(); // Maintain rolling 1 day/1 week backups
+            
             render(); 
             renderFavs();
             if (fireSync) triggerIsolatedAutoSync();
         }
 
         function render() {
+            const filterVal = document.getElementById('monthFilter').value; // e.g., "2026-03"
+            
+            let displayList = state.mileage.map((t, idx) => ({ ...t, originalIndex: idx }));
+
+            // Apply filter if selected
+            if (filterVal) {
+                displayList = displayList.filter(t => t.date.startsWith(filterVal));
+                
+                // Format banner label
+                const [y, m] = filterVal.split('-');
+                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                document.getElementById('totalsLabel').innerText = `${monthNames[parseInt(m)-1]} ${y} Tax Deduction`;
+            } else {
+                document.getElementById('totalsLabel').innerText = `2026 Tax Deduction Earned`;
+            }
+
             const tbody = document.querySelector('#logTable tbody');
-            tbody.innerHTML = state.mileage.map((t, i) => {
-                const isDel = delTimers['trip-'+i];
+            tbody.innerHTML = displayList.map(t => {
+                const isDel = delTimers['trip-'+t.originalIndex];
                 const odoE = (t.odoStart + t.miles).toFixed(1);
                 return `<tr>
-                    <td class="centered-col"><button class="btn-icon" onclick="openFavModal(${i})">⭐</button></td>
+                    <td class="centered-col"><button class="btn-icon" onclick="openFavModal(${t.originalIndex})">⭐</button></td>
                     <td>${t.date}</td>
                     <td>${t.start}</td>
                     <td><strong>${t.dest}</strong></td>
@@ -769,16 +760,29 @@
                     <td class="miles-cell">${t.miles}<span class="odo-detail">${t.odoStart} → ${odoE}</span></td>
                     <td>
                         <div class="actions-cell">
-                            <button class="btn-icon" onclick="copyTrip(${i})">📑</button>
-                            <button class="btn-icon" onclick="openEdit(${i})">✏️</button>
-                            <button class="btn-icon ${isDel ? 'btn-confirm' : 'btn-delete'}" onclick="toggleDelete(${i}, false)">${isDel ? '✔️' : '✕'}</button>
+                            <button class="btn-icon" onclick="triggerCopy(${t.originalIndex})">📑</button>
+                            <button class="btn-icon" onclick="openEdit(${t.originalIndex})">✏️</button>
+                            <button class="btn-icon ${isDel ? 'btn-confirm' : 'btn-delete'}" onclick="toggleDelete('${t.originalIndex}', false)">${isDel ? '✔️' : '✕'}</button>
                         </div>
                     </td>
                 </tr>`;
             }).join('');
-            const totalM = state.mileage.reduce((s, t) => s + t.miles, 0);
+            
+            const totalM = displayList.reduce((s, t) => s + t.miles, 0);
             document.getElementById('totalMiles').innerText = `${totalM.toFixed(1)} Total Miles`;
             document.getElementById('totalDeduction').innerText = `$${(totalM * RATE).toFixed(2)}`;
+        }
+
+        function triggerCopy(actualIdx) {
+            const t = state.mileage[actualIdx];
+            document.getElementById('startLoc').value = t.start;
+            document.getElementById('dest').value = t.dest;
+            document.getElementById('purpose').value = t.purpose;
+            document.getElementById('miles').value = t.miles;
+            document.getElementById('odoStart').value = t.odoStart;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today; 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function exportToCSV() {
@@ -788,14 +792,13 @@
 
         window.onload = () => { 
             setInputsToDefault(); 
-            render(); 
-            renderFavs(); 
+            saveAndRender(false); // Runs the sort and handles first backup
             if (CLOUD_CONFIG.key) {
                 updateSyncStatus("Ready");
                 updateDebugId(CLOUD_CONFIG.binId);
                 if(CLOUD_CONFIG.binId) {
                     startPassiveListener(); 
-                    isolatedAutoDownload(); // Fetches latest mileage data as soon as you open the page!
+                    isolatedAutoDownload();
                 }
             }
         };
