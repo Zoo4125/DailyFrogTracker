@@ -120,8 +120,8 @@
             <div class="modal-close" style="top:20px;" onclick="closeSyncModal()">✕</div>
             <div class="modal-text">Cloud Sync</div>
             <div class="modal-btns">
-                <button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Download All Data</button>
-                <button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload All Data</button>
+                <button onclick="cloudSync('download', true)" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Force Download Data</button>
+                <button onclick="cloudSync('upload')" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload All Data</button>
                 <hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;">
                 <button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button>
             </div>
@@ -132,7 +132,7 @@
         <div class="sync-modal">
             <div class="alarm-title" style="color:var(--success)">Success!</div>
             <div class="modal-text">Remote Device Uploaded New Data.<br>Download it now?</div>
-            <button onclick="cloudSync('download'); document.getElementById('newDataModal').style.display='none'" class="confirm-btn">Download Now</button>
+            <button onclick="cloudSync('download', true); document.getElementById('newDataModal').style.display='none'" class="confirm-btn">Download Now</button>
         </div>
     </div>
 
@@ -151,7 +151,7 @@
         <div class="card" style="text-align: center;">
             <div class="total-banner" id="totalDeduction">$0.00</div>
             <div style="color:white; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;" id="totalsLabel">2026 Tax Deduction Earned</div>
-            <div id="totalMiles" style="color: #a1a1aa; margin-top: 5px;">0.0 Total Miles</div>
+            <div id="totalMiles" style="color: #a1a1aa; margin-top: 5px;">0 Total Miles</div>
         </div>
 
         <div class="card">
@@ -169,8 +169,18 @@
 
             <div class="input-group">
                 <div><label>Date</label><input type="date" id="date"></div>
-                <div><label>Miles Driven</label><input type="number" id="miles" step="0.1" placeholder="0.0"></div>
-                <div><label>Odometer Start</label><input type="number" id="odoStart" placeholder="0"></div>
+                
+                <div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <label style="margin:0;">Miles Driven</label>
+                        <label style="margin:0; color:var(--frog); cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:bold; font-size: 0.75rem;">
+                            <input type="checkbox" id="isRoundTrip" style="width:14px; height:14px; margin:0; accent-color:var(--frog);"> Round Trip (x2)
+                        </label>
+                    </div>
+                    <input type="number" id="miles" step="1" placeholder="0">
+                </div>
+                
+                <div><label>Odometer Start</label><input type="number" id="odoStart" step="1" placeholder="0"></div>
             </div>
             <div class="triple-group">
                 <div><label>Start Location</label><input type="text" id="startLoc"></div>
@@ -251,8 +261,8 @@
 
             <div style="margin-bottom:10px;"><label>Date</label><input type="date" id="editDate"></div>
             <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <div style="flex:1;"><label>Miles</label><input type="number" id="editMiles" step="0.1"></div>
-                <div style="flex:1;"><label>Odo Start</label><input type="number" id="editOdoStart"></div>
+                <div style="flex:1;"><label>Miles</label><input type="number" id="editMiles" step="1"></div>
+                <div style="flex:1;"><label>Odo Start</label><input type="number" id="editOdoStart" step="1"></div>
             </div>
             <div style="margin-bottom:10px;"><label>Start Location</label><input type="text" id="editStart"></div>
             <div style="margin-bottom:10px;"><label>Destination</label><input type="text" id="editDest"></div>
@@ -293,6 +303,7 @@
         if (!state.favDests) state.favDests = [];
         if (!state.favPurps) state.favPurps = [];
         if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
+        if (!state.lastUpdated) state.lastUpdated = 0; // The versioning timestamp
 
         let delTimers = {}, editingIdx = -1;
         const cashSound = new Audio('https://www.myinstants.com/media/sounds/cash-register-purchase.mp3');
@@ -346,10 +357,11 @@
                 favStarts: state.favStarts,
                 favDests: state.favDests,
                 favPurps: state.favPurps,
-                mileageDefaults: state.mileageDefaults
+                mileageDefaults: state.mileageDefaults,
+                lastUpdated: state.lastUpdated
             };
 
-            // If no backups exist, or the newest backup is from a different calendar day, save a new snapshot
+            // Save snapshot if none exist, or if the newest backup is from a different calendar day
             if (backups.length === 0 || new Date(backups[0].timestamp).toDateString() !== todayStr) {
                 backups.unshift({
                     timestamp: now,
@@ -373,7 +385,6 @@
                 return;
             }
 
-            // Index 1 is the previous day's snapshot. 
             if (backups[1]) {
                 const btn1 = document.createElement('button');
                 btn1.className = 'backup-btn';
@@ -382,7 +393,6 @@
                 container.appendChild(btn1);
             }
 
-            // The last index (up to 7 days old) is the week snapshot
             if (backups.length > 2) {
                 const oldestIndex = backups.length - 1;
                 const btn2 = document.createElement('button');
@@ -405,11 +415,10 @@
                 state.favPurps = restoredData.favPurps || [];
                 state.mileageDefaults = restoredData.mileageDefaults || { start: '', dest: '', purpose: '' };
                 
-                saveAndRender(true);
+                saveAndRender(true, false); // Triggers upload of the restored data
                 showToast("Backup Restored Successfully!");
             }
         }
-
 
         // --- CLOUD FUNCTIONS ---
         function openSyncModal() { document.getElementById('syncModal').style.display = 'flex'; }
@@ -430,20 +439,33 @@
         async function isolatedAutoDownload() {
             if (!CLOUD_CONFIG.key || !CLOUD_CONFIG.binId) return;
             const syncIcon = document.getElementById('syncPulse');
-            syncIcon.classList.add('pulsing'); updateSyncStatus("Fetching...");
+            syncIcon.classList.add('pulsing'); updateSyncStatus("Checking Cloud...");
             try {
                 const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
                     method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store'
                 });
                 const remoteData = await resGet.json();
                 let remoteState = remoteData.record || remoteData;
+                
+                const localTime = state.lastUpdated || 0;
+                const remoteTime = remoteState.lastUpdated || 0;
+
+                // CRITICAL CHECK: Don't overwrite if local data is newer or identical in age
+                if (remoteTime <= localTime && localTime !== 0) {
+                    updateSyncStatus("Ready (Up-to-date)");
+                    syncIcon.classList.remove('pulsing');
+                    return; 
+                }
+
+                // If cloud is newer, apply it
+                state.lastUpdated = remoteTime;
                 if (remoteState.mileage) state.mileage = remoteState.mileage;
                 if (remoteState.favStarts) state.favStarts = remoteState.favStarts;
                 if (remoteState.favDests) state.favDests = remoteState.favDests;
                 if (remoteState.favPurps) state.favPurps = remoteState.favPurps;
                 if (remoteState.mileageDefaults) state.mileageDefaults = remoteState.mileageDefaults;
 
-                saveAndRender(false); 
+                saveAndRender(false, true); // isFromCloud = true (keeps the remote timestamp)
                 updateSyncStatus("Ready"); syncIcon.classList.remove('pulsing');
                 showToast("Latest Mileage Downloaded.");
             } catch (e) {
@@ -451,7 +473,7 @@
             }
         }
 
-        async function cloudSync(type) {
+        async function cloudSync(type, bypassCheck = false) {
             if (!CLOUD_CONFIG.key) { setupCloud(); return; }
             updateSyncStatus("Syncing...");
             try {
@@ -471,6 +493,7 @@
                         body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null, cache: 'no-store'
                     });
                     const data = await res.json();
+                    
                     if (type === 'download') { 
                         state = data.record; 
                         if (!state.mileage) state.mileage = [];
@@ -478,7 +501,8 @@
                         if (!state.favDests) state.favDests = [];
                         if (!state.favPurps) state.favPurps = [];
                         if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
-                        saveAndRender(false); 
+                        saveAndRender(false, true); // True = don't overwrite timestamp
+                        closeSyncModal();
                     }
                     updateSyncStatus("Synced");
                 }
@@ -498,6 +522,7 @@
                     const remoteData = await resGet.json();
                     let payload = remoteData.record || remoteData;
 
+                    payload.lastUpdated = state.lastUpdated;
                     payload.mileage = state.mileage;
                     payload.favStarts = state.favStarts;
                     payload.favDests = state.favDests;
@@ -618,9 +643,17 @@
         }
 
         function addTrip() {
-            const d = document.getElementById('date').value, s = document.getElementById('startLoc').value, 
-                  dest = document.getElementById('dest').value, p = document.getElementById('purpose').value,
-                  m = parseFloat(document.getElementById('miles').value), odoS = parseFloat(document.getElementById('odoStart').value) || 0;
+            const d = document.getElementById('date').value, 
+                  s = document.getElementById('startLoc').value, 
+                  dest = document.getElementById('dest').value, 
+                  p = document.getElementById('purpose').value;
+            
+            // Apply Rounding & x2 Checkbox logic
+            let m = Math.round(parseFloat(document.getElementById('miles').value));
+            const isRound = document.getElementById('isRoundTrip').checked;
+            if (isRound) m = m * 2;
+            
+            let odoS = Math.round(parseFloat(document.getElementById('odoStart').value)) || 0;
             
             if (!d || !dest || isNaN(m)) return;
             triggerCashEffect(m * RATE);
@@ -629,16 +662,46 @@
             
             document.getElementById('odoStart').value = odoS + m;
             document.getElementById('miles').value = '';
+            document.getElementById('isRoundTrip').checked = false; // reset box
             
             saveAndRender(true); 
             setInputsToDefault(); 
             showToast("Trip Added & Saved!");
         }
 
-        function copyTrip(idx) {
-            // Because of filtering and sorting, idx matches displayList, not state.mileage directly.
-            // But we will grab the object directly from the button rendering later to be safe.
-            // Handled differently now in render()
+        function triggerCopy(actualIdx) {
+            const t = state.mileage[actualIdx];
+            document.getElementById('startLoc').value = t.start;
+            document.getElementById('dest').value = t.dest;
+            document.getElementById('purpose').value = t.purpose;
+            document.getElementById('miles').value = Math.round(t.miles);
+            document.getElementById('odoStart').value = Math.round(t.odoStart);
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today; 
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Populates fields with inverted Start/Dest for an easy return trip
+        function queueReturnTrip(actualIdx) {
+            const t = state.mileage[actualIdx];
+            document.getElementById('startLoc').value = t.dest;
+            document.getElementById('dest').value = t.start;
+            document.getElementById('purpose').value = t.purpose;
+            document.getElementById('miles').value = Math.round(t.miles);
+            
+            // Guess the next logical Odometer reading from the highest recorded trip
+            let highestOdo = 0;
+            if(state.mileage.length > 0) {
+                // The list is sorted, so index 0 is the newest
+                highestOdo = state.mileage[0].odoStart + state.mileage[0].miles;
+            }
+            document.getElementById('odoStart').value = Math.round(highestOdo);
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today; 
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast("Return Trip Queued! Modify if needed & hit Add.");
         }
 
         function toggleDelete(idStr, isFav, type) {
@@ -650,8 +713,6 @@
                     else if (type === 'dest') state.favDests.splice(idx, 1);
                     else state.favPurps.splice(idx, 1);
                 } else {
-                    // idStr is the actual unique timestamp or matched by properties
-                    // We will filter it out
                     state.mileage = state.mileage.filter((_, idx) => idx !== parseInt(idStr));
                 }
                 clearTimeout(delTimers[btnId].timer); delete delTimers[btnId]; saveAndRender(true);
@@ -664,8 +725,8 @@
         function openEdit(actualIdx) {
             editingIdx = actualIdx; const t = state.mileage[actualIdx];
             document.getElementById('editDate').value = t.date; 
-            document.getElementById('editMiles').value = t.miles;
-            document.getElementById('editOdoStart').value = t.odoStart || 0;
+            document.getElementById('editMiles').value = Math.round(t.miles);
+            document.getElementById('editOdoStart').value = Math.round(t.odoStart || 0);
             document.getElementById('editStart').value = t.start; 
             document.getElementById('editDest').value = t.dest;
             document.getElementById('editPurpose').value = t.purpose || '';
@@ -675,8 +736,8 @@
         function saveEdit() {
             state.mileage[editingIdx] = { 
                 date: document.getElementById('editDate').value, 
-                miles: parseFloat(document.getElementById('editMiles').value), 
-                odoStart: parseFloat(document.getElementById('editOdoStart').value),
+                miles: Math.round(parseFloat(document.getElementById('editMiles').value)), 
+                odoStart: Math.round(parseFloat(document.getElementById('editOdoStart').value)),
                 start: document.getElementById('editStart').value, 
                 dest: document.getElementById('editDest').value,
                 purpose: document.getElementById('editPurpose').value
@@ -714,7 +775,12 @@
             else document.getElementById(prefix + (isEditMode ? 'Purpose' : 'purpose')).value = val;
         }
 
-        function saveAndRender(fireSync = false) {
+        function saveAndRender(fireSync = false, isFromCloud = false) {
+            // Give local saves a new timestamp. If pulled from cloud, we keep the cloud's timestamp.
+            if (!isFromCloud) {
+                state.lastUpdated = Date.now();
+            }
+
             // Auto Sort - Sorts by Date DESC, then Odometer DESC (keeps same day entries in correct order)
             state.mileage.sort((a, b) => {
                 const dateDiff = new Date(b.date) - new Date(a.date);
@@ -723,7 +789,7 @@
             });
 
             localStorage.setItem('discipline_v12', JSON.stringify(state));
-            manageBackups(); // Maintain rolling 1 day/1 week backups
+            manageBackups(); 
             
             render(); 
             renderFavs();
@@ -731,7 +797,7 @@
         }
 
         function render() {
-            const filterVal = document.getElementById('monthFilter').value; // e.g., "2026-03"
+            const filterVal = document.getElementById('monthFilter').value; 
             
             let displayList = state.mileage.map((t, idx) => ({ ...t, originalIndex: idx }));
 
@@ -739,7 +805,6 @@
             if (filterVal) {
                 displayList = displayList.filter(t => t.date.startsWith(filterVal));
                 
-                // Format banner label
                 const [y, m] = filterVal.split('-');
                 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                 document.getElementById('totalsLabel').innerText = `${monthNames[parseInt(m)-1]} ${y} Tax Deduction`;
@@ -750,43 +815,40 @@
             const tbody = document.querySelector('#logTable tbody');
             tbody.innerHTML = displayList.map(t => {
                 const isDel = delTimers['trip-'+t.originalIndex];
-                const odoE = (t.odoStart + t.miles).toFixed(1);
+                // Using Math.round to ensure clean display
+                const cleanMiles = Math.round(t.miles);
+                const cleanOdoStart = Math.round(t.odoStart);
+                const cleanOdoEnd = cleanOdoStart + cleanMiles;
+
                 return `<tr>
                     <td class="centered-col"><button class="btn-icon" onclick="openFavModal(${t.originalIndex})">⭐</button></td>
                     <td>${t.date}</td>
                     <td>${t.start}</td>
                     <td><strong>${t.dest}</strong></td>
                     <td style="color:#a1a1aa">${t.purpose || '-'}</td>
-                    <td class="miles-cell">${t.miles}<span class="odo-detail">${t.odoStart} → ${odoE}</span></td>
+                    <td class="miles-cell">${cleanMiles}<span class="odo-detail">${cleanOdoStart} → ${cleanOdoEnd}</span></td>
                     <td>
                         <div class="actions-cell">
-                            <button class="btn-icon" onclick="triggerCopy(${t.originalIndex})">📑</button>
-                            <button class="btn-icon" onclick="openEdit(${t.originalIndex})">✏️</button>
-                            <button class="btn-icon ${isDel ? 'btn-confirm' : 'btn-delete'}" onclick="toggleDelete('${t.originalIndex}', false)">${isDel ? '✔️' : '✕'}</button>
+                            <button class="btn-icon" onclick="triggerCopy(${t.originalIndex})" title="Copy Trip">📑</button>
+                            <button class="btn-icon" onclick="queueReturnTrip(${t.originalIndex})" title="Queue Return Trip">🔄</button>
+                            <button class="btn-icon" onclick="openEdit(${t.originalIndex})" title="Edit Trip">✏️</button>
+                            <button class="btn-icon ${isDel ? 'btn-confirm' : 'btn-delete'}" onclick="toggleDelete('${t.originalIndex}', false)" title="Delete">${isDel ? '✔️' : '✕'}</button>
                         </div>
                     </td>
                 </tr>`;
             }).join('');
             
-            const totalM = displayList.reduce((s, t) => s + t.miles, 0);
-            document.getElementById('totalMiles').innerText = `${totalM.toFixed(1)} Total Miles`;
+            const totalM = Math.round(displayList.reduce((s, t) => s + t.miles, 0));
+            document.getElementById('totalMiles').innerText = `${totalM} Total Miles`;
             document.getElementById('totalDeduction').innerText = `$${(totalM * RATE).toFixed(2)}`;
         }
 
-        function triggerCopy(actualIdx) {
-            const t = state.mileage[actualIdx];
-            document.getElementById('startLoc').value = t.start;
-            document.getElementById('dest').value = t.dest;
-            document.getElementById('purpose').value = t.purpose;
-            document.getElementById('miles').value = t.miles;
-            document.getElementById('odoStart').value = t.odoStart;
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today; 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
         function exportToCSV() {
-            let csv = "Date,Start,Destination,Purpose,Miles,OdoStart,OdoEnd,Deduction\n" + state.mileage.map(t => `${t.date},"${t.start}","${t.dest}","${t.purpose}",${t.miles},${t.odoStart},${(t.odoStart+t.miles).toFixed(1)},${(t.miles*RATE).toFixed(2)}`).join("\n");
+            let csv = "Date,Start,Destination,Purpose,Miles,OdoStart,OdoEnd,Deduction\n" + state.mileage.map(t => {
+                const cleanMiles = Math.round(t.miles);
+                const cleanOdo = Math.round(t.odoStart);
+                return `${t.date},"${t.start}","${t.dest}","${t.purpose}",${cleanMiles},${cleanOdo},${cleanOdo + cleanMiles},${(cleanMiles*RATE).toFixed(2)}`;
+            }).join("\n");
             const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `Dryden_2026.csv`; a.click();
         }
 
