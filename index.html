@@ -2162,6 +2162,8 @@
         // Limit new cards
         const newCardsAllowed = Math.max(0, 8 - state.fcNewTracker[todayKey]);
         const allowedNewCards = newCards.slice(0, newCardsAllowed);
+        
+        window.hiddenFcCount = Math.max(0, newCards.length - allowedNewCards.length);
 
         const playableCount = reviewCards.length + allowedNewCards.length;
         
@@ -2190,6 +2192,12 @@
         if (dueCards.length === 0) {
             document.getElementById('fcEmptyState').style.display = 'block';
             document.getElementById('fcCardContainer').style.display = 'none';
+            
+            const msg = window.hiddenFcCount > 0 
+                ? `All caught up! 🎉<br><span style="font-size:0.8rem; color:#a1a1aa; font-weight:normal; display:block; margin-top:5px;">(${window.hiddenFcCount} new cards waiting for tomorrow)</span>`
+                : `All caught up! Great job. 🎉`;
+                
+            document.getElementById('fcEmptyState').innerHTML = msg;
             currentFc = null;
             return;
         }
@@ -3505,6 +3513,12 @@
                     headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Private': 'true' }, 
                     body: JSON.stringify(state) 
                 });
+                
+                if (!res.ok) {
+                    const err = await res.json().catch(()=>({}));
+                    throw new Error(err.message || `HTTP ${res.status}`);
+                }
+                
                 const data = await res.json();
                 
                 if (data.metadata) { 
@@ -3523,6 +3537,12 @@
                     body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null, 
                     cache: 'no-store' 
                 });
+                
+                if (!res.ok) {
+                    const err = await res.json().catch(()=>({}));
+                    throw new Error(err.message || `HTTP ${res.status}`);
+                }
+                
                 const data = await res.json();
                 
                 if (type === 'download') { 
@@ -3552,6 +3572,7 @@
         } catch (e) { 
             updateSyncStatus("Error"); 
             addSyncLog(`Sync Error: ${e.message}`); 
+            showToast(`Sync Failed: ${e.message}`, 4000);
         }
     }
 
