@@ -746,8 +746,9 @@
         }
         .column { 
             flex: 1; 
-            min-width: 300px; 
+            min-width: 280px; 
             max-width: 320px; 
+            width: 100%;
             border-radius: 16px; 
             padding: 5px; 
             min-height: 100px; 
@@ -910,7 +911,7 @@
             border-color: var(--danger) !important; 
         }
 
-        /* TROPHY SECTION */
+        /* TROPHY SECTION & GLOW ALERTS */
         .trophy-section { 
             width: 100%; 
             display: flex; 
@@ -929,12 +930,27 @@
             user-select: none; 
         }
 
+        @keyframes alertGlow {
+            0% { filter: drop-shadow(0 0 2px var(--glow-color)); transform: scale(1); opacity: 0.8; }
+            50% { filter: drop-shadow(0 0 15px var(--glow-color)); transform: scale(1.15); opacity: 1; }
+            100% { filter: drop-shadow(0 0 2px var(--glow-color)); transform: scale(1); opacity: 0.8; }
+        }
+
+        .dashboard-icon.needs-attention {
+            animation: alertGlow 2s infinite ease-in-out;
+            opacity: 1;
+        }
+
         .dashboard-icon.icon-bolt { color: #facc15; }
         .dashboard-icon.icon-pray { color: #f472b6; } 
+        .icon-pray.needs-attention { --glow-color: #f472b6; color: #f472b6; }
+        
         .dashboard-icon.icon-trophy { filter: grayscale(0.6); } 
         .dashboard-icon.icon-broom { color: #a1a1aa; }
         .dashboard-icon.icon-study { color: var(--primary); }
+        
         .dashboard-icon.icon-flash { color: #c084fc; }
+        .icon-flash.needs-attention { --glow-color: #c084fc; color: #c084fc; }
 
         .dashboard-icon.icon-bolt:hover { 
             opacity: 1; transform: scale(1.3); text-shadow: 0 0 15px #facc15; filter: drop-shadow(0 0 6px #facc15); 
@@ -977,7 +993,6 @@
             position: relative; 
             min-height: 100px; 
         }
-        @media (max-width: 800px) { .year-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .goal-card { flex: 0 0 100%; } }
         .goal-card.done { 
             border-color: var(--success); 
@@ -1129,8 +1144,15 @@
             opacity: 0.4; 
             text-transform: uppercase; 
             letter-spacing: 1px; 
-            margin-top: 5px; 
         }
+        #fcCounter {
+            font-size: 0.6rem; 
+            color: #c084fc; 
+            opacity: 0.5; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+
         .button-row { 
             display: flex; 
             gap: 15px; 
@@ -1211,6 +1233,15 @@
             padding-top: 40px; 
             width: 100%; 
         }
+        
+        /* Layout fixes for mobile / smaller screens */
+        @media (max-width: 900px) { 
+            .year-grid { grid-template-columns: repeat(2, 1fr); } 
+        }
+        @media (max-width: 550px) { 
+            .year-grid { grid-template-columns: 1fr; } 
+        }
+
         .month-card { 
             background: var(--card); 
             border: 1px solid var(--border); 
@@ -1282,7 +1313,7 @@
             z-index: 200; 
         }
         
-        /* New Image Specific CSS */
+        /* Image Specific CSS */
         .fc-image-preview {
             max-width: 100%;
             max-height: 150px;
@@ -1319,6 +1350,38 @@
             <hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;">
             <button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button>
         </div>
+    </div>
+</div>
+
+<div id="sweepModal" class="modal-overlay">
+    <div class="sync-modal" style="max-width: 400px;">
+        <div class="modal-close" onclick="closeSweepModal()">✕</div>
+        <div class="modal-title" style="font-size: 1.8rem;">Sweep Tasks</div>
+        <div class="modal-text">Move incomplete tasks around.</div>
+        <div class="modal-btns">
+            <button onclick="executeSweep(0)" class="tool-btn" style="border-color: var(--success); color: var(--success);">Sweep Priority 1 (Green) to Tomorrow</button>
+            <button onclick="executeSweep(1)" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Sweep Priority 2 (Yellow) to Tomorrow</button>
+            <button onclick="executeSweep(2)" class="tool-btn" style="border-color: var(--danger); color: var(--danger);">Sweep Priority 3 (Red) to Tomorrow</button>
+            <button onclick="sweepToBacklog(2)" class="tool-btn" style="border-color: var(--danger); color: var(--danger); opacity: 0.7;">Move Priority 3 (Red) to Backlog</button>
+            <hr style="width:100%; border:0; border-top:1px solid #333; margin:5px 0;">
+            <button onclick="executeSweep('all')" class="tool-btn" style="border-color: var(--text); color: var(--text);">Sweep All to Tomorrow</button>
+        </div>
+    </div>
+</div>
+
+<div id="backlogModal" class="modal-overlay">
+    <div class="sync-modal" style="max-width: 400px; max-height: 80vh; display:flex; flex-direction:column;">
+        <div class="modal-close" onclick="closeBacklogModal()">✕</div>
+        <div class="modal-title" style="font-size: 1.8rem;">Backlog</div>
+        <div class="modal-text">Store tasks for later.</div>
+        
+        <div style="display:flex; width:100%; gap:10px; margin-bottom: 15px;">
+            <input type="text" id="newBacklogTask" class="custom-input" placeholder="New backlog task..." style="margin-bottom:0; flex:1;" onkeypress="if(event.key==='Enter') addBacklogTask()">
+            <button onclick="addBacklogTask()" class="confirm-btn" style="margin-top:0; padding: 10px 20px;">Add</button>
+        </div>
+        
+        <div id="backlogList" style="width:100%; display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1; text-align:left;">
+            </div>
     </div>
 </div>
 
@@ -1608,7 +1671,7 @@
         <div class="dashboard-icon icon-bolt" onclick="openDailyRoutineModal()" title="Daily Routine">⚡</div>
         <div class="dashboard-icon icon-pray" onclick="openGratitudeModal()" title="Gratitude Journal">🙏</div>
         <div class="dashboard-icon icon-trophy" onclick="openGoalModal()" title="Goals">🏆</div>
-        <div class="dashboard-icon icon-broom" onclick="sweepIncompleteTasks()" title="Sweep to Tomorrow">🧹</div>
+        <div class="dashboard-icon icon-broom" onclick="openSweepModal()" title="Sweep Menu">🧹</div>
     </div>
     
     <div class="goals-flex" id="goalsGrid"></div>
@@ -1650,11 +1713,15 @@
         </div>
         
         <div class="button-row" style="margin-top: 10px;">
-            <button id="btnDayOffToggle" onclick="toggleDayOff()" class="tool-btn" style="border-color: var(--milestone); color: var(--milestone);">Take Day Off 💤</button>
+            <button onclick="openBacklogModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Backlog</button>
+            <button id="btnDayOffToggle" onclick="toggleDayOff()" class="tool-btn" style="border-color: var(--milestone); color: var(--milestone);">Take Day Off</button>
             <a href="mileage.html" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Mileage</a>
         </div>
 
-        <div id="frogCounter">0 Frogs Eaten</div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap: 4px; margin-top: 5px;">
+            <div id="frogCounter">0 Frogs Eaten</div>
+            <div id="fcCounter">0 Days Studied</div>
+        </div>
 
         <div class="toggle-section">
             <button class="toggle-link" onclick="toggleElement('setupGuide', 'Setup Guide')">Show Setup Guide ↓</button>
@@ -1756,6 +1823,8 @@
     if (!state.monthNotes) state.monthNotes = {}; 
     if (!state.studyNotes) state.studyNotes = {}; 
     if (!state.flashcards) state.flashcards = [];
+    if (!state.backlog) state.backlog = [];
+    if (!state.fcStudyDays) state.fcStudyDays = [];
 
     const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9);
     let viewingDate = new Date();
@@ -1772,6 +1841,46 @@
     let activeRichId = null;
     let pollInterval = null; 
 
+    // --- ALERT TIMEOUT LOGIC ---
+    let alertsActive = true;
+    setTimeout(() => {
+        alertsActive = false;
+        updateAlertGlows();
+    }, 15000);
+
+    function updateAlertGlows() {
+        const fcIcon = document.querySelector('.icon-flash');
+        const gratIcon = document.querySelector('.icon-pray');
+        
+        if (!alertsActive) {
+            if(fcIcon) fcIcon.classList.remove('needs-attention');
+            if(gratIcon) gratIcon.classList.remove('needs-attention');
+            return;
+        }
+
+        const todayStr = getTodayKey(new Date());
+        
+        // Flashcard Check
+        if (!state.fcStudyDays || !state.fcStudyDays.includes(todayStr)) {
+            if(fcIcon) fcIcon.classList.add('needs-attention');
+        } else {
+            if(fcIcon) fcIcon.classList.remove('needs-attention');
+        }
+        
+        // Gratitude Check
+        let gratDone = false;
+        const todayData = state.dailyData[todayStr];
+        if (todayData && todayData.gratitude) {
+            gratDone = todayData.gratitude.some(g => g.trim() !== '');
+        }
+        if (!gratDone) {
+            if(gratIcon) gratIcon.classList.add('needs-attention');
+        } else {
+            if(gratIcon) gratIcon.classList.remove('needs-attention');
+        }
+    }
+
+
     // --- DAY OFF LOGIC ---
     function toggleDayOff() {
         const key = getTodayKey(viewingDate);
@@ -1782,6 +1891,73 @@
         saveAndRender();
         showToast(state.dailyData[key].isDayOff ? "Day off set! 💤" : "Day off removed.");
     }
+
+    // --- BACKLOG LOGIC ---
+    function openBacklogModal() {
+        renderBacklog();
+        document.getElementById('backlogModal').style.display = 'flex';
+        document.getElementById('newBacklogTask').focus();
+    }
+
+    function closeBacklogModal() {
+        document.getElementById('backlogModal').style.display = 'none';
+    }
+
+    function renderBacklog() {
+        const list = document.getElementById('backlogList');
+        list.innerHTML = '';
+        if (!state.backlog || state.backlog.length === 0) {
+            list.innerHTML = '<div style="color:#71717a; text-align:center; font-size:0.9rem; margin-top:20px;">Backlog is empty.</div>';
+            return;
+        }
+
+        state.backlog.forEach(item => {
+            list.innerHTML += `
+                <div style="background:#111; padding:12px; border-radius:8px; border:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.9rem; word-break:break-word; flex:1; margin-right:10px;">${item.text}</span>
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <div class="routine-action bolt" onclick="moveBacklogToToday(${item.id})" title="Move to Today">⚡</div>
+                        <div class="routine-action del" onclick="deleteBacklogTask(${item.id})" title="Delete">✕</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function addBacklogTask() {
+        const input = document.getElementById('newBacklogTask');
+        const text = input.value.trim();
+        if (text) {
+            if (!state.backlog) state.backlog = [];
+            state.backlog.push({ id: Date.now(), text: text });
+            input.value = '';
+            saveAndRender(false);
+            renderBacklog();
+        }
+    }
+
+    function deleteBacklogTask(id) {
+        state.backlog = state.backlog.filter(t => t.id != id);
+        saveAndRender(false);
+        renderBacklog();
+    }
+
+    function moveBacklogToToday(id) {
+        const taskIndex = state.backlog.findIndex(t => t.id == id);
+        if (taskIndex > -1) {
+            const task = state.backlog[taskIndex];
+            state.backlog.splice(taskIndex, 1);
+            
+            const key = getTodayKey(viewingDate); 
+            if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+            state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random()*10000), text: task.text, done: false, col: 1, isFrog: false });
+            
+            saveAndRender();
+            renderBacklog();
+            showToast("Moved to Today!");
+        }
+    }
+
 
     // --- Flashcards / Spaced Repetition Logic ---
     let currentFc = null;
@@ -2159,10 +2335,109 @@
             card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
         }
 
+        // Add study day tracking
+        const todayStr = getTodayKey(new Date());
+        if (!state.fcStudyDays.includes(todayStr)) {
+            state.fcStudyDays.push(todayStr);
+        }
+
         saveAndRender();
         renderNextFlashcard();
     }
 
+
+    // --- Sweep Logic ---
+    function openSweepModal() {
+        document.getElementById('sweepModal').style.display = 'flex';
+    }
+
+    function closeSweepModal() {
+        document.getElementById('sweepModal').style.display = 'none';
+    }
+
+    function executeSweep(targetCol) {
+        const currentKey = getTodayKey(viewingDate);
+        if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) {
+            showToast("No tasks to sweep.");
+            closeSweepModal();
+            return;
+        }
+
+        const habits = state.dailyData[currentKey].habits;
+        const toSweep = [];
+        const remaining = [];
+
+        habits.forEach(h => {
+            if (!h.done && (targetCol === 'all' || h.col === targetCol)) {
+                toSweep.push(h);
+            } else {
+                remaining.push(h);
+            }
+        });
+
+        if (toSweep.length === 0) {
+            showToast("No incomplete tasks match.");
+            closeSweepModal();
+            return;
+        }
+
+        // Remove swept tasks from today
+        state.dailyData[currentKey].habits = remaining;
+
+        // Add to tomorrow
+        let tomorrow = new Date(viewingDate);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const nextKey = getTodayKey(tomorrow);
+
+        if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
+
+        toSweep.forEach(h => {
+            // Task maintains its original column/priority color
+            state.dailyData[nextKey].habits.push({ ...h });
+        });
+
+        saveAndRender();
+        closeSweepModal();
+        showToast(`Swept ${toSweep.length} tasks to tomorrow.`);
+    }
+
+    function sweepToBacklog(targetCol) {
+        const currentKey = getTodayKey(viewingDate);
+        if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) {
+            showToast("No tasks to move.");
+            closeSweepModal();
+            return;
+        }
+
+        const habits = state.dailyData[currentKey].habits;
+        const toMove = [];
+        const remaining = [];
+
+        habits.forEach(h => {
+            if (!h.done && h.col === targetCol) {
+                toMove.push(h);
+            } else {
+                remaining.push(h);
+            }
+        });
+
+        if (toMove.length === 0) {
+            showToast("No tasks match.");
+            closeSweepModal();
+            return;
+        }
+
+        state.dailyData[currentKey].habits = remaining;
+
+        if (!state.backlog) state.backlog = [];
+        toMove.forEach(h => {
+            state.backlog.push({ id: Date.now() + Math.floor(Math.random()*10000), text: h.text });
+        });
+
+        saveAndRender();
+        closeSweepModal();
+        showToast(`Moved ${toMove.length} tasks to Backlog.`);
+    }
 
     // --- Gratitude Logic ---
     function openGratitudeModal() {
@@ -2969,36 +3244,6 @@
         }
     }
 
-    function sweepIncompleteTasks() {
-        const currentKey = getTodayKey(viewingDate);
-        if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) { 
-            showToast("No incomplete tasks."); 
-            return; 
-        }
-        
-        const habits = state.dailyData[currentKey].habits; 
-        const incomplete = habits.filter(h => !h.done);
-        
-        if (incomplete.length === 0) { 
-            showToast("No incomplete tasks."); 
-            return; 
-        }
-        
-        state.dailyData[currentKey].habits = habits.filter(h => h.done);
-        let tomorrow = new Date(viewingDate); 
-        tomorrow.setDate(tomorrow.getDate() + 1); 
-        const nextKey = getTodayKey(tomorrow);
-        
-        if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
-        
-        incomplete.forEach(h => { 
-            state.dailyData[nextKey].habits.push({ ...h, col: 1 }); 
-        });
-        
-        saveAndRender(); 
-        showToast(`Swept ${incomplete.length} tasks to tomorrow.`);
-    }
-
     function toggleElement(id, baseName) { 
         const el = document.getElementById(id); 
         const btn = el.previousElementSibling; 
@@ -3246,6 +3491,8 @@
                     if (!state.monthNotes) state.monthNotes = {};
                     if (!state.studyNotes) state.studyNotes = {};
                     if (!state.flashcards) state.flashcards = [];
+                    if (!state.backlog) state.backlog = [];
+                    if (!state.fcStudyDays) state.fcStudyDays = [];
                     
                     state.longTermGoals.forEach(g => { 
                         if(!g.datasets) { 
@@ -3425,7 +3672,7 @@
     
     function clearAllData() { 
         if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { 
-            state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {}, studyNotes: {}, flashcards: [] }; 
+            state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {}, studyNotes: {}, flashcards: [], backlog: [], fcStudyDays: [] }; 
             saveAndRender(); 
             addSyncLog("Local history wiped."); 
         } 
@@ -3802,7 +4049,7 @@
             btnDayOff.style.color = "var(--danger)"; 
             btnDayOff.style.borderColor = "var(--danger)"; 
         } else { 
-            btnDayOff.innerText = "Take Day Off 💤"; 
+            btnDayOff.innerText = "Take Day Off"; 
             btnDayOff.style.color = "var(--milestone)"; 
             btnDayOff.style.borderColor = "var(--milestone)"; 
         }
@@ -3852,6 +4099,11 @@
             frogCounter.innerText = `${totalFrogs} Frogs Eaten`; 
         }
 
+        const fcCounter = document.getElementById('fcCounter');
+        if(fcCounter) {
+            fcCounter.innerText = `${(state.fcStudyDays || []).length} Days Studied`;
+        }
+
         state.dailyData[key] = dayData; 
         localStorage.setItem('discipline_v12', JSON.stringify(state));
         
@@ -3862,6 +4114,7 @@
         renderYear(); 
         renderGoals();
         updateFcDueCount();
+        updateAlertGlows();
     }
 
     function updateQuote(isComplete, isDayOff) {
@@ -4051,6 +4304,8 @@
             closeGratitudeModal();
             closeStudyModal();
             closeFlashcardModal();
+            closeSweepModal();
+            closeBacklogModal();
         }
     });
 
