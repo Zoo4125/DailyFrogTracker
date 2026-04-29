@@ -1281,6 +1281,26 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
             z-index: 200; 
         }
+        
+        /* New Image Specific CSS */
+        .fc-image-preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: none;
+            margin-top: 10px;
+            object-fit: contain;
+        }
+        .fc-review-img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin: 10px 0;
+            display: none;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -1319,9 +1339,14 @@
             </div>
 
             <div id="fcCardContainer" style="width:100%; display:none; flex-direction:column; align-items:center;">
-                <div style="background:#111; border:1px solid var(--border); border-radius:12px; width:100%; min-height:220px; padding:25px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative;">
+                <div style="background:#111; border:1px solid var(--border); border-radius:12px; width:100%; min-height:220px; padding:25px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; overflow-y:auto; max-height:50vh;">
+                    
+                    <img id="fcFrontImgDisplay" class="fc-review-img">
                     <div id="fcFrontText" style="font-size:1.2rem; font-weight:bold; color:var(--text); word-break:break-word;"></div>
+                    
                     <div id="fcDivider" style="width:80%; border-top:1px dashed #333; margin:20px 0; display:none;"></div>
+                    
+                    <img id="fcBackImgDisplay" class="fc-review-img">
                     <div id="fcBackText" style="font-size:1rem; color:#a1a1aa; display:none; word-break:break-word; white-space:pre-wrap;"></div>
                 </div>
                 
@@ -1341,7 +1366,27 @@
         <div id="fcManageArea" style="display:none; flex:1; flex-direction:column; width:100%; overflow-y:auto; gap:10px; padding-right:5px;">
             <input type="text" id="fcFrontInput" class="custom-input" placeholder="Front (Question/Term)...">
             <textarea id="fcBackInput" class="custom-input" placeholder="Back (Answer/Definition)..." style="resize:vertical; min-height:80px; font-family:inherit;"></textarea>
-            <button onclick="addFlashcard()" class="confirm-btn">Add Card</button>
+            
+            <div style="display:flex; gap:10px; width:100%;">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+                    <label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">
+                        🖼️ Add Front Img
+                        <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'front')">
+                    </label>
+                    <img id="fcFrontPreview" class="fc-image-preview">
+                    <div id="fcFrontImgClear" onclick="clearPreview('front')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+                    <label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">
+                        🖼️ Add Back Img
+                        <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'back')">
+                    </label>
+                    <img id="fcBackPreview" class="fc-image-preview">
+                    <div id="fcBackImgClear" onclick="clearPreview('back')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div>
+                </div>
+            </div>
+
+            <button onclick="addFlashcard()" class="confirm-btn" style="margin-top:15px;">Add Card</button>
             <hr style="width:100%; border:0; border-top:1px solid #333; margin: 10px 0;">
             <div id="fcList" style="text-align:left; display:flex; flex-direction:column; gap:10px;"></div>
             
@@ -1740,6 +1785,8 @@
 
     // --- Flashcards / Spaced Repetition Logic ---
     let currentFc = null;
+    let pendingFrontImg = null;
+    let pendingBackImg = null;
 
     function openFlashcardModal() {
         updateFcDueCount();
@@ -1750,6 +1797,8 @@
     function closeFlashcardModal() {
         document.getElementById('flashcardModal').style.display = 'none';
         currentFc = null;
+        clearPreview('front');
+        clearPreview('back');
     }
 
     function setFcTab(tab) {
@@ -1769,15 +1818,84 @@
         }
     }
 
+    // --- Image Compression Logic ---
+    function handleImageUpload(input, type) {
+        if (!input.files || !input.files[0]) return;
+        
+        const file = input.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+            
+            img.onload = function() {
+                // Compress Image via Canvas (Max width 800px to save storage)
+                const MAX_WIDTH = 800;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > MAX_WIDTH) {
+                    height = height * (MAX_WIDTH / width);
+                    width = MAX_WIDTH;
+                }
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Compress to 70% quality JPEG
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                
+                if (type === 'front') {
+                    pendingFrontImg = dataUrl;
+                    const preview = document.getElementById('fcFrontPreview');
+                    preview.src = dataUrl;
+                    preview.style.display = 'block';
+                    document.getElementById('fcFrontImgClear').style.display = 'block';
+                } else {
+                    pendingBackImg = dataUrl;
+                    const preview = document.getElementById('fcBackPreview');
+                    preview.src = dataUrl;
+                    preview.style.display = 'block';
+                    document.getElementById('fcBackImgClear').style.display = 'block';
+                }
+            }
+        }
+        reader.readAsDataURL(file);
+    }
+
+    function clearPreview(type) {
+        if (type === 'front') {
+            pendingFrontImg = null;
+            document.getElementById('fcFrontPreview').style.display = 'none';
+            document.getElementById('fcFrontPreview').src = '';
+            document.getElementById('fcFrontImgClear').style.display = 'none';
+        } else {
+            pendingBackImg = null;
+            document.getElementById('fcBackPreview').style.display = 'none';
+            document.getElementById('fcBackPreview').src = '';
+            document.getElementById('fcBackImgClear').style.display = 'none';
+        }
+    }
+
     function addFlashcard() {
         const front = document.getElementById('fcFrontInput').value.trim();
         const back = document.getElementById('fcBackInput').value.trim();
-        if (!front || !back) return;
+        
+        if (!front && !pendingFrontImg) {
+            showToast("Need front text or image.");
+            return;
+        }
 
         state.flashcards.push({
             id: Date.now(),
             front: front,
             back: back,
+            frontImg: pendingFrontImg,
+            backImg: pendingBackImg,
             interval: 0,
             ease: 2.5,
             consecutiveEasy: 0,
@@ -1787,6 +1905,9 @@
 
         document.getElementById('fcFrontInput').value = '';
         document.getElementById('fcBackInput').value = '';
+        clearPreview('front');
+        clearPreview('back');
+        
         saveAndRender();
         renderFcManageList();
         updateFcDueCount();
@@ -1814,9 +1935,13 @@
         if (activeCards.length === 0) {
             list.innerHTML = '<div style="color:#71717a; text-align:center;">No active cards.</div>';
         } else {
-            list.innerHTML = activeCards.map(c => `
+            list.innerHTML = activeCards.map(c => {
+                const imgIcon = (c.frontImg || c.backImg) ? '🖼️ ' : '';
+                return `
                 <div style="background:#111; padding:15px; border-radius:8px; border:1px solid #27272a; position:relative;">
-                    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:8px; color:var(--text); word-break:break-word;">${c.front}</div>
+                    <div style="font-weight:bold; font-size:0.9rem; margin-bottom:8px; color:var(--text); word-break:break-word;">
+                        ${imgIcon}${c.front}
+                    </div>
                     <div style="color:#a1a1aa; font-size:0.8rem; margin-bottom:12px; white-space:pre-wrap; word-break:break-word;">${c.back}</div>
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #333; padding-top:8px;">
                         <div style="font-size:0.65rem; color:#71717a; font-family:monospace;">
@@ -1825,7 +1950,8 @@
                         <div class="delete-btn" onclick="deleteFlashcard(${c.id})">✕</div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         if (burnedCards.length === 0) {
@@ -1864,10 +1990,30 @@
         document.getElementById('fcEmptyState').style.display = 'none';
         document.getElementById('fcCardContainer').style.display = 'flex';
         
-        document.getElementById('fcFrontText').innerText = currentFc.front;
-        document.getElementById('fcBackText').innerText = currentFc.back;
+        // Handle Text
+        document.getElementById('fcFrontText').innerText = currentFc.front || '';
+        document.getElementById('fcBackText').innerText = currentFc.back || '';
         
+        // Handle Images
+        const frontImgEl = document.getElementById('fcFrontImgDisplay');
+        if (currentFc.frontImg) {
+            frontImgEl.src = currentFc.frontImg;
+            frontImgEl.style.display = 'block';
+        } else {
+            frontImgEl.style.display = 'none';
+            frontImgEl.src = '';
+        }
+
+        const backImgEl = document.getElementById('fcBackImgDisplay');
+        if (currentFc.backImg) {
+            backImgEl.src = currentFc.backImg;
+            // Kept hidden until 'Show Answer' is clicked
+        } else {
+            backImgEl.src = '';
+        }
+
         // Reset View
+        backImgEl.style.display = 'none';
         document.getElementById('fcDivider').style.display = 'none';
         document.getElementById('fcBackText').style.display = 'none';
         document.getElementById('fcShowBtnWrap').style.display = 'block';
@@ -1886,7 +2032,14 @@
 
     function fcShowAnswer() {
         document.getElementById('fcDivider').style.display = 'block';
-        document.getElementById('fcBackText').style.display = 'block';
+        
+        if (currentFc && currentFc.backText !== '') {
+            document.getElementById('fcBackText').style.display = 'block';
+        }
+        if (currentFc && currentFc.backImg) {
+            document.getElementById('fcBackImgDisplay').style.display = 'block';
+        }
+
         document.getElementById('fcShowBtnWrap').style.display = 'none';
         document.getElementById('fcScoreBtns').style.display = 'flex';
     }
