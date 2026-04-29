@@ -2076,7 +2076,8 @@
             ease: 2.5,
             consecutiveEasy: 0,
             status: 'active',
-            nextReview: Date.now() // Due immediately
+            nextReview: Date.now(), // Due immediately
+            reviews: 0
         });
 
         document.getElementById('fcFrontInput').value = '';
@@ -2146,14 +2147,45 @@
     }
 
     function updateFcDueCount() {
-        const due = state.flashcards.filter(c => c.nextReview <= Date.now() && c.status !== 'burned').length;
-        document.getElementById('fcDueCount').innerText = due;
-        return due;
+        const now = Date.now();
+        const todayKey = getTodayKey(new Date());
+        
+        if (!state.fcNewTracker) state.fcNewTracker = {};
+        if (!state.fcNewTracker[todayKey]) state.fcNewTracker[todayKey] = 0;
+
+        let allDue = state.flashcards.filter(c => c.nextReview <= now && c.status !== 'burned');
+        
+        // Split into "Review" and "New"
+        let reviewCards = allDue.filter(c => c.reviews > 0 || (c.interval > 0 && c.reviews === undefined));
+        let newCards = allDue.filter(c => c.reviews === 0 || (c.interval === 0 && c.reviews === undefined));
+
+        // Limit new cards
+        const newCardsAllowed = Math.max(0, 8 - state.fcNewTracker[todayKey]);
+        const allowedNewCards = newCards.slice(0, newCardsAllowed);
+
+        const playableCount = reviewCards.length + allowedNewCards.length;
+        
+        document.getElementById('fcDueCount').innerText = playableCount;
+        return playableCount;
     }
 
     function renderNextFlashcard() {
         const now = Date.now();
-        const dueCards = state.flashcards.filter(c => c.nextReview <= now && c.status !== 'burned').sort((a,b) => a.nextReview - b.nextReview);
+        const todayKey = getTodayKey(new Date());
+        
+        if (!state.fcNewTracker) state.fcNewTracker = {};
+        if (!state.fcNewTracker[todayKey]) state.fcNewTracker[todayKey] = 0;
+
+        let allDue = state.flashcards.filter(c => c.nextReview <= now && c.status !== 'burned');
+        
+        let reviewCards = allDue.filter(c => c.reviews > 0 || (c.interval > 0 && c.reviews === undefined));
+        let newCards = allDue.filter(c => c.reviews === 0 || (c.interval === 0 && c.reviews === undefined))
+                             .sort((a,b) => a.id - b.id); // Oldest created first
+
+        const newCardsAllowed = Math.max(0, 8 - state.fcNewTracker[todayKey]);
+        const allowedNewCards = newCards.slice(0, newCardsAllowed);
+
+        const dueCards = [...reviewCards, ...allowedNewCards].sort((a,b) => a.nextReview - b.nextReview);
 
         if (dueCards.length === 0) {
             document.getElementById('fcEmptyState').style.display = 'block';
@@ -2296,6 +2328,16 @@
         if (cardIndex === -1) return;
         
         const card = state.flashcards[cardIndex];
+        const todayKey = getTodayKey(new Date());
+
+        // Daily Tracker Logic for New Cards
+        if (card.reviews === 0 || (card.interval === 0 && card.reviews === undefined)) {
+            if (!state.fcNewTracker) state.fcNewTracker = {};
+            if (!state.fcNewTracker[todayKey]) state.fcNewTracker[todayKey] = 0;
+            state.fcNewTracker[todayKey]++;
+        }
+        
+        card.reviews = (card.reviews || 0) + 1;
 
         if (quality === 3) {
             // Very Easy Track
@@ -2336,9 +2378,8 @@
         }
 
         // Add study day tracking
-        const todayStr = getTodayKey(new Date());
-        if (!state.fcStudyDays.includes(todayStr)) {
-            state.fcStudyDays.push(todayStr);
+        if (!state.fcStudyDays.includes(todayKey)) {
+            state.fcStudyDays.push(todayKey);
         }
 
         saveAndRender();
