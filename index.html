@@ -1333,6 +1333,35 @@
             object-fit: contain;
         }
     </style>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDeIWa3ioRcFTa6yQAEfFmBXWgrB6h1Ohs",
+            authDomain: "daily-frog-8505e.firebaseapp.com",
+            projectId: "daily-frog-8505e",
+            storageBucket: "daily-frog-8505e.firebasestorage.app",
+            messagingSenderId: "296231619691",
+            appId: "1:296231619691:web:b5611d537be4d6a103b52e"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        
+        window.fbDb = getFirestore(app);
+        window.fbStorage = getStorage(app);
+        window.fbDoc = doc;
+        window.fbSetDoc = setDoc;
+        window.fbGetDoc = getDoc;
+        window.fbRef = ref;
+        window.fbUploadString = uploadString;
+        window.fbGetDownloadURL = getDownloadURL;
+        window.fbOnSnapshot = onSnapshot;
+
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
 </head>
 <body>
 
@@ -1343,12 +1372,10 @@
 <div id="syncModal" class="modal-overlay">
     <div class="sync-modal">
         <div class="modal-close" onclick="closeSyncModal()">✕</div>
-        <div class="modal-text">Cloud Sync</div>
+        <div class="modal-text">Firebase Cloud Sync</div>
         <div class="modal-btns">
-            <button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Download</button>
-            <button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload</button>
-            <hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;">
-            <button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button>
+            <button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Manual Download</button>
+            <button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Manual Upload</button>
         </div>
     </div>
 </div>
@@ -1449,7 +1476,9 @@
                 </div>
             </div>
 
-            <button onclick="addFlashcard()" class="confirm-btn" style="margin-top:15px;">Add Card</button>
+            <button id="addCardBtn" onclick="addFlashcard()" class="confirm-btn" style="margin-top:15px;">Add Card</button>
+            <div id="uploadSpinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto 0 auto; display: none;"></div>
+            
             <hr style="width:100%; border:0; border-top:1px solid #333; margin: 10px 0;">
             <div id="fcList" style="text-align:left; display:flex; flex-direction:column; gap:10px;"></div>
             
@@ -1508,21 +1537,6 @@
         <div class="alarm-title">Timer Ended</div>
         <div class="modal-text">Frog time is over. Take a breath.</div>
         <button onclick="stopAlarmLoop()" class="confirm-btn">Okay</button>
-    </div>
-</div>
-
-<div id="newDataModal" class="modal-overlay">
-    <div class="sync-modal">
-        <div class="alarm-title" style="color:var(--success)">Success!</div>
-        <div class="modal-text">Remote Device Uploaded New Data.<br>Download it now?</div>
-        <button onclick="cloudSync('download'); document.getElementById('newDataModal').style.display='none'" class="confirm-btn">Download Now</button>
-    </div>
-</div>
-
-<div id="uploadingModal" class="modal-overlay">
-    <div class="sync-modal">
-        <div class="alarm-title" style="color:var(--frog)">Signal Received</div>
-        <div class="modal-text">Remote requested upload.<br>Uploading data now...</div>
     </div>
 </div>
 
@@ -1685,10 +1699,8 @@
 
         <div style="display:flex; align-items:center; gap:5px; flex-direction: column;">
             <div style="display:flex; align-items:center; gap:5px;">
-                <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
-                <div id="syncPulse"></div>
+                <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Starting...</div>
             </div>
-            <div id="debugBinId" style="font-size: 0.5rem; color: #3f3f46; margin-top: 2px;">ID: None</div>
             
             <div class="toggle-section" style="width: 100%; margin-top: 5px;">
                 <button class="toggle-link" onclick="toggleElement('syncHistoryBox', 'Sync History')" style="font-size: 0.55rem;">Show Sync History ↓</button>
@@ -1701,19 +1713,17 @@
         </div>
         
         <div class="button-row" style="margin-top:10px;">
-            <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
-            <button onclick="setupCloud()" class="tool-btn mobile-blue" style="border-color: var(--success); color: var(--success);">Link</button>
-            <button onclick="resetCloud()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Reset</button>
+            <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Firebase Sync</button>
+            <button onclick="openBacklogModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Backlog</button>
         </div>
 
-        <div class="button-row">
+        <div class="button-row" style="margin-top:10px;">
             <button onclick="playStretch()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Stretch</button>
             <button onclick="playChillVibe()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Chill</button>
             <a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Meditate</a>
         </div>
         
         <div class="button-row" style="margin-top: 10px;">
-            <button onclick="openBacklogModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Backlog</button>
             <button id="btnDayOffToggle" onclick="toggleDayOff()" class="tool-btn" style="border-color: var(--milestone); color: var(--milestone);">Take Day Off</button>
             <a href="mileage.html" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Mileage</a>
         </div>
@@ -1724,24 +1734,9 @@
         </div>
 
         <div class="toggle-section">
-            <button class="toggle-link" onclick="toggleElement('setupGuide', 'Setup Guide')">Show Setup Guide ↓</button>
-            <div id="setupGuide" class="expand-box">
-                <div class="instruction-box">
-                    <b>CLOUDSYNC SETUP</b><br>
-                    1. Get a Master Key from JSONBin.io.<br>
-                    2. Click "Link" (Green) to enter your Key.<br>
-                    3. Click "Sync" then "Upload" to create your first locker.<br>
-                    4. Save the generated ID to link other devices!<br>
-                    5. Ensure that the ID: Under Cloud Ready is the same on both devices
-                </div>
-            </div>
-        </div>
-
-        <div class="toggle-section">
             <button class="toggle-link" onclick="toggleElement('dangerZone', 'Danger Zone')">Danger Zone ↓</button>
             <div id="dangerZone" class="expand-box">
                 <button onclick="clearAllData()" class="tool-btn" style="color: #ef4444; border-color: #ef4444; margin-top: 10px; font-size: 0.5rem; opacity: 0.4;">Wipe All History</button>
-                <button onclick="resetCloud()" class="tool-btn" style="color: #ef4444; border-color: #ef4444; margin-top: 10px; font-size: 0.5rem; opacity: 0.4;">Unlink Cloud</button>
             </div>
         </div>
     </div>
@@ -1831,15 +1826,63 @@
     let activeTimer = { id: null, totalSeconds: 0, interval: null, isPaused: false };
     let audioCtx;
     let alarmLoopInterval = null;
-    let remoteListenInterval = null;
-    let isIntentionallyPaused = false; 
     let deleteTimeouts = {};
-    let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
     let activeGoalId = null;
     let currentGoalIdForMilestone = null;
     let activeRichContext = null; 
     let activeRichId = null;
-    let pollInterval = null; 
+
+    // --- FIREBASE SYNC ENGINE ---
+    let unsubscribeSnapshot = null;
+
+    window.addEventListener('firebase-ready', () => {
+        setupRealtimeSync();
+    });
+
+    function setupRealtimeSync() {
+        document.getElementById('syncStatus').innerText = "Cloud: Connected";
+        const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
+        
+        unsubscribeSnapshot = window.fbOnSnapshot(stateRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data._source !== DEVICE_ID) {
+                    addSyncLog("Cloud updated remotely.");
+                }
+            }
+        });
+    }
+
+    async function cloudSync(type) {
+        if (!window.fbDb) { showToast("Firebase not ready."); return; }
+        document.getElementById('syncStatus').innerText = "Cloud: Syncing...";
+        
+        try {
+            const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
+            if (type === 'upload') {
+                const payload = { ...state, _source: DEVICE_ID, _timestamp: Date.now() };
+                await window.fbSetDoc(stateRef, payload);
+                document.getElementById('syncStatus').innerText = "Cloud: Synced";
+                addSyncLog("Manual Upload Completed.");
+            } else {
+                const docSnap = await window.fbGetDoc(stateRef);
+                if (docSnap.exists()) {
+                    state = docSnap.data();
+                    saveAndRender();
+                    document.getElementById('syncStatus').innerText = "Cloud: Synced";
+                    addSyncLog("Manual Download Completed.");
+                    showToast("Downloaded Cloud Data!");
+                } else {
+                    addSyncLog("No cloud data found yet.");
+                    document.getElementById('syncStatus').innerText = "Cloud: Ready";
+                }
+            }
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "Cloud: Error";
+            showToast("Sync Error: " + e.message);
+            addSyncLog(`Sync Error: ${e.message}`);
+        }
+    }
 
     // --- ALERT TIMEOUT LOGIC ---
     let alertsActive = true;
@@ -1860,14 +1903,12 @@
 
         const todayStr = getTodayKey(new Date());
         
-        // Flashcard Check
         if (!state.fcStudyDays || !state.fcStudyDays.includes(todayStr)) {
             if(fcIcon) fcIcon.classList.add('needs-attention');
         } else {
             if(fcIcon) fcIcon.classList.remove('needs-attention');
         }
         
-        // Gratitude Check
         let gratDone = false;
         const todayData = state.dailyData[todayStr];
         if (todayData && todayData.gratitude) {
@@ -1879,7 +1920,6 @@
             if(gratIcon) gratIcon.classList.remove('needs-attention');
         }
     }
-
 
     // --- DAY OFF LOGIC ---
     function toggleDayOff() {
@@ -1994,7 +2034,6 @@
         }
     }
 
-    // --- Image Compression Logic ---
     function handleImageUpload(input, type) {
         if (!input.files || !input.files[0]) return;
         
@@ -2006,7 +2045,6 @@
             img.src = e.target.result;
             
             img.onload = function() {
-                // Compress Image via Canvas (Max width 800px to save storage)
                 const MAX_WIDTH = 800;
                 let width = img.width;
                 let height = img.height;
@@ -2022,7 +2060,6 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                // Compress to 70% quality JPEG
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
                 
                 if (type === 'front') {
@@ -2057,7 +2094,7 @@
         }
     }
 
-    function addFlashcard() {
+    async function addFlashcard() {
         const front = document.getElementById('fcFrontInput').value.trim();
         const back = document.getElementById('fcBackInput').value.trim();
         
@@ -2066,29 +2103,54 @@
             return;
         }
 
-        state.flashcards.push({
-            id: Date.now(),
-            front: front,
-            back: back,
-            frontImg: pendingFrontImg,
-            backImg: pendingBackImg,
-            interval: 0,
-            ease: 2.5,
-            consecutiveEasy: 0,
-            status: 'active',
-            nextReview: Date.now(), // Due immediately
-            reviews: 0
-        });
+        document.getElementById('addCardBtn').style.display = 'none';
+        document.getElementById('uploadSpinner').style.display = 'block';
 
-        document.getElementById('fcFrontInput').value = '';
-        document.getElementById('fcBackInput').value = '';
-        clearPreview('front');
-        clearPreview('back');
-        
-        saveAndRender();
-        renderFcManageList();
-        updateFcDueCount();
-        showToast("Flashcard Added!");
+        let finalFrontUrl = null;
+        let finalBackUrl = null;
+        const cardId = Date.now();
+
+        try {
+            if (pendingFrontImg) {
+                const r = window.fbRef(window.fbStorage, `flashcards/front_${cardId}.jpg`);
+                await window.fbUploadString(r, pendingFrontImg, 'data_url');
+                finalFrontUrl = await window.fbGetDownloadURL(r);
+            }
+            if (pendingBackImg) {
+                const r = window.fbRef(window.fbStorage, `flashcards/back_${cardId}.jpg`);
+                await window.fbUploadString(r, pendingBackImg, 'data_url');
+                finalBackUrl = await window.fbGetDownloadURL(r);
+            }
+
+            state.flashcards.push({
+                id: cardId,
+                front: front,
+                back: back,
+                frontImg: finalFrontUrl,
+                backImg: finalBackUrl,
+                interval: 0,
+                ease: 2.5,
+                consecutiveEasy: 0,
+                status: 'active',
+                nextReview: Date.now(),
+                reviews: 0
+            });
+
+            document.getElementById('fcFrontInput').value = '';
+            document.getElementById('fcBackInput').value = '';
+            clearPreview('front');
+            clearPreview('back');
+            
+            saveAndRender();
+            renderFcManageList();
+            updateFcDueCount();
+            showToast("Flashcard Added!");
+        } catch (e) {
+            showToast("Error adding card: " + e.message);
+        }
+
+        document.getElementById('addCardBtn').style.display = 'block';
+        document.getElementById('uploadSpinner').style.display = 'none';
     }
 
     function deleteFlashcard(id) {
@@ -2155,11 +2217,9 @@
 
         let allDue = state.flashcards.filter(c => c.nextReview <= now && c.status !== 'burned');
         
-        // Split into "Review" and "New"
         let reviewCards = allDue.filter(c => c.reviews > 0 || (c.interval > 0 && c.reviews === undefined));
         let newCards = allDue.filter(c => c.reviews === 0 || (c.interval === 0 && c.reviews === undefined));
 
-        // Limit new cards
         const newCardsAllowed = Math.max(0, 8 - state.fcNewTracker[todayKey]);
         const allowedNewCards = newCards.slice(0, newCardsAllowed);
         
@@ -2182,7 +2242,7 @@
         
         let reviewCards = allDue.filter(c => c.reviews > 0 || (c.interval > 0 && c.reviews === undefined));
         let newCards = allDue.filter(c => c.reviews === 0 || (c.interval === 0 && c.reviews === undefined))
-                             .sort((a,b) => a.id - b.id); // Oldest created first
+                             .sort((a,b) => a.id - b.id);
 
         const newCardsAllowed = Math.max(0, 8 - state.fcNewTracker[todayKey]);
         const allowedNewCards = newCards.slice(0, newCardsAllowed);
@@ -2206,11 +2266,9 @@
         document.getElementById('fcEmptyState').style.display = 'none';
         document.getElementById('fcCardContainer').style.display = 'flex';
         
-        // Handle Text
         document.getElementById('fcFrontText').innerText = currentFc.front || '';
         document.getElementById('fcBackText').innerText = currentFc.back || '';
         
-        // Handle Images
         const frontImgEl = document.getElementById('fcFrontImgDisplay');
         if (currentFc.frontImg) {
             frontImgEl.src = currentFc.frontImg;
@@ -2223,19 +2281,16 @@
         const backImgEl = document.getElementById('fcBackImgDisplay');
         if (currentFc.backImg) {
             backImgEl.src = currentFc.backImg;
-            // Kept hidden until 'Show Answer' is clicked
         } else {
             backImgEl.src = '';
         }
 
-        // Reset View
         backImgEl.style.display = 'none';
         document.getElementById('fcDivider').style.display = 'none';
         document.getElementById('fcBackText').style.display = 'none';
         document.getElementById('fcShowBtnWrap').style.display = 'block';
         document.getElementById('fcScoreBtns').style.display = 'none';
 
-        // Pre-calculate times for buttons
         document.getElementById('fcTime2').innerText = formatFcTime(calculateNextInterval(currentFc, 2));
         
         const easyResult = calculateNextInterval(currentFc, 3);
@@ -2262,7 +2317,7 @@
 
     function calculateNextInterval(card, quality) {
         if (quality === 0) return 0;
-        if (quality === 1) return 0.25; // Hard is fixed to 6 hours
+        if (quality === 1) return 0.25; 
         if (quality === 2) return (card.interval === 0) ? 1 : card.interval * card.ease;
         
         if (quality === 3) {
@@ -2287,7 +2342,6 @@
     function triggerBurnEffect() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Burn Sound (Low rumble to high hiss)
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -2302,13 +2356,11 @@
         osc.start(now);
         osc.stop(now + 1.6);
 
-        // Text Element
         const reward = document.createElement('div');
         reward.className = 'burn-reward';
         reward.innerText = '🔥 BURNED 🔥';
         document.body.appendChild(reward);
         
-        // Particles
         const container = document.getElementById('firework-container');
         for(let i=0; i<50; i++) {
             const p = document.createElement('div');
@@ -2322,7 +2374,7 @@
             const angle = Math.random() * Math.PI * 2;
             const dist = 50 + Math.random() * 300;
             p.style.setProperty('--x', Math.cos(angle) * dist + 'px');
-            p.style.setProperty('--y', (Math.sin(angle) * dist) - 100 + 'px'); // Bias upwards for fire
+            p.style.setProperty('--y', (Math.sin(angle) * dist) - 100 + 'px'); 
             container.appendChild(p);
             setTimeout(() => p.remove(), 1200);
         }
@@ -2338,7 +2390,6 @@
         const card = state.flashcards[cardIndex];
         const todayKey = getTodayKey(new Date());
 
-        // Daily Tracker Logic for New Cards
         if (card.reviews === 0 || (card.interval === 0 && card.reviews === undefined)) {
             if (!state.fcNewTracker) state.fcNewTracker = {};
             if (!state.fcNewTracker[todayKey]) state.fcNewTracker[todayKey] = 0;
@@ -2348,7 +2399,6 @@
         card.reviews = (card.reviews || 0) + 1;
 
         if (quality === 3) {
-            // Very Easy Track
             card.consecutiveEasy = (card.consecutiveEasy || 0) + 1;
             card.ease += 0.15;
             const result = calculateNextInterval(card, 3);
@@ -2361,31 +2411,28 @@
                 card.interval = result;
             }
         } else {
-            // Break the streak
             card.consecutiveEasy = 0; 
             
-            if (quality === 0) { // Again
+            if (quality === 0) { 
                 card.ease = Math.max(1.3, card.ease - 0.2);
                 card.interval = 0;
-            } else if (quality === 1) { // Hard
-                card.interval = 0.25; // Fixed 6 hours
+            } else if (quality === 1) { 
+                card.interval = 0.25; 
                 card.ease = Math.max(1.3, card.ease - 0.15);
-            } else if (quality === 2) { // Good
+            } else if (quality === 2) { 
                 card.interval = calculateNextInterval(card, 2);
             }
         }
 
-        // Apply Timings
         if (card.status === 'burned') {
-            card.nextReview = Date.now() + (3650 * 24 * 60 * 60 * 1000); // 10 years
+            card.nextReview = Date.now() + (3650 * 24 * 60 * 60 * 1000); 
         } else if (quality === 0) {
-            card.nextReview = Date.now() + 60 * 1000; // 1 min
+            card.nextReview = Date.now() + 60 * 1000; 
         } else {
             card.interval = Math.round(card.interval * 100) / 100;
             card.nextReview = Date.now() + (card.interval * 24 * 60 * 60 * 1000);
         }
 
-        // Add study day tracking
         if (!state.fcStudyDays.includes(todayKey)) {
             state.fcStudyDays.push(todayKey);
         }
@@ -2430,10 +2477,8 @@
             return;
         }
 
-        // Remove swept tasks from today
         state.dailyData[currentKey].habits = remaining;
 
-        // Add to tomorrow
         let tomorrow = new Date(viewingDate);
         tomorrow.setDate(tomorrow.getDate() + 1);
         const nextKey = getTodayKey(tomorrow);
@@ -2441,7 +2486,6 @@
         if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
 
         toSweep.forEach(h => {
-            // Task maintains its original column/priority color
             state.dailyData[nextKey].habits.push({ ...h });
         });
 
@@ -3466,272 +3510,6 @@
         } 
     }
 
-    function setupCloud() {
-        const key = prompt("Paste Master Key:"); 
-        if (!key) return; 
-        
-        const bin = prompt("Enter Bin ID (Leave blank if creating new):");
-        localStorage.setItem('sync_key', key); 
-        
-        if (bin) { 
-            localStorage.setItem('sync_bin_id', bin); 
-        } else { 
-            localStorage.removeItem('sync_bin_id'); 
-        }
-        
-        CLOUD_CONFIG = { key, binId: bin || '' }; 
-        updateSyncStatus("Ready"); 
-        updateDebugId(CLOUD_CONFIG.binId); 
-        addSyncLog("Cloud successfully linked."); 
-        startPassiveListener(); 
-    }
-    
-    function resetCloud() {
-        if (confirm("Disconnect Cloud?")) { 
-            localStorage.removeItem('sync_key'); 
-            localStorage.removeItem('sync_bin_id'); 
-            CLOUD_CONFIG = { key: '', binId: '' }; 
-            
-            updateSyncStatus("Unlinked"); 
-            updateDebugId("None"); 
-            addSyncLog("Cloud unlinked from this device."); 
-            stopPassiveListener(); 
-        }
-    }
-    
-    async function cloudSync(type) {
-        if (!CLOUD_CONFIG.key) { 
-            setupCloud(); 
-            return; 
-        } 
-        
-        updateSyncStatus("Syncing...");
-        try {
-            if (!CLOUD_CONFIG.binId && type === 'upload') {
-                const res = await fetch('https://api.jsonbin.io/v3/b', { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Private': 'true' }, 
-                    body: JSON.stringify(state) 
-                });
-                
-                if (!res.ok) {
-                    const err = await res.json().catch(()=>({}));
-                    throw new Error(err.message || `HTTP ${res.status}`);
-                }
-                
-                const data = await res.json();
-                
-                if (data.metadata) { 
-                    localStorage.setItem('sync_bin_id', data.metadata.id); 
-                    CLOUD_CONFIG.binId = data.metadata.id; 
-                    updateSyncStatus("Linked"); 
-                    alert("Bin ID Created: " + data.metadata.id); 
-                    updateDebugId(data.metadata.id); 
-                    addSyncLog(`Created new cloud bin: ${data.metadata.id}`); 
-                    startPassiveListener(); 
-                }
-            } else {
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}${type === 'download' ? '/latest' : ''}?t=${Date.now()}`, { 
-                    method: type === 'upload' ? 'PUT' : 'GET', 
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, 
-                    body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null, 
-                    cache: 'no-store' 
-                });
-                
-                if (!res.ok) {
-                    const err = await res.json().catch(()=>({}));
-                    throw new Error(err.message || `HTTP ${res.status}`);
-                }
-                
-                const data = await res.json();
-                
-                if (type === 'download') { 
-                    state = data.record; 
-                    if (!state.longTermGoals) state.longTermGoals = []; 
-                    if (!state.dailyRoutine) state.dailyRoutine = []; 
-                    if (!state.monthNotes) state.monthNotes = {};
-                    if (!state.studyNotes) state.studyNotes = {};
-                    if (!state.flashcards) state.flashcards = [];
-                    if (!state.backlog) state.backlog = [];
-                    if (!state.fcStudyDays) state.fcStudyDays = [];
-                    
-                    state.longTermGoals.forEach(g => { 
-                        if(!g.datasets) { 
-                            if(g.stats) g.datasets = [{label:'Variable 1', color:'#f472b6', data: g.stats}]; 
-                            else g.datasets = []; 
-                        } 
-                    });
-                    
-                    saveAndRender(); 
-                    addSyncLog("Manual Download Completed.");
-                } else { 
-                    addSyncLog("Manual Upload Completed."); 
-                }
-                updateSyncStatus("Synced");
-            }
-        } catch (e) { 
-            updateSyncStatus("Error"); 
-            addSyncLog(`Sync Error: ${e.message}`); 
-            showToast(`Sync Failed: ${e.message}`, 4000);
-        }
-    }
-
-    document.addEventListener('visibilitychange', () => { 
-        if (document.visibilityState === 'visible' && CLOUD_CONFIG.binId && !isIntentionallyPaused) { 
-            addSyncLog("App woken up. Checking cloud..."); 
-            checkRemoteSignal(); 
-            startPassiveListener(); 
-        } 
-    });
-    
-    window.addEventListener('focus', () => { 
-        if (CLOUD_CONFIG.binId && !isIntentionallyPaused) { 
-            checkRemoteSignal(); 
-            startPassiveListener(); 
-        } 
-    });
-    
-    document.addEventListener('touchstart', () => { 
-        if(!remoteListenInterval && CLOUD_CONFIG.binId && !isIntentionallyPaused) { 
-            startPassiveListener(); 
-        } 
-    }, {passive: true});
-
-    function startPassiveListener() { 
-        if (remoteListenInterval) clearInterval(remoteListenInterval); 
-        if(!CLOUD_CONFIG.binId) return; 
-        document.getElementById('syncPulse').classList.add('pulsing'); 
-        remoteListenInterval = setInterval(checkRemoteSignal, 15000); 
-    }
-    
-    function stopPassiveListener() { 
-        if (remoteListenInterval) clearInterval(remoteListenInterval); 
-        document.getElementById('syncPulse').classList.remove('pulsing'); 
-        remoteListenInterval = null; 
-    }
-
-    async function checkRemoteSignal() {
-        try {
-            const statusEl = document.getElementById('syncStatus'); 
-            statusEl.classList.add('blink-blue'); 
-            statusEl.innerText = "Cloud: Checking...";
-            
-            const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, { 
-                method: 'GET', 
-                headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, 
-                cache: 'no-store' 
-            });
-            const data = await res.json(); 
-            statusEl.classList.remove('blink-blue'); 
-            statusEl.innerText = "Cloud: Ready";
-            
-            const remoteState = data.record || data;
-            
-            if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
-                if (remoteState._signalSource === DEVICE_ID) return; 
-                
-                addSyncLog("Signal Received: Remote device requested upload."); 
-                playChime(); 
-                statusEl.classList.add('blink-yellow'); 
-                statusEl.innerText = "Cloud: Uploading..."; 
-                document.getElementById('uploadingModal').style.display = 'flex';
-                
-                const payload = { ...state, _remoteSignal: 'UPLOAD_COMPLETE' };
-                await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, { 
-                    method: 'PUT', 
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, 
-                    body: JSON.stringify(payload) 
-                });
-                
-                setTimeout(() => { 
-                    statusEl.classList.remove('blink-yellow'); 
-                    statusEl.innerText = "Cloud: Synced"; 
-                    document.getElementById('uploadingModal').style.display = 'none'; 
-                    showToast("My Data Uploaded. Remote notified."); 
-                    addSyncLog("Data Auto-Uploaded to Remote."); 
-                }, 1500);
-            }
-        } catch(e) { 
-            console.log("Listener error:", e); 
-            document.getElementById('syncStatus').classList.remove('blink-blue'); 
-        }
-    }
-
-    async function sendRemoteSignal() {
-        if(!CLOUD_CONFIG.binId) { 
-            alert("Link cloud first!"); 
-            return; 
-        } 
-        
-        showToast("Sending Signal to Remote..."); 
-        addSyncLog("Sent Upload Request to Remote."); 
-        isIntentionallyPaused = true; 
-        stopPassiveListener();
-        
-        try {
-            const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, { 
-                method: 'GET', 
-                headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, 
-                cache: 'no-store' 
-            });
-            const data = await resGet.json(); 
-            let payload = data.record || data; 
-            payload._remoteSignal = 'UPLOAD_REQUEST'; 
-            payload._signalSource = DEVICE_ID;
-            
-            await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, { 
-                method: 'PUT', 
-                headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, 
-                body: JSON.stringify(payload) 
-            });
-            showToast("Signal Sent. Waiting for remote to reply...");
-            
-            if (pollInterval) clearInterval(pollInterval); 
-            let attempts = 0;
-            
-            pollInterval = setInterval(async () => {
-                attempts++; 
-                if(attempts > 20) { 
-                    clearInterval(pollInterval); 
-                    showToast("Remote timed out."); 
-                    addSyncLog("Remote connection timed out (No reply)."); 
-                    isIntentionallyPaused = false; 
-                    startPassiveListener(); 
-                    return; 
-                }
-                const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, { 
-                    method: 'GET', 
-                    headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, 
-                    cache: 'no-store' 
-                });
-                const pollData = await pollRes.json(); 
-                const pollState = pollData.record || pollData;
-                
-                if (pollState && pollState._remoteSignal === 'UPLOAD_COMPLETE') { 
-                    clearInterval(pollInterval); 
-                    document.getElementById('newDataModal').style.display = 'flex'; 
-                    playChime(); 
-                    addSyncLog("Success: Remote uploaded its data."); 
-                    isIntentionallyPaused = false; 
-                    startPassiveListener(); 
-                }
-            }, 3000); 
-        } catch (e) { 
-            alert("Signal Error: " + e.message); 
-            addSyncLog(`Signal Error: ${e.message}`); 
-            isIntentionallyPaused = false; 
-            startPassiveListener(); 
-        }
-    }
-
-    function updateSyncStatus(msg) { 
-        document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; 
-    }
-    
-    function updateDebugId(id) { 
-        document.getElementById('debugBinId').innerText = `ID: ${id || 'None'}`; 
-    }
-    
     function clearAllData() { 
         if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { 
             state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {}, studyNotes: {}, flashcards: [], backlog: [], fcStudyDays: [] }; 
@@ -4100,123 +3878,6 @@
         });
     }
 
-    // --- Core Render Logic ---
-    function saveAndRender(shouldRenderBoard = true) {
-        const key = getTodayKey(viewingDate); 
-        const dayData = state.dailyData[key] || { habits: [], percent: 0 };
-        
-        const btnDayOff = document.getElementById('btnDayOffToggle');
-        if (dayData.isDayOff) { 
-            btnDayOff.innerText = "Resume Day"; 
-            btnDayOff.style.color = "var(--danger)"; 
-            btnDayOff.style.borderColor = "var(--danger)"; 
-        } else { 
-            btnDayOff.innerText = "Take Day Off"; 
-            btnDayOff.style.color = "var(--milestone)"; 
-            btnDayOff.style.borderColor = "var(--milestone)"; 
-        }
-
-        const mainEl = document.getElementById('mainPercent'); 
-        const frogLabel = document.getElementById('frogLabel');
-        const total = dayData.habits ? dayData.habits.length : 0; 
-        const doneCount = dayData.habits ? dayData.habits.filter(h => h.done).length : 0;
-        
-        if (dayData.isDayOff) { 
-            mainEl.innerText = '💤'; 
-            mainEl.style.fontSize = '5rem'; 
-            mainEl.classList.remove('complete'); 
-            frogLabel.innerText = "DAY OFF"; 
-            updateQuote(false, true); 
-        } else {
-            dayData.percent = total > 0 ? Math.round((doneCount / total) * 100) : 0; 
-            mainEl.innerText = dayData.percent + '%'; 
-            mainEl.style.fontSize = '6rem'; 
-            frogLabel.innerText = "Today's Frog";
-            
-            const wasComplete = mainEl.classList.contains('complete');
-            if (dayData.percent === 100 && total > 0) { 
-                if (!wasComplete) triggerFireworks(); 
-                mainEl.classList.add('complete'); 
-                updateQuote(true, false); 
-            } else { 
-                mainEl.classList.remove('complete'); 
-                updateQuote(false, false); 
-            }
-        }
-        
-        document.getElementById('frogInput').style.display = (dayData.habits && dayData.habits.some(h => h.isFrog)) ? 'none' : 'block';
-        document.getElementById('dateDisplay').innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-
-        let totalFrogs = 0; 
-        Object.values(state.dailyData).forEach(d => { 
-            if(d.habits) { 
-                d.habits.forEach(h => { 
-                    if(h.isFrog && h.done) totalFrogs++; 
-                }); 
-            } 
-        });
-        
-        const frogCounter = document.getElementById('frogCounter'); 
-        if(frogCounter) { 
-            frogCounter.innerText = `${totalFrogs} Frogs Eaten`; 
-        }
-
-        const fcCounter = document.getElementById('fcCounter');
-        if(fcCounter) {
-            fcCounter.innerText = `${(state.fcStudyDays || []).length} Days Studied`;
-        }
-
-        state.dailyData[key] = dayData; 
-        localStorage.setItem('discipline_v12', JSON.stringify(state));
-        
-        if (shouldRenderBoard) { 
-            renderBoard(dayData.habits || []); 
-        } 
-        
-        renderYear(); 
-        renderGoals();
-        updateFcDueCount();
-        updateAlertGlows();
-    }
-
-    function updateQuote(isComplete, isDayOff) {
-        const textEl = document.getElementById('quoteText');
-        
-        if (isDayOff) { 
-            const idx = viewingDate.getDate() % restQuotes.length; 
-            const selectedQuote = restQuotes[idx]; 
-            textEl.innerText = `"${selectedQuote.text}"`; 
-            textEl.dataset.author = selectedQuote.author; 
-        } else if (isComplete) {
-            const hasWonBefore = localStorage.getItem('victory_first_done');
-            if (!hasWonBefore) { 
-                textEl.innerText = `"${firstVictoryQuote}"`; 
-                localStorage.setItem('victory_first_done', 'true'); 
-            } else { 
-                textEl.innerText = `"${randomVictoryQuotes[Math.floor(Math.random() * randomVictoryQuotes.length)]}"`; 
-            } 
-            textEl.dataset.author = "You";
-        } else {
-            const hasVisited = localStorage.getItem('frog_first_visit_done'); 
-            let selectedQuote;
-            if (!hasVisited) { 
-                selectedQuote = markTwainQuote; 
-                localStorage.setItem('frog_first_visit_done', 'true'); 
-            } else { 
-                const idx = viewingDate.getDate() % quotesList.length; 
-                selectedQuote = quotesList[idx]; 
-            }
-            textEl.innerText = `"${selectedQuote.text}"`; 
-            textEl.dataset.author = selectedQuote.author;
-        }
-    }
-
-    const cols = [document.getElementById('col-0'), document.getElementById('col-1'), document.getElementById('col-2')];
-    cols.forEach(c => { 
-        c.ondragover = handleDragOver; 
-        c.ondrop = handleDrop; 
-    });
-
     function renderBoard(habits) {
         cols.forEach(c => c.innerHTML = '');
         
@@ -4322,28 +3983,6 @@
         });
     }
 
-    function getTodayKey(date) { 
-        const year = date.getFullYear(); 
-        const month = String(date.getMonth() + 1).padStart(2, '0'); 
-        const day = String(date.getDate()).padStart(2, '0'); 
-        return `${year}-${month}-${day}`; 
-    }
-    
-    function changeDate(d) { 
-        viewingDate.setDate(viewingDate.getDate() + d); 
-        saveAndRender(); 
-    }
-    
-    function jumpToToday() { 
-        viewingDate = new Date(); 
-        saveAndRender(); 
-    }
-    
-    function jumpToDate(s) { 
-        viewingDate = new Date(s + 'T00:00:00'); 
-        saveAndRender(); 
-    }
-
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'DIV' && e.target.isContentEditable)) return; 
         
@@ -4391,14 +4030,6 @@
         } 
     });
 
-    if (CLOUD_CONFIG.key) { 
-        updateSyncStatus("Ready"); 
-        updateDebugId(CLOUD_CONFIG.binId); 
-        if(CLOUD_CONFIG.binId) { 
-            startPassiveListener(); 
-        } 
-    }
-    
     saveAndRender();
 </script>
 </body>
