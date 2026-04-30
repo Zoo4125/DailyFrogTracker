@@ -144,6 +144,7 @@
     let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {} };
     if (!state.longTermGoals || !Array.isArray(state.longTermGoals)) state.longTermGoals = []; 
     if (!state.dailyRoutine) state.dailyRoutine = []; if (!state.monthNotes) state.monthNotes = {}; if (!state.studyNotes) state.studyNotes = {}; if (!state.flashcards) state.flashcards = []; if (!state.backlog) state.backlog = []; if (!state.fcStudyDays) state.fcStudyDays = [];
+    if (!state.ui) state.ui = { goals: true, calendar: true };
     const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9); let viewingDate = new Date(); let activeTimer = { id: null, totalSeconds: 0, interval: null, isPaused: false }; let audioCtx; let alarmLoopInterval = null; let deleteTimeouts = {}; let activeGoalId = null; let currentGoalIdForMilestone = null; let activeRichContext = null; let activeRichId = null;
     let unsubscribeSnapshot = null; let isIntentionallyPaused = false; let pollInterval = null;
 
@@ -181,7 +182,7 @@
                 document.getElementById('syncStatus').innerText = "Cloud: Synced"; addSyncLog("Manual Upload Completed.");
             } else {
                 const docSnap = await window.fbGetDoc(stateRef);
-                if (docSnap.exists()) { state = docSnap.data(); saveAndRender(); document.getElementById('syncStatus').innerText = "Cloud: Synced"; addSyncLog("Manual Download Completed."); showToast("Downloaded Cloud Data!"); } else { addSyncLog("No cloud data found yet."); document.getElementById('syncStatus').innerText = "Cloud: Ready"; }
+                if (docSnap.exists()) { state = docSnap.data(); if (!state.ui) state.ui = { goals: true, calendar: true }; saveAndRender(); document.getElementById('syncStatus').innerText = "Cloud: Synced"; addSyncLog("Manual Download Completed."); showToast("Downloaded Cloud Data!"); } else { addSyncLog("No cloud data found yet."); document.getElementById('syncStatus').innerText = "Cloud: Ready"; }
             }
         } catch (e) { document.getElementById('syncStatus').innerText = "Cloud: Error"; showToast("Sync Error: " + e.message); addSyncLog(`Sync Error: ${e.message}`); }
     }
@@ -389,7 +390,15 @@
     function confirmAddMilestone() { const text = document.getElementById('newMilestoneText').value; if (text && currentGoalIdForMilestone) { const goal = state.longTermGoals.find(g => g.id == currentGoalIdForMilestone); if (goal) { goal.milestones.push({ id: Date.now(), text: text, done: false }); saveAndRender(); closeMilestoneModal(); } } }
 
     const DEFAULT_COLORS = ['#f472b6', '#facc15', '#60a5fa', '#c084fc'];
-    function toggleCollapse(id) { document.getElementById(id).classList.toggle('show'); }
+    
+    function toggleElement(id, baseName) { 
+        const el = document.getElementById(id); const btn = el.previousElementSibling; const isOpen = el.classList.toggle('open'); 
+        if(id === 'goalsCollapse') state.ui.goals = isOpen;
+        if(id === 'calendarCollapse') state.ui.calendar = isOpen;
+        if(id === 'goalsCollapse' || id === 'calendarCollapse') localStorage.setItem('discipline_v12', JSON.stringify(state));
+        if (baseName === 'Danger Zone' || baseName === 'Sync History') { btn.innerText = `${baseName} ${isOpen ? '↑' : '↓'}`; } else { btn.innerText = `${isOpen ? 'Hide' : 'Show'} ${baseName} ${isOpen ? '↑' : '↓'}`; } 
+    }
+
     function openStatsModal(id) { activeGoalId = id; document.getElementById('goalStatsModal').style.display = 'flex'; document.getElementById('statDate').valueAsDate = new Date(); document.getElementById('statValue').value = ''; const goal = state.longTermGoals.find(g => g.id == activeGoalId); if(!goal.datasets) { if(goal.stats) { goal.datasets = [{ label: "Variable 1", color: DEFAULT_COLORS[0], data: goal.stats }]; delete goal.stats; } else { goal.datasets = []; } } goal.datasets.forEach((ds, i) => { if(!ds.color) ds.color = DEFAULT_COLORS[i % 4]; }); renderMultiGraph(); renderManageSection(); renderDataHistory(); }
     function closeStatsModal() { document.getElementById('goalStatsModal').style.display = 'none'; activeGoalId = null; }
 
@@ -442,7 +451,6 @@
     function addSingleRoutineTask(taskText) { const key = getTodayKey(viewingDate); if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false }); saveAndRender(); showToast(`Added "${taskText}" to Today!`); }
     function addAllRoutinesToToday() { if(activeGoalId) { const goal = state.longTermGoals.find(g => g.id == activeGoalId); if(goal && goal.routine && goal.routine.length > 0) { const key = getTodayKey(viewingDate); if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; goal.routine.forEach(taskText => { state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random() * 100000), text: taskText, done: false, col: 1, isFrog: false }); }); saveAndRender(); showToast(`Added ${goal.routine.length} tasks to Today!`); closeRoutineModal(); } else { showToast("No tasks in routine."); } } }
 
-    function toggleElement(id, baseName) { const el = document.getElementById(id); const btn = el.previousElementSibling; const isOpen = el.classList.toggle('open'); if (baseName === 'Danger Zone' || baseName === 'Sync History') { btn.innerText = `${baseName} ${isOpen ? '↑' : '↓'}`; } else { btn.innerText = `${isOpen ? 'Hide' : 'Show'} ${baseName} ${isOpen ? '↑' : '↓'}`; } }
     function playStretch() { window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); }
     function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=400,height=750,left=50,top=50'); }
     function playChime() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const now = audioCtx.currentTime; [174, 348, 522].forEach((freq, i) => { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.frequency.setValueAtTime(freq, now); gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.1, now + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, now + 3); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 3.1); }); }
@@ -463,7 +471,7 @@
     function closeCustomTimerModal() { document.getElementById('customTimerModal').style.display = 'none'; document.getElementById('customTimerInput').value = ''; }
     function confirmCustomTimer() { const input = document.getElementById('customTimerInput'); const mins = parseInt(input.value); if (mins && mins > 0) { const btn = document.getElementById('timerCustom'); btn.innerText = mins + ":00"; startTimer(mins, 'timerCustom'); closeCustomTimerModal(); } }
 
-    function clearAllData() { if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {}, studyNotes: {}, flashcards: [], backlog: [], fcStudyDays: [] }; saveAndRender(); addSyncLog("Local history wiped."); } }
+    function clearAllData() { if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {}, studyNotes: {}, flashcards: [], backlog: [], fcStudyDays: [], ui: { goals: true, calendar: true } }; saveAndRender(); addSyncLog("Local history wiped."); } }
 
     function addHabit() { const input = document.getElementById('habitInput'); if (!input.value.trim()) return; const key = getTodayKey(viewingDate); if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; state.dailyData[key].habits.push({ id: Date.now(), text: input.value, done: false, col: 1, isFrog: false }); input.value = ''; saveAndRender(); input.blur(); }
     function addFrog() { const input = document.getElementById('frogInput'); if (!input.value.trim()) return; const key = getTodayKey(viewingDate); if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; state.dailyData[key].habits.unshift({ id: Date.now(), text: input.value, done: false, col: 1, isFrog: true }); input.value = ''; saveAndRender(); input.blur(); }
@@ -539,6 +547,14 @@
     function jumpToToday() { viewingDate = new Date(); saveAndRender(); }
     function jumpToDate(s) { viewingDate = new Date(s + 'T00:00:00'); saveAndRender(); }
 
+    function applyUIState() {
+        if(!state.ui) return;
+        const gEl = document.getElementById('goalsCollapse'); const gBtn = gEl.previousElementSibling;
+        if(state.ui.goals === false) { gEl.classList.remove('open'); gBtn.innerText = "Show Goals ↓"; }
+        const cEl = document.getElementById('calendarCollapse'); const cBtn = cEl.previousElementSibling;
+        if(state.ui.calendar === false) { cEl.classList.remove('open'); cBtn.innerText = "Show Calendar ↓"; }
+    }
+
     function saveAndRender(shouldRenderBoard = true) {
         const key = getTodayKey(viewingDate); const dayData = state.dailyData[key] || { habits: [], percent: 0 };
         const btnDayOff = document.getElementById('btnDayOffToggle');
@@ -566,6 +582,7 @@
     document.getElementById('frogInput').addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); addFrog(); } });
     document.getElementById('newGoalText').addEventListener('keypress', e => { if (e.key === 'Enter') { confirmAddGoal(); } });
 
+    applyUIState();
     saveAndRender();
 </script>
 </body>
