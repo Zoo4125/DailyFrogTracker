@@ -3983,6 +3983,146 @@
         });
     }
 
+const cols = [document.getElementById('col-0'), document.getElementById('col-1'), document.getElementById('col-2')];
+    if (cols[0] && cols[1] && cols[2]) {
+        cols.forEach(c => { 
+            c.ondragover = handleDragOver; 
+            c.ondrop = handleDrop; 
+        });
+    }
+
+    function saveAndRender(shouldRenderBoard = true) {
+        const key = getTodayKey(viewingDate); 
+        const dayData = state.dailyData[key] || { habits: [], percent: 0 };
+        
+        const btnDayOff = document.getElementById('btnDayOffToggle');
+        if (dayData.isDayOff) { 
+            if(btnDayOff) { btnDayOff.innerText = "Resume Day"; btnDayOff.style.color = "var(--danger)"; btnDayOff.style.borderColor = "var(--danger)"; }
+        } else { 
+            if(btnDayOff) { btnDayOff.innerText = "Take Day Off"; btnDayOff.style.color = "var(--milestone)"; btnDayOff.style.borderColor = "var(--milestone)"; }
+        }
+
+        const mainEl = document.getElementById('mainPercent'); 
+        const frogLabel = document.getElementById('frogLabel');
+        const total = dayData.habits ? dayData.habits.length : 0; 
+        const doneCount = dayData.habits ? dayData.habits.filter(h => h.done).length : 0;
+        
+        if (dayData.isDayOff) { 
+            if(mainEl) { mainEl.innerText = '💤'; mainEl.style.fontSize = '5rem'; mainEl.classList.remove('complete'); }
+            if(frogLabel) frogLabel.innerText = "DAY OFF"; 
+            updateQuote(false, true); 
+        } else {
+            dayData.percent = total > 0 ? Math.round((doneCount / total) * 100) : 0; 
+            if(mainEl) { 
+                mainEl.innerText = dayData.percent + '%'; 
+                mainEl.style.fontSize = '6rem'; 
+                
+                const wasComplete = mainEl.classList.contains('complete');
+                if (dayData.percent === 100 && total > 0) { 
+                    if (!wasComplete) triggerFireworks(); 
+                    mainEl.classList.add('complete'); 
+                    updateQuote(true, false); 
+                } else { 
+                    mainEl.classList.remove('complete'); 
+                    updateQuote(false, false); 
+                }
+            }
+            if(frogLabel) frogLabel.innerText = "Today's Frog";
+        }
+        
+        const frogInput = document.getElementById('frogInput');
+        if(frogInput) frogInput.style.display = (dayData.habits && dayData.habits.some(h => h.isFrog)) ? 'none' : 'block';
+        
+        const dateDisplay = document.getElementById('dateDisplay');
+        if(dateDisplay) dateDisplay.innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+        let totalFrogs = 0; 
+        Object.values(state.dailyData).forEach(d => { 
+            if(d.habits) { 
+                d.habits.forEach(h => { 
+                    if(h.isFrog && h.done) totalFrogs++; 
+                }); 
+            } 
+        });
+        
+        const frogCounter = document.getElementById('frogCounter'); 
+        if(frogCounter) { 
+            frogCounter.innerText = `${totalFrogs} Frogs Eaten`; 
+        }
+
+        const fcCounter = document.getElementById('fcCounter');
+        if(fcCounter) {
+            fcCounter.innerText = `${(state.fcStudyDays || []).length} Days Studied`;
+        }
+
+        state.dailyData[key] = dayData; 
+        localStorage.setItem('discipline_v12', JSON.stringify(state));
+        
+        if (shouldRenderBoard) { 
+            renderBoard(dayData.habits || []); 
+        } 
+        
+        renderYear(); 
+        renderGoals();
+        if(typeof updateFcDueCount === 'function') updateFcDueCount();
+        if(typeof updateAlertGlows === 'function') updateAlertGlows();
+    }
+
+    function updateQuote(isComplete, isDayOff) {
+        const textEl = document.getElementById('quoteText');
+        if(!textEl) return;
+        
+        if (isDayOff) { 
+            const idx = viewingDate.getDate() % restQuotes.length; 
+            const selectedQuote = restQuotes[idx]; 
+            textEl.innerText = `"${selectedQuote.text}"`; 
+            textEl.dataset.author = selectedQuote.author; 
+        } else if (isComplete) {
+            const hasWonBefore = localStorage.getItem('victory_first_done');
+            if (!hasWonBefore) { 
+                textEl.innerText = `"${firstVictoryQuote}"`; 
+                localStorage.setItem('victory_first_done', 'true'); 
+            } else { 
+                textEl.innerText = `"${randomVictoryQuotes[Math.floor(Math.random() * randomVictoryQuotes.length)]}"`; 
+            } 
+            textEl.dataset.author = "You";
+        } else {
+            const hasVisited = localStorage.getItem('frog_first_visit_done'); 
+            let selectedQuote;
+            if (!hasVisited) { 
+                selectedQuote = markTwainQuote; 
+                localStorage.setItem('frog_first_visit_done', 'true'); 
+            } else { 
+                const idx = viewingDate.getDate() % quotesList.length; 
+                selectedQuote = quotesList[idx]; 
+            }
+            textEl.innerText = `"${selectedQuote.text}"`; 
+            textEl.dataset.author = selectedQuote.author;
+        }
+    }
+
+    function getTodayKey(date) { 
+        const year = date.getFullYear(); 
+        const month = String(date.getMonth() + 1).padStart(2, '0'); 
+        const day = String(date.getDate()).padStart(2, '0'); 
+        return `${year}-${month}-${day}`; 
+    }
+    
+    function changeDate(d) { 
+        viewingDate.setDate(viewingDate.getDate() + d); 
+        saveAndRender(); 
+    }
+    
+    function jumpToToday() { 
+        viewingDate = new Date(); 
+        saveAndRender(); 
+    }
+    
+    function jumpToDate(s) { 
+        viewingDate = new Date(s + 'T00:00:00'); 
+        saveAndRender(); 
+    }
+
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'DIV' && e.target.isContentEditable)) return; 
         
