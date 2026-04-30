@@ -83,7 +83,9 @@
 <body>
 <div class="focus-overlay"></div><div id="firework-container" class="firework-container"></div><div id="toast" class="toast"></div>
 
-<div id="syncModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeSyncModal()">✕</div><div class="modal-text">Firebase Cloud Sync</div><div class="modal-btns"><button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Manual Download</button><button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Manual Upload</button></div></div></div>
+<div id="syncModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeSyncModal()">✕</div><div class="modal-text">Firebase Cloud Sync</div><div class="modal-btns"><button onclick="cloudSync('download'); closeSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Manual Download</button><button onclick="cloudSync('upload'); closeSyncModal()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Manual Upload</button><hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;"><button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button></div></div></div>
+<div id="newDataModal" class="modal-overlay"><div class="sync-modal"><div class="alarm-title" style="color:var(--success)">Success!</div><div class="modal-text">Remote Device Uploaded New Data.<br>Download it now?</div><button onclick="cloudSync('download'); document.getElementById('newDataModal').style.display='none'" class="confirm-btn">Download Now</button></div></div>
+<div id="uploadingModal" class="modal-overlay"><div class="sync-modal"><div class="alarm-title" style="color:var(--frog)">Signal Received</div><div class="modal-text">Remote requested upload.<br>Uploading data now...</div></div></div>
 <div id="sweepModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeSweepModal()">✕</div><div class="modal-title" style="font-size: 1.8rem;">Sweep Tasks</div><div class="modal-text">Move incomplete tasks around.</div><div class="modal-btns"><button onclick="executeSweep(0)" class="tool-btn" style="border-color: var(--success); color: var(--success);">Sweep Priority 1 (Green) to Tomorrow</button><button onclick="executeSweep(1)" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Sweep Priority 2 (Yellow) to Tomorrow</button><button onclick="executeSweep(2)" class="tool-btn" style="border-color: var(--danger); color: var(--danger);">Sweep Priority 3 (Red) to Tomorrow</button><button onclick="sweepToBacklog(2)" class="tool-btn" style="border-color: var(--danger); color: var(--danger); opacity: 0.7;">Move Priority 3 (Red) to Backlog</button><hr style="width:100%; border:0; border-top:1px solid #333; margin:5px 0;"><button onclick="executeSweep('all')" class="tool-btn" style="border-color: var(--text); color: var(--text);">Sweep All to Tomorrow</button></div></div></div>
 <div id="backlogModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px; max-height: 80vh; display:flex; flex-direction:column;"><div class="modal-close" onclick="closeBacklogModal()">✕</div><div class="modal-title" style="font-size: 1.8rem;">Backlog</div><div class="modal-text">Store tasks for later.</div><div style="display:flex; width:100%; gap:10px; margin-bottom: 15px;"><input type="text" id="newBacklogTask" class="custom-input" placeholder="New backlog task..." style="margin-bottom:0; flex:1;" onkeypress="if(event.key==='Enter') addBacklogTask()"><button onclick="addBacklogTask()" class="confirm-btn" style="margin-top:0; padding: 10px 20px;">Add</button></div><div id="backlogList" style="width:100%; display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1; text-align:left;"></div></div></div>
 <div id="flashcardModal" class="modal-overlay"><div class="sync-modal" style="max-width: 500px; height: 85vh; display:flex; flex-direction:column; padding: 30px 20px;"><div class="modal-close" onclick="closeFlashcardModal()">✕</div><div class="modal-title" style="font-size: 1.5rem; margin-bottom: 5px;">Spaced Repetition</div><div style="display:flex; gap:10px; margin-bottom:15px; width:100%;"><button onclick="setFcTab('review')" id="fcTabReview" class="tool-btn active-tab" style="flex:1;">Review (<span id="fcDueCount">0</span>)</button><button onclick="setFcTab('manage')" id="fcTabManage" class="tool-btn" style="flex:1;">Manage</button></div><div id="fcReviewArea" style="flex:1; display:flex; flex-direction:column; width:100%; align-items:center; justify-content:center;"><div id="fcEmptyState" style="display:none; color:var(--success); font-weight:bold; font-size:1.2rem; text-align:center;">All caught up! Great job. 🎉</div><div id="fcCardContainer" style="width:100%; display:none; flex-direction:column; align-items:center;"><div style="background:#111; border:1px solid var(--border); border-radius:12px; width:100%; min-height:220px; padding:25px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; overflow-y:auto; max-height:50vh;"><img id="fcFrontImgDisplay" class="fc-review-img"><div id="fcFrontText" style="font-size:1.2rem; font-weight:bold; color:var(--text); word-break:break-word;"></div><div id="fcDivider" style="width:80%; border-top:1px dashed #333; margin:20px 0; display:none;"></div><img id="fcBackImgDisplay" class="fc-review-img"><div id="fcBackText" style="font-size:1rem; color:#a1a1aa; display:none; word-break:break-word; white-space:pre-wrap;"></div></div><div id="fcShowBtnWrap" style="width:100%; margin-top:20px;"><button onclick="fcShowAnswer()" class="confirm-btn" style="width:100%;">Show Answer</button></div><div id="fcScoreBtns" style="width:100%; display:none; gap:10px; margin-top:20px;"><button onclick="fcAnswer(0)" class="tool-btn" style="flex:1; padding:10px 5px; border-color:var(--danger); color:var(--danger);">Again<br><span style="font-size:0.6rem; opacity:0.7;">&lt; 1m</span></button><button onclick="fcAnswer(1)" class="tool-btn" style="flex:1; padding:10px 5px; border-color:#f97316; color:#f97316;">Hard<br><span id="fcTime1" style="font-size:0.6rem; opacity:0.7;">6h</span></button><button onclick="fcAnswer(2)" class="tool-btn" style="flex:1; padding:10px 5px; border-color:var(--success); color:var(--success);">Good<br><span id="fcTime2" style="font-size:0.6rem; opacity:0.7;">-</span></button><button onclick="fcAnswer(3)" class="tool-btn" style="flex:1; padding:10px 5px; border-color:var(--primary); color:var(--primary);">Easy<br><span id="fcTime3" style="font-size:0.6rem; opacity:0.7;">-</span></button></div></div></div><div id="fcManageArea" style="display:none; flex:1; flex-direction:column; width:100%; overflow-y:auto; gap:10px; padding-right:5px;"><input type="text" id="fcFrontInput" class="custom-input" placeholder="Front (Question/Term)..."><textarea id="fcBackInput" class="custom-input" placeholder="Back (Answer/Definition)..." style="resize:vertical; min-height:80px; font-family:inherit;"></textarea><div style="display:flex; gap:10px; width:100%;"><div style="flex:1; display:flex; flex-direction:column; align-items:center;"><label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">🖼️ Add Front Img <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'front')"></label><img id="fcFrontPreview" class="fc-image-preview"><div id="fcFrontImgClear" onclick="clearPreview('front')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div></div><div style="flex:1; display:flex; flex-direction:column; align-items:center;"><label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">🖼️ Add Back Img <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'back')"></label><img id="fcBackPreview" class="fc-image-preview"><div id="fcBackImgClear" onclick="clearPreview('back')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div></div></div><button id="addCardBtn" onclick="addFlashcard()" class="confirm-btn" style="margin-top:15px;">Add Card</button><div id="uploadSpinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto 0 auto; display: none;"></div><hr style="width:100%; border:0; border-top:1px solid #333; margin: 10px 0;"><div id="fcList" style="text-align:left; display:flex; flex-direction:column; gap:10px;"></div><div class="input-toggle" onclick="toggleCollapse('fcMasteredListContainer')" style="margin-top: 15px; border-color: #f97316; color: #f97316;">Mastered Cards (<span id="fcMasteredCount">0</span>) <span>▼</span></div><div id="fcMasteredListContainer" class="collapsible-content" style="padding: 10px;"><div id="fcMasteredList" style="text-align:left; display:flex; flex-direction:column; gap:10px;"></div></div></div></div></div>
@@ -104,7 +106,14 @@
     <div class="input-group"><input type="text" id="frogInput" placeholder="Set today's BIG FROG (one per day)..." enterkeyhint="done"><input type="text" id="habitInput" placeholder="Add another task..." enterkeyhint="done"></div>
     <div class="board"><div class="column" id="col-0" data-col="0"></div><div class="column" id="col-1" data-col="1"></div><div class="column" id="col-2" data-col="2"></div></div>
     <div class="trophy-section"><div class="dashboard-icon icon-flash" onclick="openFlashcardModal()" title="Flashcards">🗂️</div><div class="dashboard-icon icon-study" onclick="openStudyModal()" title="Master Electrician Prep">🔌</div><div class="dashboard-icon icon-bolt" onclick="openDailyRoutineModal()" title="Daily Routine">⚡</div><div class="dashboard-icon icon-pray" onclick="openGratitudeModal()" title="Gratitude Journal">🙏</div><div class="dashboard-icon icon-trophy" onclick="openGoalModal()" title="Goals">🏆</div><div class="dashboard-icon icon-broom" onclick="openSweepModal()" title="Sweep Menu">🧹</div></div>
-    <div class="goals-flex" id="goalsGrid"></div>
+    
+    <div class="toggle-section" style="width: 100%; margin: 20px auto 0 auto;">
+        <button class="toggle-link" onclick="toggleElement('goalsCollapse', 'Goals')">Hide Goals ↑</button>
+        <div id="goalsCollapse" class="expand-box open" style="width: 100%;">
+            <div class="goals-flex" id="goalsGrid"></div>
+        </div>
+    </div>
+    
     <div class="footer-tools">
         <div class="timer-row"><div class="timer-btn" id="timer25" onclick="handleTimerClick(25, 'timer25')" ondblclick="resetTimer('timer25', 25)">25:00</div><div class="timer-btn" id="timerCustom" onclick="openCustomTimerModal()" ondblclick="resetTimer('timerCustom', 'Custom')">Custom</div><div class="timer-btn" id="timer5" onclick="handleTimerClick(5, 'timer5')" ondblclick="resetTimer('timer5', 5)">05:00</div></div>
         <div style="display:flex; align-items:center; gap:5px; flex-direction: column;"><div style="display:flex; align-items:center; gap:5px;"><div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Starting...</div></div><div class="toggle-section" style="width: 100%; margin-top: 5px;"><button class="toggle-link" onclick="toggleElement('syncHistoryBox', 'Sync History')" style="font-size: 0.55rem;">Show Sync History ↓</button><div id="syncHistoryBox" class="expand-box"><div class="instruction-box" id="syncHistoryList" style="text-align: left; font-family: monospace; font-size: 0.65rem; max-height: 150px; overflow-y: auto; color: #a1a1aa; padding: 15px;"><div style="opacity: 0.5; text-align: center;">No actions logged yet.</div></div></div></div></div>
@@ -129,30 +138,60 @@
     if (!state.longTermGoals || !Array.isArray(state.longTermGoals)) state.longTermGoals = []; 
     if (!state.dailyRoutine) state.dailyRoutine = []; if (!state.monthNotes) state.monthNotes = {}; if (!state.studyNotes) state.studyNotes = {}; if (!state.flashcards) state.flashcards = []; if (!state.backlog) state.backlog = []; if (!state.fcStudyDays) state.fcStudyDays = [];
     const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9); let viewingDate = new Date(); let activeTimer = { id: null, totalSeconds: 0, interval: null, isPaused: false }; let audioCtx; let alarmLoopInterval = null; let deleteTimeouts = {}; let activeGoalId = null; let currentGoalIdForMilestone = null; let activeRichContext = null; let activeRichId = null;
-    let unsubscribeSnapshot = null;
+    let unsubscribeSnapshot = null; let isIntentionallyPaused = false; let pollInterval = null;
 
     window.addEventListener('firebase-ready', () => { setupRealtimeSync(); });
     function setupRealtimeSync() {
         document.getElementById('syncStatus').innerText = "Cloud: Connected";
         const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
-        unsubscribeSnapshot = window.fbOnSnapshot(stateRef, (docSnap) => {
-            if (docSnap.exists()) { const data = docSnap.data(); if (data._source !== DEVICE_ID) { addSyncLog("Cloud updated remotely."); } }
+        unsubscribeSnapshot = window.fbOnSnapshot(stateRef, async (docSnap) => {
+            if (docSnap.exists()) { 
+                const data = docSnap.data(); 
+                if (data._source !== DEVICE_ID) { addSyncLog("Cloud updated remotely."); } 
+                
+                if (data._remoteSignal === 'UPLOAD_REQUEST' && data._signalSource !== DEVICE_ID && !isIntentionallyPaused) {
+                    addSyncLog("Signal Received: Remote requested upload."); playChime(); document.getElementById('uploadingModal').style.display = 'flex';
+                    const payload = { ...state, _source: DEVICE_ID, _timestamp: Date.now(), _remoteSignal: 'UPLOAD_COMPLETE', _signalSource: DEVICE_ID };
+                    await window.fbSetDoc(stateRef, payload);
+                    setTimeout(() => { document.getElementById('uploadingModal').style.display = 'none'; showToast("My Data Uploaded. Remote notified."); }, 1500);
+                }
+                
+                if (data._remoteSignal === 'UPLOAD_COMPLETE' && data._signalSource !== DEVICE_ID && isIntentionallyPaused) {
+                    if (pollInterval) clearInterval(pollInterval); isIntentionallyPaused = false;
+                    document.getElementById('newDataModal').style.display = 'flex'; playChime(); addSyncLog("Success: Remote uploaded its data.");
+                }
+            }
         });
     }
+
     async function cloudSync(type) {
         if (!window.fbDb) { showToast("Firebase not ready."); return; }
         document.getElementById('syncStatus').innerText = "Cloud: Syncing...";
         try {
             const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
             if (type === 'upload') {
-                const payload = { ...state, _source: DEVICE_ID, _timestamp: Date.now() };
-                await window.fbSetDoc(stateRef, payload);
+                const payload = { ...state, _source: DEVICE_ID, _timestamp: Date.now() }; await window.fbSetDoc(stateRef, payload);
                 document.getElementById('syncStatus').innerText = "Cloud: Synced"; addSyncLog("Manual Upload Completed.");
             } else {
                 const docSnap = await window.fbGetDoc(stateRef);
                 if (docSnap.exists()) { state = docSnap.data(); saveAndRender(); document.getElementById('syncStatus').innerText = "Cloud: Synced"; addSyncLog("Manual Download Completed."); showToast("Downloaded Cloud Data!"); } else { addSyncLog("No cloud data found yet."); document.getElementById('syncStatus').innerText = "Cloud: Ready"; }
             }
         } catch (e) { document.getElementById('syncStatus').innerText = "Cloud: Error"; showToast("Sync Error: " + e.message); addSyncLog(`Sync Error: ${e.message}`); }
+    }
+
+    async function sendRemoteSignal() {
+        if (!window.fbDb) { showToast("Link cloud first!"); return; }
+        showToast("Sending Signal to Remote..."); addSyncLog("Sent Upload Request to Remote."); isIntentionallyPaused = true;
+        try {
+            const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
+            const payload = { ...state, _remoteSignal: 'UPLOAD_REQUEST', _signalSource: DEVICE_ID };
+            await window.fbSetDoc(stateRef, payload);
+            let attempts = 0;
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(() => {
+                attempts++; if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); addSyncLog("Remote connection timed out."); isIntentionallyPaused = false; }
+            }, 3000);
+        } catch (e) { showToast("Signal Error: " + e.message); isIntentionallyPaused = false; }
     }
 
     let alertsActive = true; setTimeout(() => { alertsActive = false; updateAlertGlows(); }, 15000);
