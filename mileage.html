@@ -1,86 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frog Mileage Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.85em' x='0.05em' font-size='75'>🚗</text></svg>">
     <style>
-        :root { 
-            --bg: #09090b; --card: #18181b; --text: #fafafa; 
-            --primary: #3b82f6; --frog: #facc15; --border: #27272a; 
-            --danger: #ef4444; --success: #22c55e;
-        }
+        :root { --bg: #09090b; --card: #18181b; --text: #fafafa; --primary: #3b82f6; --frog: #facc15; --border: #27272a; --danger: #ef4444; --success: #22c55e; }
         * { box-sizing: border-box; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; overflow-x: hidden; }
         .container { width: 100%; max-width: 1100px; }
         .card { background: var(--card); border: 1px solid var(--border); padding: 24px; border-radius: 12px; margin-bottom: 20px; position: relative; }
-        
         .nav-header { text-align: center; margin-bottom: 40px; }
-        .back-nav { 
-            color: #71717a; text-decoration: none; font-size: 0.85rem; 
-            font-weight: 500; letter-spacing: 0.02em; transition: 0.2s;
-            font-style: italic;
-        }
+        .back-nav { color: #71717a; text-decoration: none; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.02em; transition: 0.2s; font-style: italic; }
         .back-nav:hover { color: var(--frog); }
-
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .rate-badge { font-size: 0.9rem; color: #a1a1aa; display: flex; align-items: center; gap: 10px; }
-
-        .input-group, .triple-group { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 15px; 
-            margin-bottom: 15px; 
-        }
+        .input-group, .triple-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #a1a1aa; font-size: 0.8rem; }
-        
         input { background: #000; border: 1px solid var(--border); color: white; padding: 12px; border-radius: 6px; width: 100%; font-size: 1rem; }
         input:focus { border-color: var(--primary); outline: none; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
-        
         button { cursor: pointer; padding: 10px; border-radius: 6px; font-weight: bold; border: none; transition: 0.2s; }
         .btn-blue { background: var(--primary); color: white; width: 100%; margin-top: 10px; position: relative; }
         .btn-export { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 10px; width: 100%; }
-        
         .actions-cell { display: flex; gap: 8px; justify-content: center; align-items: center; min-width: 140px; }
         .btn-icon { background: #27272a; color: white; width: 35px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .btn-icon:hover { background: #3f3f46; transform: scale(1.05); }
         .btn-delete, .btn-confirm { color: var(--success); font-size: 0.9rem; }
-
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 700px; }
         th { text-align: left; color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; padding: 12px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
         td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: middle; }
-        
         .centered-col { text-align: center; }
         .miles-cell { text-align: center; font-weight: 500; }
         .total-banner { font-size: clamp(2rem, 8vw, 2.8rem); color: var(--success); font-weight: bold; margin-bottom: 5px; }
         .odo-detail { color: #71717a; font-size: 0.75rem; font-family: monospace; display: block; margin-top: 2px; }
-
         .fav-section { margin-bottom: 12px; }
         .fav-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
         .fav-chip { background: #27272a; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; border: 1px solid transparent; display: flex; align-items: center; }
         .fav-chip:hover { border-color: var(--primary); background: #1f1f22; }
         .fav-del { margin-left: 8px; color: var(--success); font-size: 0.9rem; min-width: 14px; text-align: center; }
-
-        @keyframes cashDrop {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-            100% { transform: translate(-50%, -250%) scale(1); opacity: 0; }
-        }
-        .cash-reward {
-            position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
-            color: var(--success); font-weight: bold; font-size: 3.5rem;
-            pointer-events: none; z-index: 2000;
-            text-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
-            animation: cashDrop 1.5s ease-out forwards; font-family: monospace;
-        }
-
+        @keyframes cashDrop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -250%) scale(1); opacity: 0; } }
+        .cash-reward { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--success); font-weight: bold; font-size: 3.5rem; pointer-events: none; z-index: 2000; text-shadow: 0 0 20px rgba(34, 197, 94, 0.8); animation: cashDrop 1.5s ease-out forwards; font-family: monospace; }
         #editModal, #favModal, #defaultsModal, .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: var(--card); border: 1px solid var(--border); width: 90%; max-width: 500px; padding: 30px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
         .modal-close { position: absolute; top: 15px; right: 15px; background: transparent; color: var(--primary); font-size: 1.2rem; cursor: pointer; border:none; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
-        
         .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(24, 24, 27, 0.95); border: 1px solid var(--primary); color: #fff; padding: 20px 40px; border-radius: 50px; font-size: 1rem; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.4s ease; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
         .toast.show { opacity: 1; }
         .sync-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px 30px; width: 90%; max-width: 400px; position: relative; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; }
@@ -92,14 +57,6 @@
         @keyframes pulseText { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.95); } }
         .tool-btn { text-decoration: none; color: #a1a1aa; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; padding: 12px 24px; border: 1px solid #27272a; border-radius: 30px; transition: 0.3s; font-weight: bold; background: none; cursor: pointer; }
         .tool-btn:hover { background: #fff; color: #000; border-color: #fff; transform: translateY(-2px); }
-        #syncPulse { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--success); margin-left: 5px; opacity: 0; transition: opacity 0.3s; }
-        .pulsing { animation: pulseDot 2s infinite; opacity: 1 !important; }
-        @keyframes pulseDot { 0% { transform: scale(0.95); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.5; } }
-        .blink-blue { animation: textBlinkBlue 1s infinite; color: var(--primary) !important; font-weight: bold; }
-        @keyframes textBlinkBlue { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .blink-yellow { animation: textBlinkYellow 1s infinite; color: var(--frog) !important; font-weight: bold; }
-        @keyframes textBlinkYellow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
         .filter-bar { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 12px 16px; border-radius: 8px; border: 1px solid #27272a; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .filter-input { background: #000; border: 1px solid #3f3f46; color: white; padding: 8px; border-radius: 6px; outline: none; }
         .toggle-section { width: 100%; text-align: center; margin-top: 15px; }
@@ -110,42 +67,24 @@
         .backup-btn { display: inline-block; background: transparent; border: 1px solid #3f3f46; color: #a1a1aa; padding: 8px 16px; border-radius: 6px; font-size: 0.8rem; margin: 5px; cursor: pointer; transition: 0.2s; }
         .backup-btn:hover { background: #1f1f22; color: #fff; border-color: var(--primary); }
     </style>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        const app = initializeApp({ apiKey: "AIzaSyDeIWa3ioRcFTa6yQAEfFmBXWgrB6h1Ohs", authDomain: "daily-frog-8505e.firebaseapp.com", projectId: "daily-frog-8505e", storageBucket: "daily-frog-8505e.firebasestorage.app", messagingSenderId: "296231619691", appId: "1:296231619691:web:b5611d537be4d6a103b52e" });
+        window.fbDb = getFirestore(app); window.fbDoc = doc; window.fbSetDoc = setDoc; window.fbGetDoc = getDoc; window.fbOnSnapshot = onSnapshot;
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
 </head>
 <body>
     <div id="toast" class="toast"></div>
 
-    <div id="syncModal" class="modal-overlay" style="z-index: 5000;">
-        <div class="sync-modal">
-            <div class="modal-close" style="top:20px;" onclick="closeSyncModal()">✕</div>
-            <div class="modal-text">Cloud Sync</div>
-            <div class="modal-btns">
-                <button onclick="cloudSync('download', true)" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Force Download Data</button>
-                <button onclick="cloudSync('upload')" class="tool-btn" style="border-color: var(--success); color: var(--success);">Upload All Data</button>
-                <hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;">
-                <button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="newDataModal" class="modal-overlay" style="z-index: 5000;">
-        <div class="sync-modal">
-            <div class="alarm-title" style="color:var(--success)">Success!</div>
-            <div class="modal-text">Remote Device Uploaded New Data.<br>Download it now?</div>
-            <button onclick="cloudSync('download', true); document.getElementById('newDataModal').style.display='none'" class="confirm-btn">Download Now</button>
-        </div>
-    </div>
-
-    <div id="uploadingModal" class="modal-overlay" style="z-index: 5000;">
-        <div class="sync-modal">
-            <div class="alarm-title" style="color:var(--frog)">Signal Received</div>
-            <div class="modal-text">Remote requested upload.<br>Uploading data now...</div>
-        </div>
-    </div>
+    <div id="syncModal" class="modal-overlay" style="z-index: 5000;"><div class="sync-modal"><div class="modal-close" style="top:20px;" onclick="closeSyncModal()">✕</div><div class="modal-text">Firebase Cloud Sync</div><div class="modal-btns"><button onclick="cloudSync('download', true)" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Manual Download</button><button onclick="cloudSync('upload')" class="tool-btn" style="border-color: var(--success); color: var(--success);">Manual Upload</button><hr style="width:50%; border:0; border-top:1px solid #333; margin:10px auto;"><button onclick="sendRemoteSignal(); closeSyncModal()" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Signal Remote Upload</button></div></div></div>
+    <div id="newDataModal" class="modal-overlay" style="z-index: 5000;"><div class="sync-modal"><div class="alarm-title" style="color:var(--success)">Success!</div><div class="modal-text">Remote Device Uploaded New Data.<br>Download it now?</div><button onclick="cloudSync('download', true); document.getElementById('newDataModal').style.display='none'" class="confirm-btn">Download Now</button></div></div>
+    <div id="uploadingModal" class="modal-overlay" style="z-index: 5000;"><div class="sync-modal"><div class="alarm-title" style="color:var(--frog)">Signal Received</div><div class="modal-text">Remote requested upload.<br>Uploading data now...</div></div></div>
 
     <div class="container">
-        <div class="nav-header">
-            <a href="index.html" class="back-nav">Back to Daily Frog Dashboard</a>
-        </div>
+        <div class="nav-header"><a href="index.html" class="back-nav">Back to Daily Frog Dashboard</a></div>
         
         <div class="card" style="text-align: center;">
             <div class="total-banner" id="totalDeduction">$0.00</div>
@@ -154,31 +93,17 @@
         </div>
 
         <div class="card">
-            <div class="card-header">
-                <h2 style="margin: 0;">Log trip</h2>
-                <div class="rate-badge">
-                    <span>72.5¢ / mi</span>
-                    <button class="btn-icon" onclick="openDefaultsModal()" title="Set Input Defaults">⚙️</button>
-                </div>
-            </div>
-            
+            <div class="card-header"><h2 style="margin: 0;">Log trip</h2><div class="rate-badge"><span>72.5¢ / mi</span><button class="btn-icon" onclick="openDefaultsModal()" title="Set Input Defaults">⚙️</button></div></div>
             <div class="fav-section"><label>Favorite Start Locations</label><div id="startFavs" class="fav-container"></div></div>
             <div class="fav-section"><label>Favorite Destinations</label><div id="destFavs" class="fav-container"></div></div>
             <div class="fav-section"><label>Favorite Purposes</label><div id="purpFavs" class="fav-container"></div></div>
 
             <div class="input-group">
                 <div><label>Date</label><input type="date" id="date"></div>
-                
                 <div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <label style="margin:0;">Miles Driven</label>
-                        <label style="margin:0; color:var(--frog); cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:bold; font-size: 0.75rem;">
-                            <input type="checkbox" id="isRoundTrip" style="width:14px; height:14px; margin:0; accent-color:var(--frog);"> Round Trip (x2)
-                        </label>
-                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><label style="margin:0;">Miles Driven</label><label style="margin:0; color:var(--frog); cursor:pointer; display:flex; align-items:center; gap:4px; font-weight:bold; font-size: 0.75rem;"><input type="checkbox" id="isRoundTrip" style="width:14px; height:14px; margin:0; accent-color:var(--frog);"> Round Trip (x2)</label></div>
                     <input type="number" id="miles" step="1" placeholder="0">
                 </div>
-                
                 <div><label>Odometer Start</label><input type="number" id="odoStart" step="1" placeholder="0"></div>
             </div>
             <div class="triple-group">
@@ -186,7 +111,6 @@
                 <div><label>Destination</label><input type="text" id="dest"></div>
                 <div><label>Purpose</label><input type="text" id="purpose"></div>
             </div>
-
             <button class="btn-blue" id="addTripBtn" onclick="addTrip()">Add Trip to Log</button>
             <button class="btn-export" onclick="exportToCSV()">Export for Google Sheets</button>
         </div>
@@ -194,588 +118,196 @@
         <div class="card">
             <div class="filter-bar">
                 <div style="font-weight: bold; color: var(--primary);">Trip History</div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <label style="margin:0;">Filter:</label>
-                    <input type="month" id="monthFilter" class="filter-input" onchange="render()">
-                    <button onclick="document.getElementById('monthFilter').value=''; render();" style="padding: 6px 12px; background: #27272a; border: 1px solid #3f3f46; color: #fff; border-radius: 6px; font-size:0.75rem;">Clear</button>
-                </div>
+                <div style="display: flex; gap: 10px; align-items: center;"><label style="margin:0;">Filter:</label><input type="month" id="monthFilter" class="filter-input" onchange="render()"><button onclick="document.getElementById('monthFilter').value=''; render();" style="padding: 6px 12px; background: #27272a; border: 1px solid #3f3f46; color: #fff; border-radius: 6px; font-size:0.75rem;">Clear</button></div>
             </div>
-
             <div class="table-responsive">
                 <table id="logTable">
-                    <thead>
-                        <tr>
-                            <th width="40" class="centered-col">⭐</th>
-                            <th width="100">Date</th>
-                            <th>Start Location</th>
-                            <th>Destination</th>
-                            <th>Purpose</th>
-                            <th width="100" class="centered-col">Miles</th>
-                            <th width="150" class="centered-col">Actions</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th width="40" class="centered-col">⭐</th><th width="100">Date</th><th>Start Location</th><th>Destination</th><th>Purpose</th><th width="100" class="centered-col">Miles</th><th width="150" class="centered-col">Actions</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </div>
 
         <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 20px; padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; width: 100%;">
-            <div style="display:flex; align-items:center; gap:5px; flex-direction: column;">
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Unlinked</div>
-                    <div id="syncPulse"></div>
-                </div>
-                <div id="debugBinId" style="font-size: 0.5rem; color: #3f3f46; margin-top: 2px;">ID: None</div>
-            </div>
-            
-            <div style="margin-top:15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                <button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Sync</button>
-                <button onclick="setupCloud()" class="tool-btn" style="border-color: var(--success); color: var(--success);">Link</button>
-            </div>
-
-            <div class="toggle-section">
-                <button class="toggle-link" onclick="toggleElement('backupMenu', 'Data & Backups')">Data & Backups ↓</button>
-                <div id="backupMenu" class="expand-box">
-                    <div style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 10px;">Restore a rolling snapshot. (This only overrides mileage data).</div>
-                    <div id="backupButtonsContainer"></div>
-                </div>
-            </div>
+            <div style="display:flex; align-items:center; gap:5px; flex-direction: column;"><div id="syncStatus" style="font-size: 0.6rem; color: #71717a; text-transform: uppercase; letter-spacing: 1px;">Cloud: Starting...</div></div>
+            <div style="margin-top:15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;"><button onclick="openSyncModal()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Firebase Sync</button></div>
+            <div class="toggle-section"><button class="toggle-link" onclick="toggleElement('backupMenu', 'Data & Backups')">Data & Backups ↓</button><div id="backupMenu" class="expand-box"><div style="font-size: 0.75rem; color: #a1a1aa; margin-bottom: 10px;">Restore a rolling snapshot. (This only overrides mileage data).</div><div id="backupButtonsContainer"></div></div></div>
         </div>
     </div>
 
-    <div id="editModal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeEditModal()">✕</button>
-            <h3 style="color:var(--primary); margin-top:0">✏️ Edit Trip Details</h3>
-            
-            <div class="fav-section" style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
-                <label style="color: var(--primary); font-weight: bold;">Quick Fill</label>
-                <div id="editStartFavs" class="fav-container"></div>
-                <div id="editDestFavs" class="fav-container"></div>
-                <div id="editPurpFavs" class="fav-container"></div>
-            </div>
-
-            <div style="margin-bottom:10px;"><label>Date</label><input type="date" id="editDate"></div>
-            <div style="display:flex; gap:10px; margin-bottom:10px;">
-                <div style="flex:1;"><label>Miles</label><input type="number" id="editMiles" step="1"></div>
-                <div style="flex:1;"><label>Odo Start</label><input type="number" id="editOdoStart" step="1"></div>
-            </div>
-            <div style="margin-bottom:10px;"><label>Start Location</label><input type="text" id="editStart"></div>
-            <div style="margin-bottom:10px;"><label>Destination</label><input type="text" id="editDest"></div>
-            <div style="margin-bottom:10px;"><label>Purpose</label><input type="text" id="editPurpose"></div>
-            <button class="btn-blue" onclick="saveEdit()">Save Changes</button>
-        </div>
-    </div>
-
-    <div id="favModal">
-        <div class="modal-content">
-            <button class="modal-close" style="color:var(--success)" onclick="closeFavModal()">✕</button>
-            <h3 style="margin-top:0; color:var(--frog)">⭐ Save Favorite</h3>
-            <button class="btn-blue" id="favBtnStart" style="margin-bottom:8px;">Start Location</button>
-            <button class="btn-blue" id="favBtnDest" style="margin-bottom:8px;">Destination</button>
-            <button class="btn-blue" id="favBtnPurp">Purpose</button>
-        </div>
-    </div>
-
-    <div id="defaultsModal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeDefaultsModal()">✕</button>
-            <h3 style="color:var(--text); margin-top:0">⚙️ Set Default Inputs</h3>
-            <p style="font-size: 0.8rem; color: #a1a1aa; margin-bottom: 15px;">These values will automatically populate the form every time you log a new trip.</p>
-            <div style="margin-bottom:10px;"><label>Default Start Location</label><input type="text" id="defStart" placeholder="e.g. Home Office"></div>
-            <div style="margin-bottom:10px;"><label>Default Destination</label><input type="text" id="defDest" placeholder="Leave blank if variable"></div>
-            <div style="margin-bottom:10px;"><label>Default Purpose</label><input type="text" id="defPurp" placeholder="Leave blank if variable"></div>
-            <button class="btn-blue" onclick="saveDefaults()">Save Defaults</button>
-        </div>
-    </div>
+    <div id="editModal"><div class="modal-content"><button class="modal-close" onclick="closeEditModal()">✕</button><h3 style="color:var(--primary); margin-top:0">✏️ Edit Trip Details</h3><div class="fav-section" style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px;"><label style="color: var(--primary); font-weight: bold;">Quick Fill</label><div id="editStartFavs" class="fav-container"></div><div id="editDestFavs" class="fav-container"></div><div id="editPurpFavs" class="fav-container"></div></div><div style="margin-bottom:10px;"><label>Date</label><input type="date" id="editDate"></div><div style="display:flex; gap:10px; margin-bottom:10px;"><div style="flex:1;"><label>Miles</label><input type="number" id="editMiles" step="1"></div><div style="flex:1;"><label>Odo Start</label><input type="number" id="editOdoStart" step="1"></div></div><div style="margin-bottom:10px;"><label>Start Location</label><input type="text" id="editStart"></div><div style="margin-bottom:10px;"><label>Destination</label><input type="text" id="editDest"></div><div style="margin-bottom:10px;"><label>Purpose</label><input type="text" id="editPurpose"></div><button class="btn-blue" onclick="saveEdit()">Save Changes</button></div></div>
+    <div id="favModal"><div class="modal-content"><button class="modal-close" style="color:var(--success)" onclick="closeFavModal()">✕</button><h3 style="margin-top:0; color:var(--frog)">⭐ Save Favorite</h3><button class="btn-blue" id="favBtnStart" style="margin-bottom:8px;">Start Location</button><button class="btn-blue" id="favBtnDest" style="margin-bottom:8px;">Destination</button><button class="btn-blue" id="favBtnPurp">Purpose</button></div></div>
+    <div id="defaultsModal"><div class="modal-content"><button class="modal-close" onclick="closeDefaultsModal()">✕</button><h3 style="color:var(--text); margin-top:0">⚙️ Set Default Inputs</h3><p style="font-size: 0.8rem; color: #a1a1aa; margin-bottom: 15px;">These values will automatically populate the form every time you log a new trip.</p><div style="margin-bottom:10px;"><label>Default Start Location</label><input type="text" id="defStart" placeholder="e.g. Home Office"></div><div style="margin-bottom:10px;"><label>Default Destination</label><input type="text" id="defDest" placeholder="Leave blank if variable"></div><div style="margin-bottom:10px;"><label>Default Purpose</label><input type="text" id="defPurp" placeholder="Leave blank if variable"></div><button class="btn-blue" onclick="saveDefaults()">Save Defaults</button></div></div>
 
     <script>
         const RATE = 0.725;
-        
         let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {} };
-        
-        if (!state.mileage) state.mileage = [];
-        if (!state.favStarts) state.favStarts = [];
-        if (!state.favDests) state.favDests = [];
-        if (!state.favPurps) state.favPurps = [];
-        if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
-        if (!state.lastUpdated) state.lastUpdated = 0; 
-
+        if (!state.mileage) state.mileage = []; if (!state.favStarts) state.favStarts = []; if (!state.favDests) state.favDests = []; if (!state.favPurps) state.favPurps = []; if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' }; if (!state.lastUpdated) state.lastUpdated = 0; 
         let delTimers = {}, editingIdx = -1;
 
-        // CLOUD SYNC CONFIG
+        // --- FIREBASE SYNC ENGINE ---
         const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9);
-        let CLOUD_CONFIG = { key: localStorage.getItem('sync_key') || '', binId: localStorage.getItem('sync_bin_id') || '' };
-        let remoteListenInterval = null;
-        let isIntentionallyPaused = false; 
-        let pollInterval = null;
+        let unsubscribeSnapshot = null; let isIntentionallyPaused = false; let pollInterval = null;
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
-        }
+        window.addEventListener('firebase-ready', () => { setupRealtimeSync(); });
 
-        function toggleElement(id, baseName) { 
-            const el = document.getElementById(id); 
-            const btn = el.previousElementSibling; 
-            const isOpen = el.classList.toggle('open'); 
-            btn.innerText = `${baseName} ${isOpen ? '↑' : '↓'}`; 
-        }
-
-        // --- BACKUPS SYSTEM ---
-        function manageBackups() {
-            let backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || [];
-            const now = Date.now();
-            const todayStr = new Date().toDateString();
-
-            const currentData = {
-                mileage: state.mileage,
-                favStarts: state.favStarts,
-                favDests: state.favDests,
-                favPurps: state.favPurps,
-                mileageDefaults: state.mileageDefaults,
-                lastUpdated: state.lastUpdated
-            };
-
-            if (backups.length === 0 || new Date(backups[0].timestamp).toDateString() !== todayStr) {
-                backups.unshift({
-                    timestamp: now,
-                    dateStr: todayStr,
-                    data: JSON.stringify(currentData)
-                });
-                
-                if (backups.length > 8) backups.pop(); 
-                localStorage.setItem('mileage_backups_v2', JSON.stringify(backups));
-            }
-            renderBackupUI();
-        }
-
-        function renderBackupUI() {
-            const backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || [];
-            const container = document.getElementById('backupButtonsContainer');
-            container.innerHTML = '';
-
-            if (backups.length < 2) {
-                container.innerHTML = '<div style="font-size:0.75rem; color:#555;">No historical backups available yet. Check back tomorrow.</div>';
-                return;
-            }
-
-            if (backups[1]) {
-                const btn1 = document.createElement('button');
-                btn1.className = 'backup-btn';
-                btn1.innerText = `Restore ~1 Day Ago (${backups[1].dateStr})`;
-                btn1.onclick = () => restoreBackup(1);
-                container.appendChild(btn1);
-            }
-
-            if (backups.length > 2) {
-                const oldestIndex = backups.length - 1;
-                const btn2 = document.createElement('button');
-                btn2.className = 'backup-btn';
-                btn2.innerText = `Restore Oldest (${backups[oldestIndex].dateStr})`;
-                btn2.onclick = () => restoreBackup(oldestIndex);
-                container.appendChild(btn2);
-            }
-        }
-
-        function restoreBackup(index) {
-            const backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || [];
-            if (!backups[index]) return;
-            
-            if (confirm(`Are you sure you want to restore mileage data from ${backups[index].dateStr}?\n\nThis will completely overwrite your current mileage log. (Your Daily Frog habits will NOT be affected).`)) {
-                const restoredData = JSON.parse(backups[index].data);
-                state.mileage = restoredData.mileage || [];
-                state.favStarts = restoredData.favStarts || [];
-                state.favDests = restoredData.favDests || [];
-                state.favPurps = restoredData.favPurps || [];
-                state.mileageDefaults = restoredData.mileageDefaults || { start: '', dest: '', purpose: '' };
-                
-                saveAndRender(false); 
-                showToast("Backup Restored Successfully!");
-            }
-        }
-
-        // --- CLOUD FUNCTIONS (MANUAL ONLY) ---
-        function openSyncModal() { document.getElementById('syncModal').style.display = 'flex'; }
-        function closeSyncModal() { document.getElementById('syncModal').style.display = 'none'; }
-        function updateSyncStatus(msg) { document.getElementById('syncStatus').innerText = `Cloud: ${msg}`; }
-        function updateDebugId(id) { document.getElementById('debugBinId').innerText = `ID: ${id || 'None'}`; }
-
-        function setupCloud() {
-            const key = prompt("Paste Master Key:"); if (!key) return;
-            const bin = prompt("Enter Bin ID (Leave blank if creating new):");
-            localStorage.setItem('sync_key', key);
-            if (bin) localStorage.setItem('sync_bin_id', bin); else localStorage.removeItem('sync_bin_id');
-            CLOUD_CONFIG = { key, binId: bin || '' }; 
-            updateSyncStatus("Ready"); updateDebugId(CLOUD_CONFIG.binId);
-            startPassiveListener(); 
+        function setupRealtimeSync() {
+            document.getElementById('syncStatus').innerText = "Cloud: Connected";
+            const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
+            unsubscribeSnapshot = window.fbOnSnapshot(stateRef, async (docSnap) => {
+                if (docSnap.exists()) { 
+                    const data = docSnap.data(); 
+                    if (data._remoteSignal === 'UPLOAD_REQUEST' && data._signalSource !== DEVICE_ID && !isIntentionallyPaused) {
+                        playChime(); document.getElementById('uploadingModal').style.display = 'flex';
+                        const payload = { ...state, _source: DEVICE_ID, _timestamp: Date.now(), _remoteSignal: 'UPLOAD_COMPLETE', _signalSource: DEVICE_ID };
+                        await window.fbSetDoc(stateRef, payload);
+                        setTimeout(() => { document.getElementById('uploadingModal').style.display = 'none'; showToast("My Data Uploaded. Remote notified."); }, 1500);
+                    }
+                    if (data._remoteSignal === 'UPLOAD_COMPLETE' && data._signalSource !== DEVICE_ID && isIntentionallyPaused) {
+                        if (pollInterval) clearInterval(pollInterval); isIntentionallyPaused = false;
+                        document.getElementById('newDataModal').style.display = 'flex'; playChime(); 
+                    }
+                }
+            });
         }
 
         async function cloudSync(type, bypassCheck = false) {
-            if (!CLOUD_CONFIG.key) { setupCloud(); return; }
-            updateSyncStatus("Syncing...");
-            
-            // Safety measure: Pull the absolute latest local data before uploading to avoid overwriting Frog app updates
-            if (type === 'upload') {
-                const latestLocal = JSON.parse(localStorage.getItem('discipline_v12'));
-                if (latestLocal) state = latestLocal;
-            }
-
+            if (!window.fbDb) { showToast("Firebase not ready."); return; }
+            document.getElementById('syncStatus').innerText = "Cloud: Syncing...";
             try {
-                if (!CLOUD_CONFIG.binId && type === 'upload') {
-                    const res = await fetch('https://api.jsonbin.io/v3/b', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Private': 'true' }, body: JSON.stringify(state)
-                    });
-                    const data = await res.json();
-                    if (data.metadata) {
-                        localStorage.setItem('sync_bin_id', data.metadata.id); CLOUD_CONFIG.binId = data.metadata.id;
-                        updateSyncStatus("Linked"); alert("Bin ID Created: " + data.metadata.id); updateDebugId(data.metadata.id); startPassiveListener();
-                    }
-                } else {
-                    const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}${type === 'download' ? '/latest' : ''}?t=${Date.now()}`, {
-                        method: type === 'upload' ? 'PUT' : 'GET',
-                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key, 'Pragma': 'no-cache', 'Cache-Control': 'no-cache'},
-                        body: type === 'upload' ? JSON.stringify({ ...state, _remoteSignal: null }) : null, cache: 'no-store'
-                    });
-                    const data = await res.json();
-                    
-                    if (type === 'download') { 
-                        state = data.record; 
-                        if (!state.mileage) state.mileage = [];
-                        if (!state.favStarts) state.favStarts = [];
-                        if (!state.favDests) state.favDests = [];
-                        if (!state.favPurps) state.favPurps = [];
-                        if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
-                        saveAndRender(true); // True = don't overwrite timestamp
-                        closeSyncModal();
-                    }
-                    updateSyncStatus("Synced");
-                    showToast(type === 'download' ? "Cloud Data Downloaded" : "Local Data Uploaded");
-                }
-            } catch (e) { updateSyncStatus("Error"); }
-        }
-
-        // --- REMOTE SIGNALING ---
-        function startPassiveListener() {
-            if (remoteListenInterval) clearInterval(remoteListenInterval);
-            if(!CLOUD_CONFIG.binId) return;
-            document.getElementById('syncPulse').classList.add('pulsing');
-            remoteListenInterval = setInterval(checkRemoteSignal, 15000);
-        }
-
-        function stopPassiveListener() {
-            if (remoteListenInterval) clearInterval(remoteListenInterval);
-            document.getElementById('syncPulse').classList.remove('pulsing');
-            remoteListenInterval = null;
-        }
-
-        async function checkRemoteSignal() {
-            try {
-                const statusEl = document.getElementById('syncStatus');
-                statusEl.classList.add('blink-blue'); statusEl.innerText = "Cloud: Checking...";
-                const res = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                    method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store' 
-                });
-                const data = await res.json();
-                statusEl.classList.remove('blink-blue'); statusEl.innerText = "Cloud: Ready";
-                const remoteState = data.record || data;
-
-                if (remoteState && remoteState._remoteSignal === 'UPLOAD_REQUEST') {
-                    if (remoteState._signalSource === DEVICE_ID) return; 
-                    statusEl.classList.add('blink-yellow'); statusEl.innerText = "Cloud: Uploading...";
-                    document.getElementById('uploadingModal').style.display = 'flex';
-                    
-                    // Always upload the freshest local storage data
+                const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
+                if (type === 'upload') {
                     const latestLocal = JSON.parse(localStorage.getItem('discipline_v12')) || state;
-                    const payload = { ...latestLocal, _remoteSignal: 'UPLOAD_COMPLETE' };
-                    
-                    await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
-                        method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, body: JSON.stringify(payload)
-                    });
-                    
-                    setTimeout(() => {
-                        statusEl.classList.remove('blink-yellow'); statusEl.innerText = "Cloud: Synced";
-                        document.getElementById('uploadingModal').style.display = 'none'; showToast("My Data Uploaded.");
-                    }, 1500);
+                    const payload = { ...latestLocal, _source: DEVICE_ID, _timestamp: Date.now() }; await window.fbSetDoc(stateRef, payload);
+                    document.getElementById('syncStatus').innerText = "Cloud: Synced"; showToast("Local Data Uploaded");
+                } else {
+                    const docSnap = await window.fbGetDoc(stateRef);
+                    if (docSnap.exists()) { 
+                        state = docSnap.data(); 
+                        if (!state.mileage) state.mileage = []; if (!state.favStarts) state.favStarts = []; if (!state.favDests) state.favDests = []; if (!state.favPurps) state.favPurps = []; if (!state.mileageDefaults) state.mileageDefaults = { start: '', dest: '', purpose: '' };
+                        saveAndRender(true); document.getElementById('syncStatus').innerText = "Cloud: Synced"; showToast("Downloaded Cloud Data!"); closeSyncModal();
+                    } else { document.getElementById('syncStatus').innerText = "Cloud: Ready"; }
                 }
-            } catch(e) { document.getElementById('syncStatus').classList.remove('blink-blue'); }
+            } catch (e) { document.getElementById('syncStatus').innerText = "Cloud: Error"; showToast("Sync Error: " + e.message); }
         }
 
         async function sendRemoteSignal() {
-            if(!CLOUD_CONFIG.binId) { alert("Link cloud first!"); return; }
-            showToast("Sending Signal to Remote..."); isIntentionallyPaused = true; stopPassiveListener();
+            if (!window.fbDb) { showToast("Firebase not ready!"); return; }
+            showToast("Sending Signal to Remote..."); isIntentionallyPaused = true;
             try {
-                const resGet = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                    method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store'
-                });
-                const data = await resGet.json();
-                let payload = data.record || data;
-                payload._remoteSignal = 'UPLOAD_REQUEST'; payload._signalSource = DEVICE_ID;
-
-                await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}`, {
-                    method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-Master-Key': CLOUD_CONFIG.key }, body: JSON.stringify(payload)
-                });
-                
-                showToast("Signal Sent. Waiting for remote to reply...");
-                if (pollInterval) clearInterval(pollInterval);
-                let attempts = 0;
-                pollInterval = setInterval(async () => {
-                    attempts++;
-                    if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); isIntentionallyPaused = false; startPassiveListener(); return; }
-                    const pollRes = await fetch(`https://api.jsonbin.io/v3/b/${CLOUD_CONFIG.binId}/latest?t=${Date.now()}`, {
-                        method: 'GET', headers: { 'X-Master-Key': CLOUD_CONFIG.key, 'X-Bin-Meta': 'false', 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' }, cache: 'no-store'
-                    });
-                    const pollData = await pollRes.json(); const pollState = pollData.record || pollData;
-                    if (pollState && pollState._remoteSignal === 'UPLOAD_COMPLETE') {
-                        clearInterval(pollInterval); document.getElementById('newDataModal').style.display = 'flex'; isIntentionallyPaused = false; startPassiveListener();
-                    }
-                }, 3000); 
-            } catch (e) { alert("Signal Error: " + e.message); isIntentionallyPaused = false; startPassiveListener(); }
+                const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
+                const payload = { ...state, _remoteSignal: 'UPLOAD_REQUEST', _signalSource: DEVICE_ID };
+                await window.fbSetDoc(stateRef, payload);
+                let attempts = 0; if (pollInterval) clearInterval(pollInterval);
+                pollInterval = setInterval(() => { attempts++; if(attempts > 20) { clearInterval(pollInterval); showToast("Remote timed out."); isIntentionallyPaused = false; } }, 3000);
+            } catch (e) { showToast("Signal Error: " + e.message); isIntentionallyPaused = false; }
         }
 
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && CLOUD_CONFIG.binId && !isIntentionallyPaused) { checkRemoteSignal(); startPassiveListener(); } });
-        window.addEventListener('focus', () => { if (CLOUD_CONFIG.binId && !isIntentionallyPaused) { checkRemoteSignal(); startPassiveListener(); } });
-
-        // --- TRACKER LOGIC ---
-        function triggerCashEffect(amount) {
-            const reward = document.createElement('div'); reward.className = 'cash-reward'; reward.innerText = `+$${amount.toFixed(2)}`;
-            document.body.appendChild(reward); setTimeout(() => reward.remove(), 1500);
-        }
-
-        function setInputsToDefault() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
-            document.getElementById('startLoc').value = state.mileageDefaults.start || '';
-            document.getElementById('dest').value = state.mileageDefaults.dest || '';
-            document.getElementById('purpose').value = state.mileageDefaults.purpose || '';
-        }
-
-        function openDefaultsModal() {
-            document.getElementById('defStart').value = state.mileageDefaults.start || '';
-            document.getElementById('defDest').value = state.mileageDefaults.dest || '';
-            document.getElementById('defPurp').value = state.mileageDefaults.purpose || '';
-            document.getElementById('defaultsModal').style.display = 'flex';
-        }
-        function closeDefaultsModal() { document.getElementById('defaultsModal').style.display = 'none'; }
+        function playChime() { if (!window.AudioContext && !window.webkitAudioContext) return; let audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const now = audioCtx.currentTime; [174, 348, 522].forEach((freq, i) => { const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.frequency.setValueAtTime(freq, now); gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.1, now + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, now + 3); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 3.1); }); }
+        function showToast(msg) { const toast = document.getElementById('toast'); toast.innerText = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2000); }
+        function toggleElement(id, baseName) { const el = document.getElementById(id); const btn = el.previousElementSibling; const isOpen = el.classList.toggle('open'); btn.innerText = `${baseName} ${isOpen ? '↑' : '↓'}`; }
+        function openSyncModal() { document.getElementById('syncModal').style.display = 'flex'; } function closeSyncModal() { document.getElementById('syncModal').style.display = 'none'; }
         
-        function saveDefaults() {
-            state.mileageDefaults = { start: document.getElementById('defStart').value, dest: document.getElementById('defDest').value, purpose: document.getElementById('defPurp').value };
-            saveAndRender(false); setInputsToDefault(); closeDefaultsModal(); showToast("Defaults Saved!");
+        // --- BACKUPS SYSTEM ---
+        function manageBackups() {
+            let backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || []; const now = Date.now(); const todayStr = new Date().toDateString();
+            const currentData = { mileage: state.mileage, favStarts: state.favStarts, favDests: state.favDests, favPurps: state.favPurps, mileageDefaults: state.mileageDefaults, lastUpdated: state.lastUpdated };
+            if (backups.length === 0 || new Date(backups[0].timestamp).toDateString() !== todayStr) {
+                backups.unshift({ timestamp: now, dateStr: todayStr, data: JSON.stringify(currentData) });
+                if (backups.length > 8) backups.pop(); localStorage.setItem('mileage_backups_v2', JSON.stringify(backups));
+            }
+            renderBackupUI();
         }
+        function renderBackupUI() {
+            const backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || []; const container = document.getElementById('backupButtonsContainer'); container.innerHTML = '';
+            if (backups.length < 2) { container.innerHTML = '<div style="font-size:0.75rem; color:#555;">No historical backups available yet.</div>'; return; }
+            if (backups[1]) { const btn1 = document.createElement('button'); btn1.className = 'backup-btn'; btn1.innerText = `Restore ~1 Day Ago (${backups[1].dateStr})`; btn1.onclick = () => restoreBackup(1); container.appendChild(btn1); }
+            if (backups.length > 2) { const oldestIndex = backups.length - 1; const btn2 = document.createElement('button'); btn2.className = 'backup-btn'; btn2.innerText = `Restore Oldest (${backups[oldestIndex].dateStr})`; btn2.onclick = () => restoreBackup(oldestIndex); container.appendChild(btn2); }
+        }
+        function restoreBackup(index) {
+            const backups = JSON.parse(localStorage.getItem('mileage_backups_v2')) || []; if (!backups[index]) return;
+            if (confirm(`Restore mileage data from ${backups[index].dateStr}?\n\nThis overrides current mileage log.`)) {
+                const restoredData = JSON.parse(backups[index].data); state.mileage = restoredData.mileage || []; state.favStarts = restoredData.favStarts || []; state.favDests = restoredData.favDests || []; state.favPurps = restoredData.favPurps || []; state.mileageDefaults = restoredData.mileageDefaults || { start: '', dest: '', purpose: '' };
+                saveAndRender(false); showToast("Backup Restored!");
+            }
+        }
+
+        function triggerCashEffect(amount) { const reward = document.createElement('div'); reward.className = 'cash-reward'; reward.innerText = `+$${amount.toFixed(2)}`; document.body.appendChild(reward); setTimeout(() => reward.remove(), 1500); }
+        function setInputsToDefault() { const today = new Date().toISOString().split('T')[0]; document.getElementById('date').value = today; document.getElementById('startLoc').value = state.mileageDefaults.start || ''; document.getElementById('dest').value = state.mileageDefaults.dest || ''; document.getElementById('purpose').value = state.mileageDefaults.purpose || ''; }
+        function openDefaultsModal() { document.getElementById('defStart').value = state.mileageDefaults.start || ''; document.getElementById('defDest').value = state.mileageDefaults.dest || ''; document.getElementById('defPurp').value = state.mileageDefaults.purpose || ''; document.getElementById('defaultsModal').style.display = 'flex'; }
+        function closeDefaultsModal() { document.getElementById('defaultsModal').style.display = 'none'; }
+        function saveDefaults() { state.mileageDefaults = { start: document.getElementById('defStart').value, dest: document.getElementById('defDest').value, purpose: document.getElementById('defPurp').value }; saveAndRender(false); setInputsToDefault(); closeDefaultsModal(); showToast("Defaults Saved!"); }
 
         function addTrip() {
-            const d = document.getElementById('date').value, 
-                  s = document.getElementById('startLoc').value, 
-                  dest = document.getElementById('dest').value, 
-                  p = document.getElementById('purpose').value;
-            
+            const d = document.getElementById('date').value, s = document.getElementById('startLoc').value, dest = document.getElementById('dest').value, p = document.getElementById('purpose').value;
             let m = Math.round(parseFloat(document.getElementById('miles').value));
             const isRound = document.getElementById('isRoundTrip').checked;
-            if (isRound) m = m * 2;
-            
             let odoS = Math.round(parseFloat(document.getElementById('odoStart').value)) || 0;
             
             if (!d || !dest || isNaN(m)) return;
-            triggerCashEffect(m * RATE);
             
+            // Push outbound trip
             state.mileage.push({ date: d, start: s, dest: dest, purpose: p, miles: m, odoStart: odoS });
             
-            document.getElementById('odoStart').value = odoS + m;
+            if (isRound) {
+                // Push return trip
+                let returnOdo = odoS + m;
+                state.mileage.push({ date: d, start: dest, dest: s, purpose: "Return to shop", miles: m, odoStart: returnOdo });
+                document.getElementById('odoStart').value = returnOdo + m;
+                triggerCashEffect((m * 2) * RATE);
+            } else {
+                document.getElementById('odoStart').value = odoS + m;
+                triggerCashEffect(m * RATE);
+            }
+            
             document.getElementById('miles').value = '';
             document.getElementById('isRoundTrip').checked = false; 
-            
-            saveAndRender(false); 
-            setInputsToDefault(); 
-            showToast("Trip Saved Locally!");
+            saveAndRender(false); setInputsToDefault(); showToast(isRound ? "Round Trip Saved!" : "Trip Saved Locally!");
         }
 
-        function triggerCopy(actualIdx) {
-            const t = state.mileage[actualIdx];
-            document.getElementById('startLoc').value = t.start;
-            document.getElementById('dest').value = t.dest;
-            document.getElementById('purpose').value = t.purpose;
-            document.getElementById('miles').value = Math.round(t.miles);
-            document.getElementById('odoStart').value = Math.round(t.odoStart);
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today; 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function queueReturnTrip(actualIdx) {
-            const t = state.mileage[actualIdx];
-            document.getElementById('startLoc').value = t.dest;
-            document.getElementById('dest').value = t.start;
-            document.getElementById('purpose').value = t.purpose;
-            document.getElementById('miles').value = Math.round(t.miles);
-            
-            let highestOdo = 0;
-            if(state.mileage.length > 0) {
-                highestOdo = state.mileage[0].odoStart + state.mileage[0].miles;
-            }
-            document.getElementById('odoStart').value = Math.round(highestOdo);
-            
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today; 
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            showToast("Return Trip Queued!");
-        }
+        function triggerCopy(actualIdx) { const t = state.mileage[actualIdx]; document.getElementById('startLoc').value = t.start; document.getElementById('dest').value = t.dest; document.getElementById('purpose').value = t.purpose; document.getElementById('miles').value = Math.round(t.miles); document.getElementById('odoStart').value = Math.round(t.odoStart); const today = new Date().toISOString().split('T')[0]; document.getElementById('date').value = today; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        function queueReturnTrip(actualIdx) { const t = state.mileage[actualIdx]; document.getElementById('startLoc').value = t.dest; document.getElementById('dest').value = t.start; document.getElementById('purpose').value = t.purpose; document.getElementById('miles').value = Math.round(t.miles); let highestOdo = 0; if(state.mileage.length > 0) { highestOdo = state.mileage[0].odoStart + state.mileage[0].miles; } document.getElementById('odoStart').value = Math.round(highestOdo); const today = new Date().toISOString().split('T')[0]; document.getElementById('date').value = today; window.scrollTo({ top: 0, behavior: 'smooth' }); showToast("Return Trip Queued!"); }
 
         function toggleDelete(idStr, isFav, type) {
             const btnId = isFav ? `${type}-${idStr}` : `trip-${idStr}`;
             if (delTimers[btnId]) {
-                if (isFav) {
-                    const idx = parseInt(idStr);
-                    if (type === 'start') state.favStarts.splice(idx, 1);
-                    else if (type === 'dest') state.favDests.splice(idx, 1);
-                    else state.favPurps.splice(idx, 1);
-                } else {
-                    state.mileage = state.mileage.filter((_, idx) => idx !== parseInt(idStr));
-                }
+                if (isFav) { const idx = parseInt(idStr); if (type === 'start') state.favStarts.splice(idx, 1); else if (type === 'dest') state.favDests.splice(idx, 1); else state.favPurps.splice(idx, 1); } else { state.mileage = state.mileage.filter((_, idx) => idx !== parseInt(idStr)); }
                 clearTimeout(delTimers[btnId].timer); delete delTimers[btnId]; saveAndRender(false);
-            } else {
-                delTimers[btnId] = { timer: setTimeout(() => { delete delTimers[btnId]; render(); renderFavs(); }, 3000) };
-                render(); renderFavs();
-            }
+            } else { delTimers[btnId] = { timer: setTimeout(() => { delete delTimers[btnId]; render(); renderFavs(); }, 3000) }; render(); renderFavs(); }
         }
 
-        function openEdit(actualIdx) {
-            editingIdx = actualIdx; const t = state.mileage[actualIdx];
-            document.getElementById('editDate').value = t.date; 
-            document.getElementById('editMiles').value = Math.round(t.miles);
-            document.getElementById('editOdoStart').value = Math.round(t.odoStart || 0);
-            document.getElementById('editStart').value = t.start; 
-            document.getElementById('editDest').value = t.dest;
-            document.getElementById('editPurpose').value = t.purpose || '';
-            document.getElementById('editModal').style.display = 'flex';
-        }
-
-        function saveEdit() {
-            state.mileage[editingIdx] = { 
-                date: document.getElementById('editDate').value, 
-                miles: Math.round(parseFloat(document.getElementById('editMiles').value)), 
-                odoStart: Math.round(parseFloat(document.getElementById('editOdoStart').value)),
-                start: document.getElementById('editStart').value, 
-                dest: document.getElementById('editDest').value,
-                purpose: document.getElementById('editPurpose').value
-            };
-            closeEditModal(); saveAndRender(false);
-        }
-
+        function openEdit(actualIdx) { editingIdx = actualIdx; const t = state.mileage[actualIdx]; document.getElementById('editDate').value = t.date; document.getElementById('editMiles').value = Math.round(t.miles); document.getElementById('editOdoStart').value = Math.round(t.odoStart || 0); document.getElementById('editStart').value = t.start; document.getElementById('editDest').value = t.dest; document.getElementById('editPurpose').value = t.purpose || ''; document.getElementById('editModal').style.display = 'flex'; }
+        function saveEdit() { state.mileage[editingIdx] = { date: document.getElementById('editDate').value, miles: Math.round(parseFloat(document.getElementById('editMiles').value)), odoStart: Math.round(parseFloat(document.getElementById('editOdoStart').value)), start: document.getElementById('editStart').value, dest: document.getElementById('editDest').value, purpose: document.getElementById('editPurpose').value }; closeEditModal(); saveAndRender(false); }
         function closeEditModal() { document.getElementById('editModal').style.display = 'none'; editingIdx = -1; }
 
-        function openFavModal(actualIdx) {
-            const t = state.mileage[actualIdx];
-            document.getElementById('favModal').style.display = 'flex';
-            document.getElementById('favBtnStart').onclick = () => { if(!state.favStarts.includes(t.start)) state.favStarts.push(t.start); closeFavModal(); saveAndRender(false); };
-            document.getElementById('favBtnDest').onclick = () => { if(!state.favDests.includes(t.dest)) state.favDests.push(t.dest); closeFavModal(); saveAndRender(false); };
-            document.getElementById('favBtnPurp').onclick = () => { if(t.purpose && !state.favPurps.includes(t.purpose)) state.favPurps.push(t.purpose); closeFavModal(); saveAndRender(false); };
-        }
+        function openFavModal(actualIdx) { const t = state.mileage[actualIdx]; document.getElementById('favModal').style.display = 'flex'; document.getElementById('favBtnStart').onclick = () => { if(!state.favStarts.includes(t.start)) state.favStarts.push(t.start); closeFavModal(); saveAndRender(false); }; document.getElementById('favBtnDest').onclick = () => { if(!state.favDests.includes(t.dest)) state.favDests.push(t.dest); closeFavModal(); saveAndRender(false); }; document.getElementById('favBtnPurp').onclick = () => { if(t.purpose && !state.favPurps.includes(t.purpose)) state.favPurps.push(t.purpose); closeFavModal(); saveAndRender(false); }; }
         function closeFavModal() { document.getElementById('favModal').style.display = 'none'; }
-
-        function renderFavs() {
-            const sBox = document.getElementById('startFavs'), dBox = document.getElementById('destFavs'), pBox = document.getElementById('purpFavs');
-            sBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', false)">🏠 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'start')">${delTimers['start-'+i] ? '✔️' : '✕'}</span></div>`).join('');
-            dBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', false)">📍 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'dest')">${delTimers['dest-'+i] ? '✔️' : '✕'}</span></div>`).join('');
-            pBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', false)">🔧 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'purp')">${delTimers['purp-'+i] ? '✔️' : '✕'}</span></div>`).join('');
-
-            const eSBox = document.getElementById('editStartFavs'), eDBox = document.getElementById('editDestFavs'), ePBox = document.getElementById('editPurpFavs');
-            eSBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', true)">🏠 ${f}</div>`).join('');
-            eDBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', true)">📍 ${f}</div>`).join('');
-            ePBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', true)">🔧 ${f}</div>`).join('');
-        }
-
-        function applyFav(val, type, isEditMode) {
-            const prefix = isEditMode ? 'edit' : '';
-            if (type === 'start') document.getElementById(prefix + (isEditMode ? 'Start' : 'startLoc')).value = val;
-            else if (type === 'dest') document.getElementById(prefix + (isEditMode ? 'Dest' : 'dest')).value = val;
-            else document.getElementById(prefix + (isEditMode ? 'Purpose' : 'purpose')).value = val;
-        }
+        function renderFavs() { const sBox = document.getElementById('startFavs'), dBox = document.getElementById('destFavs'), pBox = document.getElementById('purpFavs'); sBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', false)">🏠 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'start')">${delTimers['start-'+i] ? '✔️' : '✕'}</span></div>`).join(''); dBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', false)">📍 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'dest')">${delTimers['dest-'+i] ? '✔️' : '✕'}</span></div>`).join(''); pBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', false)">🔧 ${f} <span class="fav-del" onclick="event.stopPropagation(); toggleDelete('${i}', true, 'purp')">${delTimers['purp-'+i] ? '✔️' : '✕'}</span></div>`).join(''); const eSBox = document.getElementById('editStartFavs'), eDBox = document.getElementById('editDestFavs'), ePBox = document.getElementById('editPurpFavs'); eSBox.innerHTML = state.favStarts.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'start', true)">🏠 ${f}</div>`).join(''); eDBox.innerHTML = state.favDests.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'dest', true)">📍 ${f}</div>`).join(''); ePBox.innerHTML = state.favPurps.map((f, i) => `<div class="fav-chip" onclick="applyFav('${f}', 'purp', true)">🔧 ${f}</div>`).join(''); }
+        function applyFav(val, type, isEditMode) { const prefix = isEditMode ? 'edit' : ''; if (type === 'start') document.getElementById(prefix + (isEditMode ? 'Start' : 'startLoc')).value = val; else if (type === 'dest') document.getElementById(prefix + (isEditMode ? 'Dest' : 'dest')).value = val; else document.getElementById(prefix + (isEditMode ? 'Purpose' : 'purpose')).value = val; }
 
         function saveAndRender(isFromCloud = false) {
-            if (!isFromCloud) {
-                state.lastUpdated = Date.now();
-            }
-
-            state.mileage.sort((a, b) => {
-                const dateDiff = new Date(b.date) - new Date(a.date);
-                if (dateDiff !== 0) return dateDiff;
-                return (b.odoStart || 0) - (a.odoStart || 0);
-            });
-
-            localStorage.setItem('discipline_v12', JSON.stringify(state));
-            manageBackups(); 
-            
-            render(); 
-            renderFavs();
+            if (!isFromCloud) state.lastUpdated = Date.now();
+            state.mileage.sort((a, b) => { const dateDiff = new Date(b.date) - new Date(a.date); if (dateDiff !== 0) return dateDiff; return (b.odoStart || 0) - (a.odoStart || 0); });
+            localStorage.setItem('discipline_v12', JSON.stringify(state)); manageBackups(); render(); renderFavs();
         }
 
         function render() {
-            const filterVal = document.getElementById('monthFilter').value; 
-            
-            let displayList = state.mileage.map((t, idx) => ({ ...t, originalIndex: idx }));
-
-            if (filterVal) {
-                displayList = displayList.filter(t => t.date.startsWith(filterVal));
-                const [y, m] = filterVal.split('-');
-                const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                document.getElementById('totalsLabel').innerText = `${monthNames[parseInt(m)-1]} ${y} Tax Deduction`;
-            } else {
-                document.getElementById('totalsLabel').innerText = `2026 Tax Deduction Earned`;
-            }
-
+            const filterVal = document.getElementById('monthFilter').value; let displayList = state.mileage.map((t, idx) => ({ ...t, originalIndex: idx }));
+            if (filterVal) { displayList = displayList.filter(t => t.date.startsWith(filterVal)); const [y, m] = filterVal.split('-'); const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; document.getElementById('totalsLabel').innerText = `${monthNames[parseInt(m)-1]} ${y} Tax Deduction`; } else { document.getElementById('totalsLabel').innerText = `2026 Tax Deduction Earned`; }
             const tbody = document.querySelector('#logTable tbody');
             tbody.innerHTML = displayList.map(t => {
-                const isDel = delTimers['trip-'+t.originalIndex];
-                const cleanMiles = Math.round(t.miles);
-                const cleanOdoStart = Math.round(t.odoStart);
-                const cleanOdoEnd = cleanOdoStart + cleanMiles;
-
-                return `<tr>
-                    <td class="centered-col"><button class="btn-icon" onclick="openFavModal(${t.originalIndex})">⭐</button></td>
-                    <td>${t.date}</td>
-                    <td>${t.start}</td>
-                    <td><strong>${t.dest}</strong></td>
-                    <td style="color:#a1a1aa">${t.purpose || '-'}</td>
-                    <td class="miles-cell">${cleanMiles}<span class="odo-detail">${cleanOdoStart} → ${cleanOdoEnd}</span></td>
-                    <td>
-                        <div class="actions-cell">
-                            <button class="btn-icon" onclick="triggerCopy(${t.originalIndex})" title="Copy Trip">📑</button>
-                            <button class="btn-icon" onclick="queueReturnTrip(${t.originalIndex})" title="Queue Return Trip">🔄</button>
-                            <button class="btn-icon" onclick="openEdit(${t.originalIndex})" title="Edit Trip">✏️</button>
-                            <button class="btn-icon ${isDel ? 'btn-confirm' : 'btn-delete'}" onclick="toggleDelete('${t.originalIndex}', false)" title="Delete">${isDel ? '✔️' : '✕'}</button>
-                        </div>
-                    </td>
-                </tr>`;
+                const isDel = delTimers['trip-'+t.originalIndex]; const cleanMiles = Math.round(t.miles); const cleanOdoStart = Math.round(t.odoStart); const cleanOdoEnd = cleanOdoStart + cleanMiles;
+                return `<tr><td class="centered-col"><button class="btn-icon" onclick="openFavModal(${t.originalIndex})">⭐</button></td><td>${t.date}</td><td>${t.start}</td><td><strong>${t.dest}</strong></td><td style="color:#a1a1aa">${t.purpose || '-'}</td><td class="miles-cell">${cleanMiles}<span class="odo-detail">${cleanOdoStart} → ${cleanOdoEnd}</span></td><td><div class="actions-cell"><button class="btn-icon" onclick="triggerCopy(${t.originalIndex})" title="Copy Trip">📑</button><button class="btn-icon" onclick="queueReturnTrip(${t.originalIndex})" title="Queue Return Trip">🔄</button><button class="btn-icon" onclick="openEdit(${t.originalIndex})" title="Edit Trip">✏️</button><button class="btn-icon ${isDel ? 'btn-confirm' : 'btn-delete'}" onclick="toggleDelete('${t.originalIndex}', false)" title="Delete">${isDel ? '✔️' : '✕'}</button></div></td></tr>`;
             }).join('');
-            
-            const totalM = Math.round(displayList.reduce((s, t) => s + t.miles, 0));
-            document.getElementById('totalMiles').innerText = `${totalM} Total Miles`;
-            document.getElementById('totalDeduction').innerText = `$${(totalM * RATE).toFixed(2)}`;
+            const totalM = Math.round(displayList.reduce((s, t) => s + t.miles, 0)); document.getElementById('totalMiles').innerText = `${totalM} Total Miles`; document.getElementById('totalDeduction').innerText = `$${(totalM * RATE).toFixed(2)}`;
         }
 
         function exportToCSV() {
-            let csv = "Date,Start,Destination,Purpose,Miles,OdoStart,OdoEnd,Deduction\n" + state.mileage.map(t => {
-                const cleanMiles = Math.round(t.miles);
-                const cleanOdo = Math.round(t.odoStart);
-                return `${t.date},"${t.start}","${t.dest}","${t.purpose}",${cleanMiles},${cleanOdo},${cleanOdo + cleanMiles},${(cleanMiles*RATE).toFixed(2)}`;
-            }).join("\n");
+            let csv = "Date,Start,Destination,Purpose,Miles,OdoStart,OdoEnd,Deduction\n" + state.mileage.map(t => { const cleanMiles = Math.round(t.miles); const cleanOdo = Math.round(t.odoStart); return `${t.date},"${t.start}","${t.dest}","${t.purpose}",${cleanMiles},${cleanOdo},${cleanOdo + cleanMiles},${(cleanMiles*RATE).toFixed(2)}`; }).join("\n");
             const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = `Dryden_2026.csv`; a.click();
         }
 
-        window.onload = () => { 
-            setInputsToDefault(); 
-            saveAndRender(false); 
-            if (CLOUD_CONFIG.key) {
-                updateSyncStatus("Ready");
-                updateDebugId(CLOUD_CONFIG.binId);
-                if(CLOUD_CONFIG.binId) {
-                    startPassiveListener(); 
-                }
-            }
-        };
+        window.onload = () => { setInputsToDefault(); saveAndRender(false); };
     </script>
 </body>
 </html>
