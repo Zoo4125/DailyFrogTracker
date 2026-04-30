@@ -107,7 +107,7 @@
     <div class="board"><div class="column" id="col-0" data-col="0"></div><div class="column" id="col-1" data-col="1"></div><div class="column" id="col-2" data-col="2"></div></div>
     <div class="trophy-section"><div class="dashboard-icon icon-flash" onclick="openFlashcardModal()" title="Flashcards">🗂️</div><div class="dashboard-icon icon-study" onclick="openStudyModal()" title="Master Electrician Prep">🔌</div><div class="dashboard-icon icon-bolt" onclick="openDailyRoutineModal()" title="Daily Routine">⚡</div><div class="dashboard-icon icon-pray" onclick="openGratitudeModal()" title="Gratitude Journal">🙏</div><div class="dashboard-icon icon-trophy" onclick="openGoalModal()" title="Goals">🏆</div><div class="dashboard-icon icon-broom" onclick="openSweepModal()" title="Sweep Menu">🧹</div></div>
     
-<div class="toggle-section" style="width: 100%; max-width: 1000px; margin: 20px auto 0 auto;">
+    <div class="toggle-section" style="width: 100%; max-width: 1000px; margin: 20px auto 0 auto;">
         <button class="toggle-link" onclick="toggleElement('goalsCollapse', 'Goals')">Hide Goals ↑</button>
         <div id="goalsCollapse" class="expand-box open" style="width: 100%;">
             <div class="goals-flex" id="goalsGrid"></div>
@@ -121,9 +121,16 @@
         <div class="button-row" style="margin-top:10px;"><button onclick="playStretch()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Stretch</button><button onclick="playChillVibe()" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Chill</button><a href="https://www.brain.fm" target="_blank" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Meditate</a></div>
         <div class="button-row" style="margin-top: 10px;"><button id="btnDayOffToggle" onclick="toggleDayOff()" class="tool-btn" style="border-color: var(--milestone); color: var(--milestone);">Take Day Off</button><a href="mileage.html" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Mileage</a></div>
         <div style="display:flex; flex-direction:column; align-items:center; gap: 4px; margin-top: 5px;"><div id="frogCounter">0 Frogs Eaten</div><div id="fcCounter">0 Days Studied</div></div>
-        <div class="toggle-section"><button class="toggle-link" onclick="toggleElement('dangerZone', 'Danger Zone')">Danger Zone ↓</button><div id="dangerZone" class="expand-box"><button onclick="clearAllData()" class="tool-btn" style="color: #ef4444; border-color: #ef4444; margin-top: 10px; font-size: 0.5rem; opacity: 0.4;">Wipe All History</button></div></div>
     </div>
-    <div class="year-grid" id="yearGrid"></div>
+
+    <div class="toggle-section" style="width: 100%; max-width: 1000px; margin: 40px auto 20px auto; border-top: 1px solid var(--border); padding-top: 20px;">
+        <button class="toggle-link" onclick="toggleElement('calendarCollapse', 'Calendar')">Hide Calendar ↑</button>
+        <div id="calendarCollapse" class="expand-box open" style="width: 100%;">
+            <div class="year-grid" id="yearGrid" style="margin-top: 20px; border-top: none; padding-top: 0;"></div>
+        </div>
+    </div>
+
+    <div class="toggle-section" style="margin-top: 40px; margin-bottom: 40px; width: 100%;"><button class="toggle-link" onclick="toggleElement('dangerZone', 'Danger Zone')">Danger Zone ↓</button><div id="dangerZone" class="expand-box"><button onclick="clearAllData()" class="tool-btn" style="color: #ef4444; border-color: #ef4444; margin-top: 10px; font-size: 0.5rem; opacity: 0.4;">Wipe All History</button></div></div>
 </div>
 
 <script>
