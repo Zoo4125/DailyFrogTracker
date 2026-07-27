@@ -352,14 +352,13 @@
         .day-sq:hover { transform: scale(1.5); z-index: 100; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); border: 1px solid var(--text); }
         .day-sq:hover::after { content: attr(data-pct); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: #000; border: 1px solid var(--primary); color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; white-space: nowrap; pointer-events: none; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 200; }
         
-        .fc-image-preview, .fc-review-img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); display: none; object-fit: contain; }
-        .fc-image-preview { max-height: 150px; margin-top: 10px; }
-        .fc-review-img { max-height: 250px; margin: 10px 0; }
+        .fc-image-preview { max-width: 100%; max-height: 150px; border-radius: 8px; border: 1px solid var(--border); display: none; margin-top: 10px; object-fit: contain; }
+        .fc-review-img { max-width: 100%; max-height: 250px; border-radius: 8px; border: 1px solid var(--border); margin: 10px 0; display: none; object-fit: contain; }
         
-        #flashcardModal .sync-modal { max-width: 800px; }
+        .article-badge { display: inline-block; background: var(--primary); color: #fff; font-weight: 800; font-size: 0.75rem; padding: 4px 16px; border-radius: 20px; letter-spacing: 1px; margin-bottom: 15px; }
+        #flashcardModal .sync-modal, #editFcModal .sync-modal { max-width: 800px; }
     </style>
 
-    <!-- FIREBASE MODULE LOADER -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
@@ -395,7 +394,6 @@
 <div id="firework-container" class="firework-container"></div>
 <div id="toast" class="toast"></div>
 
-<!-- General Dash Modals -->
 <div id="syncModal" class="modal-overlay">
     <div class="sync-modal">
         <div class="modal-close" onclick="closeSyncModal()">✕</div>
@@ -453,48 +451,36 @@
     </div>
 </div>
 
-<!-- Habit Calendars Modals -->
-<div id="newHabitModal" class="modal-overlay">
+<div id="editFcModal" class="modal-overlay" style="z-index: 4500;">
     <div class="sync-modal">
-        <div class="modal-close" onclick="closeNewHabitModal()">✕</div>
-        <div class="modal-title" style="font-size: 1.8rem;">New Habit Tracker</div>
-        <input type="text" id="habitTrackerName" class="custom-input" placeholder="Habit Name (e.g., Reading)">
-        <input type="text" id="habitTrackerEmoji" class="custom-input" placeholder="Emoji (e.g., 📚)" maxlength="5" style="margin-top:10px;">
-        <button onclick="createHabitTracker()" class="confirm-btn" style="width:100%;">Create Tracker</button>
-    </div>
-</div>
-
-<div id="habitTrackerModal" class="modal-overlay">
-    <div class="sync-modal" style="max-width: 500px; width: 95%;">
-        <div class="modal-close" onclick="closeHabitTrackerModal()">✕</div>
-        <div class="modal-title" id="htTitle">Habit Name</div>
+        <div class="modal-close" onclick="closeEditFc()">✕</div>
+        <h3 style="color:var(--primary); margin-top:0">✏️ Edit Flashcard</h3>
+        <input type="text" id="editFcFront" class="custom-input" placeholder="Main Question..." style="margin-bottom:10px;">
+        <input type="text" id="editFcHint" class="custom-input" placeholder="Hint (Optional)..." style="margin-bottom:10px;">
+        <textarea id="editFcAlt" class="custom-input" placeholder="Alt Questions (one per line)..." style="margin-bottom:10px; min-height:50px; resize:vertical;"></textarea>
+        <textarea id="editFcBack" class="custom-input" placeholder="Answer..." style="margin-bottom:10px; min-height:80px; resize:vertical;"></textarea>
         
-        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom: 15px;">
-            <button class="tool-btn" onclick="changeHtMonth(-1)">← Prev</button>
-            <div id="htMonthDisplay" style="font-weight:bold; color:var(--primary);">Month Year</div>
-            <button class="tool-btn" onclick="changeHtMonth(1)">Next →</button>
-        </div>
-        
-        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; width:100%; text-align:center; color:#71717a; font-size:0.7rem; margin-bottom:5px;">
-            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-        </div>
-        <div id="htCalendarGrid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:5px; width:100%; margin-bottom: 20px;"></div>
-        
-        <div id="htActionArea" style="display:none; width:100%; flex-direction:column; gap:10px; background:#111; padding:15px; border-radius:8px; border:1px solid #27272a;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span id="htSelectedDate" style="font-size:0.85rem; color:#a1a1aa; font-family:monospace;">YYYY-MM-DD</span>
-                <button id="htToggleBtn" onclick="toggleHtStamp()" class="confirm-btn" style="margin:0; padding:6px 15px; font-size:0.8rem;">Stamp</button>
+        <div style="display:flex; gap:10px; width:100%; margin-bottom:15px;">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+                <label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">
+                    🖼️ Replace Front Img <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'editFront')">
+                </label>
+                <img id="editFcFrontPreview" class="fc-image-preview">
+                <div id="editFcFrontImgClear" onclick="clearPreview('editFront')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div>
             </div>
-            <textarea id="htNoteInput" class="custom-input" placeholder="Add a note for this day..." style="min-height:60px; resize:vertical; font-size:0.85rem;" onchange="saveHtNote()"></textarea>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+                <label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">
+                    🖼️ Replace Back Img <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'editBack')">
+                </label>
+                <img id="editFcBackPreview" class="fc-image-preview">
+                <div id="editFcBackImgClear" onclick="clearPreview('editBack')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div>
+            </div>
         </div>
-        
-        <div style="margin-top:20px; width:100%;">
-            <button onclick="deleteHabitTracker()" class="tool-btn" style="color:var(--danger); border-color:var(--danger); width:100%;">Delete Tracker</button>
-        </div>
+        <button id="editFcSaveBtn" class="confirm-btn" onclick="saveEditFc()" style="width:100%;">Save Changes</button>
+        <div id="editUploadSpinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto 0 auto; display: none;"></div>
     </div>
 </div>
 
-<!-- Flashcard System Modals -->
 <div id="flashcardModal" class="modal-overlay">
     <div class="sync-modal" style="height: 85vh; display:flex; flex-direction:column; padding: 30px 20px;">
         <div class="modal-close" onclick="closeFlashcardModal()">✕</div>
@@ -505,7 +491,6 @@
             <button onclick="setFcTab('manage')" id="fcTabManage" class="tool-btn" style="flex:1;">Manage</button>
         </div>
 
-        <!-- Review Screen -->
         <div id="fcReviewArea" style="flex:1; display:flex; flex-direction:column; width:100%; align-items:center; justify-content:center;">
             
             <div id="fcEmptyState" style="display:none; color:var(--success); font-weight:bold; font-size:1.2rem; text-align:center;">
@@ -514,8 +499,6 @@
 
             <div id="fcCardContainer" style="width:100%; display:none; flex-direction:column; align-items:center;">
                 <div style="background:#111; border:1px solid var(--border); border-radius:12px; width:100%; min-height:220px; padding:25px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; position:relative; overflow-y:auto; max-height:50vh;">
-                    
-                    <div id="fcArticleBadge" style="display:inline-block; background:var(--primary); color:#fff; font-weight:800; font-size:0.75rem; padding:4px 16px; border-radius:20px; letter-spacing:1px; margin-bottom:15px; display:none;"></div>
                     
                     <img id="fcFrontImgDisplay" class="fc-review-img">
                     <div id="fcFrontText" style="font-size:1.2rem; font-weight:bold; color:var(--text); word-break:break-word;"></div>
@@ -536,7 +519,7 @@
                 </div>
                 
                 <div id="fcScoreBtns" style="width:100%; max-width:500px; display:none; gap:10px; margin-top:20px;">
-                    <button onclick="if(currentFc) { closeFlashcardModal(); openEditFc(currentFc.id); }" class="tool-btn" style="padding:10px; border-color:#3f3f46; color:#a1a1aa;" title="Edit this card">✏️</button>
+                    <button onclick="if(currentFc) openEditFc(currentFc.id);" class="tool-btn" style="padding:10px; border-color:#3f3f46; color:#a1a1aa;" title="Edit this card">✏️</button>
                     <button onclick="fcAnswer(0)" class="tool-btn" style="flex:1; padding:10px 5px; border-color:var(--danger); color:var(--danger);">Again<br><span style="font-size:0.6rem; opacity:0.7;">&lt; 1m</span></button>
                     <button onclick="fcAnswer(1)" class="tool-btn" style="flex:1; padding:10px 5px; border-color:#f97316; color:#f97316;">Hard<br><span id="fcTime1" style="font-size:0.6rem; opacity:0.7;">6h</span></button>
                     <button onclick="fcAnswer(2)" class="tool-btn" style="flex:1; padding:10px 5px; border-color:var(--success); color:var(--success);">Good<br><span id="fcTime2" style="font-size:0.6rem; opacity:0.7;">-</span></button>
@@ -545,7 +528,6 @@
             </div>
         </div>
 
-        <!-- Manage Screen -->
         <div id="fcManageArea" style="display:none; flex:1; flex-direction:column; width:100%; overflow-y:auto; gap:10px; padding-right:5px;">
             <div style="max-width:500px; width:100%; align-self:center;">
                 <input type="text" id="fcFrontInput" class="custom-input" placeholder="Front (Main Question/Term)..." style="margin-bottom: 5px;">
@@ -553,7 +535,26 @@
                 <textarea id="fcAltInput" class="custom-input" placeholder="Alternative Questions (one per line, optional)..." style="resize:vertical; min-height:50px; font-family:inherit; margin-bottom: 5px;"></textarea>
                 <textarea id="fcBackInput" class="custom-input" placeholder="Back (Answer/Definition)..." style="resize:vertical; min-height:80px; font-family:inherit; margin-bottom: 5px;"></textarea>
                 
+                <div style="display:flex; gap:10px; width:100%;">
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+                        <label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">
+                            🖼️ Add Front Img <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'front')">
+                        </label>
+                        <img id="fcFrontPreview" class="fc-image-preview">
+                        <div id="fcFrontImgClear" onclick="clearPreview('front')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div>
+                    </div>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+                        <label class="tool-btn" style="width:100%; text-align:center; cursor:pointer; padding:8px; font-size:0.65rem;">
+                            🖼️ Add Back Img <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, 'back')">
+                        </label>
+                        <img id="fcBackPreview" class="fc-image-preview">
+                        <div id="fcBackImgClear" onclick="clearPreview('back')" style="color:var(--danger); cursor:pointer; font-size:0.7rem; margin-top:5px; display:none;">Remove</div>
+                    </div>
+                </div>
+
                 <button id="addCardBtn" onclick="addFlashcard()" class="confirm-btn" style="margin-top:15px; width:100%;">Add Card</button>
+                <div id="uploadSpinner" style="border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 15px auto 0 auto; display: none;"></div>
+                
                 <hr style="width:100%; border:0; border-top:1px solid #333; margin: 10px 0;">
             </div>
             
@@ -566,20 +567,6 @@
                 <div id="fcMasteredList" style="text-align:left; display:flex; flex-direction:column; gap:10px;"></div>
             </div>
         </div>
-    </div>
-</div>
-
-<div id="editFcModal" class="modal-overlay" style="z-index: 4500;">
-    <div class="sync-modal">
-        <div class="modal-close" onclick="closeEditFc()">✕</div>
-        <h3 style="color:var(--primary); margin-top:0">✏️ Edit Flashcard</h3>
-        
-        <input type="text" id="editFcFront" class="custom-input" placeholder="Main Question..." style="margin-bottom:10px;">
-        <input type="text" id="editFcHint" class="custom-input" placeholder="Hint (Optional)..." style="margin-bottom:10px;">
-        <textarea id="editFcAlt" class="custom-input" placeholder="Alternative Questions (one per line)..." style="margin-bottom:10px; min-height:50px; resize:vertical;"></textarea>
-        <textarea id="editFcBack" class="custom-input" placeholder="Answer..." style="margin-bottom:10px; min-height:80px; resize:vertical;"></textarea>
-        
-        <button id="editFcSaveBtn" class="confirm-btn" onclick="saveEditFc()" style="width:100%;">Save Changes</button>
     </div>
 </div>
 
@@ -724,7 +711,6 @@
     </div>
 </div>
 
-<!-- MAIN UI -->
 <div class="container">
     <div class="nav-bar">
         <button class="nav-btn" onclick="changeDate(-1)">← Yesterday</button>
@@ -756,15 +742,6 @@
         <div class="dashboard-icon icon-pray" onclick="openGratitudeModal()" title="Gratitude Journal">🙏</div>
         <div class="dashboard-icon icon-trophy" onclick="openGoalModal()" title="Goals">🏆</div>
         <div class="dashboard-icon icon-broom" onclick="openSweepModal()" title="Sweep Menu">🧹</div>
-    </div>
-
-    <!-- Habit Calendars Toggle Section -->
-    <div class="toggle-section" style="margin-top: 40px; width: 100%; max-width: 1000px; border-top: 1px solid var(--border); padding-top: 20px;">
-        <button class="toggle-link" onclick="toggleElement('habitTrackersCollapse', 'Habit Calendars')">Show Habit Calendars ↓</button>
-        <div id="habitTrackersCollapse" class="expand-box">
-            <div id="habitTrackersList" style="display:flex; flex-wrap:wrap; gap:15px; justify-content:center;"></div>
-            <button onclick="openNewHabitModal()" class="tool-btn" style="margin-top:15px;">+ Add Habit Tracker</button>
-        </div>
     </div>
     
     <div class="toggle-section" style="width: 100%; max-width: 1000px; margin: 20px auto 0 auto;">
@@ -829,7 +806,6 @@
     </div>
 </div>
 
-<!-- MAIN SCRIPT LOGIC -->
 <script>
     // --- Data Initialization ---
     let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {} };
@@ -840,21 +816,7 @@
     if (!state.flashcards) state.flashcards = []; 
     if (!state.backlog) state.backlog = []; 
     if (!state.fcStudyDays) state.fcStudyDays = [];
-    if (!state.habitTrackers) state.habitTrackers = [];
-    if (!state.ui) state.ui = { goals: true, calendar: true, habitTrackers: false };
-
-    // --- Helper Formatting ---
-    function formatText(str) { 
-        if(!str) return ''; 
-        return String(str).replace(/==(.*?)==/g, '<span style="color:var(--frog); background:rgba(250, 204, 21, 0.15); padding:2px 4px; border-radius:4px;">$1</span>'); 
-    }
-
-    function getTodayKey(date) { 
-        const year = date.getFullYear(); 
-        const month = String(date.getMonth() + 1).padStart(2, '0'); 
-        const day = String(date.getDate()).padStart(2, '0'); 
-        return `${year}-${month}-${day}`; 
-    }
+    if (!state.ui) state.ui = { goals: true, calendar: true };
 
     const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9); 
     let viewingDate = new Date(); 
@@ -871,200 +833,25 @@
     let pollInterval = null; 
     let editingFcId = null;
     let currentFc = null; 
+    let pendingFrontImg = null; 
+    let pendingBackImg = null;
 
-    // Habit Tracker Modals UI State
-    let activeHtId = null;
-    let activeHtDate = new Date(); 
-    let selectedHtDateStr = null; 
-
-    // --- Habit Calendar Logic ---
-    function openNewHabitModal() {
-        document.getElementById('newHabitModal').style.display = 'flex';
-        document.getElementById('habitTrackerName').focus();
-    }
-    
-    function closeNewHabitModal() {
-        document.getElementById('newHabitModal').style.display = 'none';
-        document.getElementById('habitTrackerName').value = '';
-        document.getElementById('habitTrackerEmoji').value = '';
-    }
-    
-    function createHabitTracker() {
-        const name = document.getElementById('habitTrackerName').value.trim();
-        const emoji = document.getElementById('habitTrackerEmoji').value.trim() || '⭐';
-        if (name) {
-            state.habitTrackers.push({
-                id: Date.now(),
-                name: name,
-                emoji: emoji,
-                logs: {}
-            });
-            saveAndRender();
-            closeNewHabitModal();
-            showToast("Habit Tracker Created!");
-        }
+    // --- Helper Formatting ---
+    function formatText(str) { 
+        if(!str) return ''; 
+        return String(str).replace(/==(.*?)==/g, '<span style="color:var(--frog); background:rgba(250, 204, 21, 0.15); padding:2px 4px; border-radius:4px;">$1</span>'); 
     }
 
-    function renderHabitTrackers() {
-        const list = document.getElementById('habitTrackersList');
-        list.innerHTML = '';
-        if(!state.habitTrackers || state.habitTrackers.length === 0) {
-            list.innerHTML = '<div style="color:#71717a; font-size:0.8rem; padding: 10px;">No habit calendars yet. Build a new habit!</div>';
-            return;
-        }
-        
-        state.habitTrackers.forEach(ht => {
-            const totalStamps = Object.values(ht.logs || {}).filter(l => l.stamped).length;
-            const btn = document.createElement('div');
-            btn.className = 'goal-card';
-            btn.style.cursor = 'pointer';
-            btn.style.alignItems = 'center';
-            btn.style.justifyContent = 'center';
-            btn.style.minHeight = '80px';
-            btn.style.width = '140px';
-            btn.style.flex = 'none';
-            btn.innerHTML = `
-                <div style="font-size:1.5rem; margin-bottom:5px;">${ht.emoji}</div>
-                <div style="font-weight:bold; font-size:0.85rem; text-align:center;">${ht.name}</div>
-                <div style="font-size:0.7rem; color:#a1a1aa; margin-top:5px;">${totalStamps} Stamps</div>
-            `;
-            btn.onclick = () => openHabitTrackerModal(ht.id);
-            list.appendChild(btn);
-        });
+    function getTodayKey(date) { 
+        const year = date.getFullYear(); 
+        const month = String(date.getMonth() + 1).padStart(2, '0'); 
+        const day = String(date.getDate()).padStart(2, '0'); 
+        return `${year}-${month}-${day}`; 
     }
 
-    function openHabitTrackerModal(id) {
-        activeHtId = id;
-        activeHtDate = new Date(); 
-        selectedHtDateStr = getTodayKey(new Date()); 
-        document.getElementById('habitTrackerModal').style.display = 'flex';
-        renderHtCalendar();
-    }
-    
-    function closeHabitTrackerModal() {
-        document.getElementById('habitTrackerModal').style.display = 'none';
-        activeHtId = null;
-    }
-
-    function changeHtMonth(delta) {
-        activeHtDate.setMonth(activeHtDate.getMonth() + delta);
-        renderHtCalendar();
-    }
-
-    function renderHtCalendar() {
-        const ht = state.habitTrackers.find(h => h.id === activeHtId);
-        if (!ht) return;
-        if (!ht.logs) ht.logs = {};
-
-        document.getElementById('htTitle').innerText = `${ht.emoji} ${ht.name}`;
-        
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        document.getElementById('htMonthDisplay').innerText = `${monthNames[activeHtDate.getMonth()]} ${activeHtDate.getFullYear()}`;
-
-        const grid = document.getElementById('htCalendarGrid');
-        grid.innerHTML = '';
-
-        const year = activeHtDate.getFullYear();
-        const month = activeHtDate.getMonth();
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        for (let i = 0; i < firstDay; i++) {
-            const empty = document.createElement('div');
-            grid.appendChild(empty);
-        }
-
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            const log = ht.logs[dateKey] || {};
-            
-            const daySq = document.createElement('div');
-            daySq.className = 'day-sq';
-            daySq.style.border = dateKey === selectedHtDateStr ? '2px solid var(--primary)' : '';
-            daySq.style.background = log.stamped ? 'rgba(250, 204, 21, 0.15)' : 'rgba(255, 255, 255, 0.05)';
-            daySq.style.aspectRatio = '1';
-            daySq.style.display = 'flex';
-            daySq.style.alignItems = 'center';
-            daySq.style.justifyContent = 'center';
-            daySq.style.position = 'relative';
-            daySq.style.cursor = 'pointer';
-            daySq.style.borderRadius = '4px';
-            
-            if (log.stamped) {
-                daySq.innerHTML = `<span style="font-size:1.2rem;">${ht.emoji}</span>`;
-            } else {
-                daySq.innerHTML = `<span style="font-size:0.8rem; color:#71717a;">${d}</span>`;
-            }
-            
-            if (log.note && log.note.trim() !== '') {
-                daySq.innerHTML += `<div style="position:absolute; top:2px; right:2px; width:6px; height:6px; background:var(--primary); border-radius:50%;"></div>`;
-            }
-
-            daySq.onclick = () => selectHtDay(dateKey);
-            grid.appendChild(daySq);
-        }
-
-        updateHtActionArea();
-    }
-
-    function selectHtDay(dateKey) {
-        selectedHtDateStr = dateKey;
-        renderHtCalendar(); 
-    }
-
-    function updateHtActionArea() {
-        if (!selectedHtDateStr || !activeHtId) {
-            document.getElementById('htActionArea').style.display = 'none';
-            return;
-        }
-        
-        const ht = state.habitTrackers.find(h => h.id === activeHtId);
-        const log = ht.logs[selectedHtDateStr] || { stamped: false, note: '' };
-
-        document.getElementById('htActionArea').style.display = 'flex';
-        document.getElementById('htSelectedDate').innerText = selectedHtDateStr;
-        
-        const btn = document.getElementById('htToggleBtn');
-        if (log.stamped) {
-            btn.innerText = `Remove ${ht.emoji}`;
-            btn.style.background = 'var(--danger)';
-        } else {
-            btn.innerText = `Stamp ${ht.emoji}`;
-            btn.style.background = 'var(--primary)';
-        }
-
-        document.getElementById('htNoteInput').value = log.note || '';
-    }
-
-    function toggleHtStamp() {
-        const ht = state.habitTrackers.find(h => h.id === activeHtId);
-        if (!ht.logs[selectedHtDateStr]) ht.logs[selectedHtDateStr] = { stamped: false, note: '' };
-        
-        ht.logs[selectedHtDateStr].stamped = !ht.logs[selectedHtDateStr].stamped;
-        saveAndRender();
-        renderHtCalendar();
-    }
-
-    function saveHtNote() {
-        const ht = state.habitTrackers.find(h => h.id === activeHtId);
-        if (!ht.logs[selectedHtDateStr]) ht.logs[selectedHtDateStr] = { stamped: false, note: '' };
-        
-        ht.logs[selectedHtDateStr].note = document.getElementById('htNoteInput').value;
-        saveAndRender();
-        renderHtCalendar();
-    }
-
-    function deleteHabitTracker() {
-        const ht = state.habitTrackers.find(h => h.id === activeHtId);
-        if(confirm(`Are you sure you want to delete the tracker for "${ht.name}"?`)) {
-            state.habitTrackers = state.habitTrackers.filter(h => h.id !== activeHtId);
-            saveAndRender();
-            closeHabitTrackerModal();
-        }
-    }
-
-    // --- Firebase Sync Engine ---
+    // --- Firebase Logic ---
     window.addEventListener('firebase-ready', () => { setupRealtimeSync(); });
+    
     function setupRealtimeSync() {
         document.getElementById('syncStatus').innerText = "Cloud: Connected";
         const stateRef = window.fbDoc(window.fbDb, "appData", "masterState");
@@ -1107,7 +894,7 @@
                 const docSnap = await window.fbGetDoc(stateRef);
                 if (docSnap.exists()) { 
                     state = docSnap.data(); 
-                    if (!state.ui) state.ui = { goals: true, calendar: true, habitTrackers: false }; 
+                    if (!state.ui) state.ui = { goals: true, calendar: true }; 
                     saveAndRender(); 
                     document.getElementById('syncStatus').innerText = "Cloud: Synced"; 
                     addSyncLog("Manual Download Completed."); 
@@ -1212,8 +999,7 @@
         
         if (shouldRenderBoard) { renderBoard(dayData.habits || []); } 
         renderYear(); 
-        renderGoals();
-        renderHabitTrackers();
+        renderGoals(); 
         updateFcDueCount(); 
         updateAlertGlows();
         
@@ -1228,7 +1014,7 @@
 
     // --- Flashcard Operations ---
     function openFlashcardModal() { updateFcDueCount(); setFcTab('review'); document.getElementById('flashcardModal').style.display = 'flex'; }
-    function closeFlashcardModal() { document.getElementById('flashcardModal').style.display = 'none'; currentFc = null; }
+    function closeFlashcardModal() { document.getElementById('flashcardModal').style.display = 'none'; currentFc = null; clearPreview('front'); clearPreview('back'); }
     
     function setFcTab(tab) {
         document.getElementById('fcTabReview').classList.remove('active-tab'); 
@@ -1246,30 +1032,92 @@
         }
     }
 
+    function handleImageUpload(input, type) {
+        if (!input.files || !input.files[0]) return; 
+        const file = input.files[0]; 
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image(); 
+            img.src = e.target.result;
+            img.onload = function() {
+                const MAX_WIDTH = 800; 
+                let width = img.width; 
+                let height = img.height; 
+                if (width > MAX_WIDTH) { height = height * (MAX_WIDTH / width); width = MAX_WIDTH; }
+                const canvas = document.createElement('canvas'); 
+                canvas.width = width; canvas.height = height; 
+                const ctx = canvas.getContext('2d'); 
+                ctx.drawImage(img, 0, 0, width, height); 
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                if (type === 'front') { 
+                    pendingFrontImg = dataUrl; 
+                    const preview = document.getElementById('fcFrontPreview'); 
+                    preview.src = dataUrl; preview.style.display = 'block'; 
+                    document.getElementById('fcFrontImgClear').style.display = 'block'; 
+                } else if (type === 'back') { 
+                    pendingBackImg = dataUrl; 
+                    const preview = document.getElementById('fcBackPreview'); 
+                    preview.src = dataUrl; preview.style.display = 'block'; 
+                    document.getElementById('fcBackImgClear').style.display = 'block'; 
+                } else if (type === 'editFront') { 
+                    pendingFrontImg = dataUrl; 
+                    const preview = document.getElementById('editFcFrontPreview'); 
+                    preview.src = dataUrl; preview.style.display = 'block'; 
+                    document.getElementById('editFcFrontImgClear').style.display = 'block'; 
+                } else if (type === 'editBack') { 
+                    pendingBackImg = dataUrl; 
+                    const preview = document.getElementById('editFcBackPreview'); 
+                    preview.src = dataUrl; preview.style.display = 'block'; 
+                    document.getElementById('editFcBackImgClear').style.display = 'block'; 
+                }
+            }
+        }; 
+        reader.readAsDataURL(file);
+    }
+
+    function clearPreview(type) {
+        if (type === 'front') { pendingFrontImg = null; document.getElementById('fcFrontPreview').style.display = 'none'; document.getElementById('fcFrontPreview').src = ''; document.getElementById('fcFrontImgClear').style.display = 'none'; } 
+        else if (type === 'back') { pendingBackImg = null; document.getElementById('fcBackPreview').style.display = 'none'; document.getElementById('fcBackPreview').src = ''; document.getElementById('fcBackImgClear').style.display = 'none'; }
+        else if (type === 'editFront') { pendingFrontImg = null; document.getElementById('editFcFrontPreview').style.display = 'none'; document.getElementById('editFcFrontPreview').src = ''; document.getElementById('editFcFrontImgClear').style.display = 'none'; }
+        else if (type === 'editBack') { pendingBackImg = null; document.getElementById('editFcBackPreview').style.display = 'none'; document.getElementById('editFcBackPreview').src = ''; document.getElementById('editFcBackImgClear').style.display = 'none'; }
+    }
+
     async function addFlashcard() {
         const front = document.getElementById('fcFrontInput').value.trim(); 
         const back = document.getElementById('fcBackInput').value.trim(); 
-        const hint = document.getElementById('fcHintInput').value.trim(); 
         const altRaw = document.getElementById('fcAltInput').value.trim(); 
+        const hint = document.getElementById('fcHintInput').value.trim();
         const altQuestions = altRaw ? altRaw.split('\n').map(q => q.trim()).filter(q => q) : [];
         
-        if (!front) { showToast("Need front text."); return; }
+        if (!front && !pendingFrontImg) { showToast("Need front text or image."); return; }
         
         document.getElementById('addCardBtn').style.display = 'none'; 
         document.getElementById('uploadSpinner').style.display = 'block';
         
-        const cardId = Date.now();
-        state.flashcards.push({ 
-            id: cardId, front: front, back: back, 
-            hint: hint, altQuestions: altQuestions, 
-            interval: 0, ease: 2.5, consecutiveEasy: 0, status: 'active', nextReview: Date.now(), reviews: 0 
-        });
-        document.getElementById('fcFrontInput').value = ''; 
-        document.getElementById('fcBackInput').value = ''; 
-        document.getElementById('fcHintInput').value = ''; 
-        document.getElementById('fcAltInput').value = ''; 
-        
-        saveAndRender(); renderFcManageList(); updateFcDueCount(); showToast("Flashcard Added!");
+        let finalFrontUrl = null; let finalBackUrl = null; const cardId = Date.now();
+        try {
+            if (pendingFrontImg) { 
+                const r = window.fbRef(window.fbStorage, `flashcards/front_${cardId}.jpg`); 
+                await window.fbUploadString(r, pendingFrontImg, 'data_url'); 
+                finalFrontUrl = await window.fbGetDownloadURL(r); 
+            }
+            if (pendingBackImg) { 
+                const r = window.fbRef(window.fbStorage, `flashcards/back_${cardId}.jpg`); 
+                await window.fbUploadString(r, pendingBackImg, 'data_url'); 
+                finalBackUrl = await window.fbGetDownloadURL(r); 
+            }
+            state.flashcards.push({ 
+                id: cardId, front: front, back: back, frontImg: finalFrontUrl, backImg: finalBackUrl, 
+                altQuestions: altQuestions, hint: hint, 
+                interval: 0, ease: 2.5, consecutiveEasy: 0, status: 'active', nextReview: Date.now(), reviews: 0 
+            });
+            document.getElementById('fcFrontInput').value = ''; 
+            document.getElementById('fcBackInput').value = ''; 
+            document.getElementById('fcAltInput').value = ''; 
+            document.getElementById('fcHintInput').value = '';
+            clearPreview('front'); clearPreview('back');
+            saveAndRender(); renderFcManageList(); updateFcDueCount(); showToast("Flashcard Added!");
+        } catch (e) { showToast("Error adding card: " + e.message); }
         document.getElementById('addCardBtn').style.display = 'block'; document.getElementById('uploadSpinner').style.display = 'none';
     }
 
@@ -1278,16 +1126,29 @@
         if(!c) return; 
         editingFcId = id;
         document.getElementById('editFcFront').value = c.front || ''; 
-        document.getElementById('editFcHint').value = c.hint || ''; 
+        document.getElementById('editFcHint').value = c.hint || '';
         document.getElementById('editFcAlt').value = (c.altQuestions || []).join('\n'); 
         document.getElementById('editFcBack').value = c.back || '';
         
+        clearPreview('editFront'); clearPreview('editBack');
+        if(c.frontImg) { 
+            document.getElementById('editFcFrontPreview').src = c.frontImg; 
+            document.getElementById('editFcFrontPreview').style.display = 'block'; 
+            document.getElementById('editFcFrontImgClear').style.display = 'block'; 
+        }
+        if(c.backImg) { 
+            document.getElementById('editFcBackPreview').src = c.backImg; 
+            document.getElementById('editFcBackPreview').style.display = 'block'; 
+            document.getElementById('editFcBackImgClear').style.display = 'block'; 
+        }
         document.getElementById('editFcModal').style.display = 'flex';
     }
 
     function closeEditFc() { 
         document.getElementById('editFcModal').style.display = 'none'; 
         editingFcId = null; 
+        clearPreview('editFront'); 
+        clearPreview('editBack'); 
     }
 
     async function saveEditFc() {
@@ -1296,22 +1157,54 @@
         if(c) { 
             document.getElementById('editFcSaveBtn').style.display = 'none'; 
             document.getElementById('editUploadSpinner').style.display = 'block';
+            try {
+                if (pendingFrontImg) { 
+                    const r = window.fbRef(window.fbStorage, `flashcards/front_${c.id}_upd.jpg`); 
+                    await window.fbUploadString(r, pendingFrontImg, 'data_url'); 
+                    c.frontImg = await window.fbGetDownloadURL(r); 
+                }
+                if (pendingBackImg) { 
+                    const r = window.fbRef(window.fbStorage, `flashcards/back_${c.id}_upd.jpg`); 
+                    await window.fbUploadString(r, pendingBackImg, 'data_url'); 
+                    c.backImg = await window.fbGetDownloadURL(r); 
+                }
+                if (document.getElementById('editFcFrontImgClear').style.display === 'none' && !document.getElementById('editFcFrontPreview').src) c.frontImg = null;
+                if (document.getElementById('editFcBackImgClear').style.display === 'none' && !document.getElementById('editFcBackPreview').src) c.backImg = null;
 
-            c.front = document.getElementById('editFcFront').value.trim(); 
-            c.hint = document.getElementById('editFcHint').value.trim(); 
-            const altRaw = document.getElementById('editFcAlt').value.trim(); 
-            c.altQuestions = altRaw ? altRaw.split('\n').map(q => q.trim()).filter(q => q) : []; 
-            c.back = document.getElementById('editFcBack').value.trim(); 
-            
-            saveAndRender(); 
-            renderFcManageList(); 
-            
-            if(currentFc && currentFc.id === c.id) {
-                renderNextFlashcard();
+                c.front = document.getElementById('editFcFront').value.trim(); 
+                const altRaw = document.getElementById('editFcAlt').value.trim(); 
+                c.altQuestions = altRaw ? altRaw.split('\n').map(q => q.trim()).filter(q => q) : []; 
+                c.hint = document.getElementById('editFcHint').value.trim();
+                c.back = document.getElementById('editFcBack').value.trim(); 
+                
+                saveAndRender(); 
+                renderFcManageList(); 
+                
+                if(currentFc && currentFc.id === c.id) {
+                    let df = formatText(c.front || '');
+                    if(c.altQuestions && c.altQuestions.length > 0) df += '<br><br><span style="font-size:0.85rem; color:#a1a1aa; font-weight:normal;">' + c.altQuestions.map(formatText).join('<br>') + '</span>';
+                    document.getElementById('fcFrontText').innerHTML = df;
+                    
+                    const hw = document.getElementById('fcHintWrapper');
+                    if(c.hint) { 
+                        hw.style.display = 'block'; 
+                        document.getElementById('fcHintToggle').style.display = 'block'; 
+                        document.getElementById('fcHintText').style.display = 'none'; 
+                        document.getElementById('fcHintText').innerHTML = formatText(c.hint); 
+                    } else { 
+                        hw.style.display = 'none'; 
+                    }
+
+                    document.getElementById('fcBackText').innerHTML = formatText(c.back || '');
+                    if(c.frontImg) { document.getElementById('fcFrontImgDisplay').src = c.frontImg; document.getElementById('fcFrontImgDisplay').style.display = 'block'; } else { document.getElementById('fcFrontImgDisplay').style.display = 'none'; }
+                    if(c.backImg) { document.getElementById('fcBackImgDisplay').src = c.backImg; }
+                }
+                
+                closeEditFc(); 
+                showToast("Flashcard Updated!");
+            } catch(e) { 
+                showToast("Error updating: " + e.message); 
             }
-            
-            closeEditFc(); 
-            showToast("Flashcard Updated!");
             document.getElementById('editFcSaveBtn').style.display = 'block'; 
             document.getElementById('editUploadSpinner').style.display = 'none';
         }
@@ -1337,7 +1230,8 @@
             list.innerHTML = '<div style="color:#71717a; text-align:center;">No active cards.</div>'; 
         } else {
             list.innerHTML = activeCards.map(c => { 
-                return `<div style="background:#111; padding:15px; border-radius:8px; border:1px solid #27272a; position:relative;"><div style="font-weight:bold; font-size:0.9rem; margin-bottom:8px; color:var(--text); word-break:break-word;">${formatText(c.front)}</div><div style="color:#a1a1aa; font-size:0.8rem; margin-bottom:12px; white-space:pre-wrap; word-break:break-word;">${formatText(c.back)}</div><div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #333; padding-top:8px;"><div style="font-size:0.65rem; color:#71717a; font-family:monospace;">Streak: ${c.consecutiveEasy || 0} | Ease: ${c.ease.toFixed(2)} | Next: ${new Date(c.nextReview).toLocaleDateString()}</div><div style="display:flex; gap:10px;"><div class="pen-btn" onclick="openEditFc(${c.id})">✏️</div><div class="delete-btn" onclick="deleteFlashcard(${c.id})">✕</div></div></div></div>`; 
+                const imgIcon = (c.frontImg || c.backImg) ? '🖼️ ' : ''; 
+                return `<div style="background:#111; padding:15px; border-radius:8px; border:1px solid #27272a; position:relative;"><div style="font-weight:bold; font-size:0.9rem; margin-bottom:8px; color:var(--text); word-break:break-word;">${imgIcon}${formatText(c.front)}</div><div style="color:#a1a1aa; font-size:0.8rem; margin-bottom:12px; white-space:pre-wrap; word-break:break-word;">${formatText(c.back)}</div><div style="display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #333; padding-top:8px;"><div style="font-size:0.65rem; color:#71717a; font-family:monospace;">Streak: ${c.consecutiveEasy || 0} | Ease: ${c.ease.toFixed(2)} | Next: ${new Date(c.nextReview).toLocaleDateString()}</div><div style="display:flex; gap:10px;"><div class="pen-btn" onclick="openEditFc(${c.id})">✏️</div><div class="delete-btn" onclick="deleteFlashcard(${c.id})">✕</div></div></div></div>`; 
             }).join('');
         }
         
@@ -1405,6 +1299,23 @@
 
         document.getElementById('fcBackText').innerHTML = formatText(currentFc.back || '');
         
+        const frontImgEl = document.getElementById('fcFrontImgDisplay'); 
+        if (currentFc.frontImg) { 
+            frontImgEl.src = currentFc.frontImg; 
+            frontImgEl.style.display = 'block'; 
+        } else { 
+            frontImgEl.style.display = 'none'; 
+            frontImgEl.src = ''; 
+        }
+        
+        const backImgEl = document.getElementById('fcBackImgDisplay'); 
+        if (currentFc.backImg) { 
+            backImgEl.src = currentFc.backImg; 
+        } else { 
+            backImgEl.src = ''; 
+        }
+        
+        backImgEl.style.display = 'none'; 
         document.getElementById('fcDivider').style.display = 'none'; 
         document.getElementById('fcBackText').style.display = 'none'; 
         document.getElementById('fcShowBtnWrap').style.display = 'block'; 
@@ -1422,6 +1333,7 @@
     function fcShowAnswer() {
         document.getElementById('fcDivider').style.display = 'block';
         if (currentFc && currentFc.back !== '') document.getElementById('fcBackText').style.display = 'block';
+        if (currentFc && currentFc.backImg) document.getElementById('fcBackImgDisplay').style.display = 'block';
         document.getElementById('fcShowBtnWrap').style.display = 'none'; 
         document.getElementById('fcScoreBtns').style.display = 'flex';
     }
@@ -1528,73 +1440,114 @@
         renderNextFlashcard();
     }
 
-    // --- UI Helpers & Initializers ---
-    function updateQuote(isComplete, isDayOff) {
-        const textEl = document.getElementById('quoteText'); if(!textEl) return;
-        if (isDayOff) { 
-            const idx = viewingDate.getDate() % restQuotes.length; 
-            const selectedQuote = restQuotes[idx]; 
-            textEl.innerText = `"${selectedQuote.text}"`; 
-            textEl.dataset.author = selectedQuote.author; 
-        } else if (isComplete) { 
-            const hasWonBefore = localStorage.getItem('victory_first_done'); 
-            if (!hasWonBefore) { 
-                textEl.innerText = `"${firstVictoryQuote}"`; 
-                localStorage.setItem('victory_first_done', 'true'); 
-            } else { 
-                textEl.innerText = `"${randomVictoryQuotes[Math.floor(Math.random() * randomVictoryQuotes.length)]}"`; 
+    // --- Daily Board Logic ---
+    function openSweepModal() { document.getElementById('sweepModal').style.display = 'flex'; }
+    function closeSweepModal() { document.getElementById('sweepModal').style.display = 'none'; }
+    
+    function executeSweep(targetCol) {
+        const currentKey = getTodayKey(viewingDate); 
+        if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) { showToast("No tasks to sweep."); closeSweepModal(); return; }
+        const habits = state.dailyData[currentKey].habits; 
+        const toSweep = []; 
+        const remaining = [];
+        habits.forEach(h => { if (!h.done && (targetCol === 'all' || h.col === targetCol)) toSweep.push(h); else remaining.push(h); });
+        if (toSweep.length === 0) { showToast("No incomplete tasks match."); closeSweepModal(); return; }
+        state.dailyData[currentKey].habits = remaining;
+        let tomorrow = new Date(viewingDate); 
+        tomorrow.setDate(tomorrow.getDate() + 1); 
+        const nextKey = getTodayKey(tomorrow);
+        if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
+        toSweep.forEach(h => state.dailyData[nextKey].habits.push({ ...h }));
+        saveAndRender(); 
+        closeSweepModal(); 
+        showToast(`Swept ${toSweep.length} tasks to tomorrow.`);
+    }
+
+    function sweepToBacklog(targetCol) {
+        const currentKey = getTodayKey(viewingDate); 
+        if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) { showToast("No tasks to move."); closeSweepModal(); return; }
+        const habits = state.dailyData[currentKey].habits; 
+        const toMove = []; 
+        const remaining = [];
+        habits.forEach(h => { if (!h.done && h.col === targetCol) toMove.push(h); else remaining.push(h); });
+        if (toMove.length === 0) { showToast("No tasks match."); closeSweepModal(); return; }
+        state.dailyData[currentKey].habits = remaining; 
+        if (!state.backlog) state.backlog = [];
+        toMove.forEach(h => state.backlog.push({ id: Date.now() + Math.floor(Math.random()*10000), text: h.text }));
+        saveAndRender(); 
+        closeSweepModal(); 
+        showToast(`Moved ${toMove.length} tasks to Backlog.`);
+    }
+
+    function openGratitudeModal() { 
+        const key = getTodayKey(viewingDate); 
+        if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; 
+        const grat = state.dailyData[key].gratitude || ['', '', '']; 
+        document.getElementById('grat1').value = grat[0] || ''; 
+        document.getElementById('grat2').value = grat[1] || ''; 
+        document.getElementById('grat3').value = grat[2] || ''; 
+        renderGratitudeHistory(); 
+        document.getElementById('gratitudeModal').style.display = 'flex'; 
+    }
+    
+    function closeGratitudeModal() { document.getElementById('gratitudeModal').style.display = 'none'; }
+    
+    function saveGratitude() { 
+        const key = getTodayKey(viewingDate); 
+        if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; 
+        state.dailyData[key].gratitude = [document.getElementById('grat1').value.trim(), document.getElementById('grat2').value.trim(), document.getElementById('grat3').value.trim()]; 
+        saveAndRender(); 
+        renderGratitudeHistory(); 
+        const quote = gratitudeQuotes[Math.floor(Math.random() * gratitudeQuotes.length)]; 
+        showToast(`<div style="font-style:italic; margin-bottom:10px; line-height:1.4;">"${quote.text}"</div><div style="font-size:0.85rem; color:var(--primary); font-weight:bold;">— ${quote.author}</div>`, 6000); 
+    }
+    
+    function renderGratitudeHistory() {
+        const box = document.getElementById('gratitudeHistoryBox'); 
+        box.innerHTML = ''; 
+        const keys = Object.keys(state.dailyData).sort((a,b) => new Date(b) - new Date(a)); 
+        let hasEntries = false;
+        keys.forEach(k => { 
+            const day = state.dailyData[k]; 
+            if (day.gratitude && day.gratitude.some(g => g !== '')) { 
+                hasEntries = true; 
+                const dateParts = k.split('-'); 
+                const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); 
+                let html = `<div style="background:#111; padding:15px; border-radius:8px; border:1px solid #27272a;"><div style="font-size:0.7rem; color:var(--primary); text-transform:uppercase; font-weight:bold; margin-bottom:8px;">${localDate.toLocaleDateString(undefined, {weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}</div><ul style="margin:0; padding-left:20px; color:#d4d4d8; font-size:0.85rem; line-height:1.5;">`; 
+                day.gratitude.forEach(g => { if (g) html += `<li>${g}</li>`; }); 
+                html += `</ul></div>`; 
+                box.innerHTML += html; 
             } 
-            textEl.dataset.author = "You"; 
-        } else { 
-            const hasVisited = localStorage.getItem('frog_first_visit_done'); 
-            let selectedQuote; 
-            if (!hasVisited) { 
-                selectedQuote = markTwainQuote; 
-                localStorage.setItem('frog_first_visit_done', 'true'); 
-            } else { 
-                const idx = viewingDate.getDate() % quotesList.length; 
-                selectedQuote = quotesList[idx]; 
-            } 
-            textEl.innerText = `"${selectedQuote.text}"`; 
-            textEl.dataset.author = selectedQuote.author; 
-        }
+        });
+        if (!hasEntries) box.innerHTML = `<div style="text-align:center; color:#555; font-size:0.8rem; margin-top: 10px;">No past entries found. Start today!</div>`;
     }
 
-    function toggleElement(id, baseName) { 
-        const el = document.getElementById(id); 
-        const btn = el.previousElementSibling; 
-        const isOpen = el.classList.toggle('open'); 
-        if(id === 'goalsCollapse') state.ui.goals = isOpen;
-        if(id === 'calendarCollapse') state.ui.calendar = isOpen;
-        if(id === 'habitTrackersCollapse') state.ui.habitTrackers = isOpen;
-        if(id === 'goalsCollapse' || id === 'calendarCollapse' || id === 'habitTrackersCollapse') localStorage.setItem('discipline_v12', JSON.stringify(state));
-        if (baseName === 'Danger Zone' || baseName === 'Sync History' || baseName === 'Habit Calendars') { btn.innerText = `Show ${baseName} ${isOpen ? '↑' : '↓'}`; } else { btn.innerText = `${isOpen ? 'Hide' : 'Show'} ${baseName} ${isOpen ? '↑' : '↓'}`; } 
-    }
+    function openCurrentMonthNotes() { const monthKey = `${viewingDate.getFullYear()}-${viewingDate.getMonth()}`; openRichTextModal('month', monthKey); }
+    function openStudyModal() { document.getElementById('studyModal').style.display = 'flex'; }
+    function closeStudyModal() { document.getElementById('studyModal').style.display = 'none'; }
 
-    function applyUIState() {
-        if(!state.ui) return;
-        const gEl = document.getElementById('goalsCollapse'); const gBtn = gEl.previousElementSibling;
-        if(state.ui.goals === false) { gEl.classList.remove('open'); gBtn.innerText = "Show Goals ↓"; }
-        const cEl = document.getElementById('calendarCollapse'); const cBtn = cEl.previousElementSibling;
-        if(state.ui.calendar === false) { cEl.classList.remove('open'); cBtn.innerText = "Show Calendar ↓"; }
-        const htEl = document.getElementById('habitTrackersCollapse'); const htBtn = htEl.previousElementSibling;
-        if(state.ui.habitTrackers === true) { htEl.classList.add('open'); htBtn.innerText = "Show Habit Calendars ↑"; }
-    }
+    // --- System Actions ---
+    function playStretch() { window.open("https://www.youtube.com/playlist?list=PLWGC5pHwnCsr4tpDxsvUMgXnfHzf26Ezy", '_blank'); }
+    function playChillVibe() { window.open('https://www.youtube.com/watch?v=mw4k1tCnAuE&list=PLWGC5pHwnCsrfo7aIeWRw-taMn79IBfdl', 'chillPlayer', 'width=400,height=750,left=50,top=50'); }
+    
+    function handleTimerClick(minutes, btnId) { if (activeTimer.id !== btnId) { startTimer(minutes, btnId); } else { togglePause(); } }
+    function startTimer(minutes, btnId) { stopTimerEngine(); activeTimer.id = btnId; activeTimer.totalSeconds = minutes * 60; activeTimer.isPaused = false; const btn = document.getElementById(btnId); if(btn) btn.classList.add('active'); playChime(); enableFocusMode(); updateTimerDisplay(); activeTimer.interval = setInterval(tick, 1000); }
+    function tick() { if(!activeTimer.isPaused) { activeTimer.totalSeconds--; updateTimerDisplay(); if (activeTimer.totalSeconds <= 0) timerComplete(); } }
+    function togglePause() { if (!activeTimer.id) return; const btn = document.getElementById(activeTimer.id); if(activeTimer.isPaused) { activeTimer.isPaused = false; if(btn) btn.classList.remove('paused'); enableFocusMode(); } else { activeTimer.isPaused = true; if(btn) btn.classList.add('paused'); disableFocusMode(); } }
+    function timerComplete() { stopTimerEngine(); resetTimerUI(null); disableFocusMode(); startAlarmLoop(); }
+    function startAlarmLoop() { document.getElementById('alarmModal').style.display = 'flex'; playChime(); alarmLoopInterval = setInterval(playChime, 2000); }
+    function stopAlarmLoop() { clearInterval(alarmLoopInterval); alarmLoopInterval = null; document.getElementById('alarmModal').style.display = 'none'; }
+    function resetTimer(btnId, defaultVal) { if(activeTimer.id === btnId) { stopTimerEngine(); resetTimerUI(defaultVal); disableFocusMode(); } }
+    function stopTimerEngine() { if(activeTimer.interval) clearInterval(activeTimer.interval); activeTimer.interval = null; activeTimer.isPaused = false; }
+    function resetTimerUI(val) { ['timer25', 'timerCustom', 'timer5'].forEach(id => { const el = document.getElementById(id); el.classList.remove('active', 'paused'); if(val && id === activeTimer.id) { el.innerText = (typeof val === 'number') ? (val < 10 ? '0'+val+':00' : val+':00') : val; } else if (id === 'timer25') { el.innerText = "25:00"; } else if (id === 'timer5') { el.innerText = "05:00"; } else if (id === 'timerCustom') { el.innerText = "Custom"; } }); activeTimer.id = null; }
+    function updateTimerDisplay() { if(!activeTimer.id) return; const btn = document.getElementById(activeTimer.id); const m = Math.floor(activeTimer.totalSeconds / 60); const s = activeTimer.totalSeconds % 60; btn.innerText = `${m}:${s < 10 ? '0' : ''}${s}`; }
+    function enableFocusMode() { document.body.classList.add('focus-mode'); } 
+    function disableFocusMode() { document.body.classList.remove('focus-mode'); }
+    function openCustomTimerModal() { if(activeTimer.id === 'timerCustom') { togglePause(); return; } document.getElementById('customTimerModal').style.display = 'flex'; document.getElementById('customTimerInput').focus(); }
+    function closeCustomTimerModal() { document.getElementById('customTimerModal').style.display = 'none'; document.getElementById('customTimerInput').value = ''; }
+    function confirmCustomTimer() { const input = document.getElementById('customTimerInput'); const mins = parseInt(input.value); if (mins && mins > 0) { const btn = document.getElementById('timerCustom'); btn.innerText = mins + ":00"; startTimer(mins, 'timerCustom'); closeCustomTimerModal(); } }
 
-    document.addEventListener('keydown', (e) => { 
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'DIV' && e.target.isContentEditable)) return; 
-        if (e.key.toLowerCase() === 'f') { 
-            e.preventDefault(); const frogInput = document.getElementById('frogInput'); if (frogInput && frogInput.style.display !== 'none') frogInput.focus(); 
-        } else if (e.key.toLowerCase() === 'n') { 
-            e.preventDefault(); document.getElementById('habitInput').focus(); 
-        } else if (e.key === 'Escape') { 
-            closeSyncModal(); closeGoalModal(); closeRichTextModal(); closeMilestoneModal(); closeRoutineModal(); closeDailyRoutineModal(); closeCustomTimerModal(); closeStatsModal(); closeGratitudeModal(); closeStudyModal(); closeFlashcardModal(); closeSweepModal(); closeBacklogModal(); closeEditFc(); closeHabitTrackerModal(); closeNewHabitModal();
-        } 
-    });
-
-    document.getElementById('habitInput').addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); addHabit(); } });
-    document.getElementById('frogInput').addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); addFrog(); } });
-    document.getElementById('newGoalText').addEventListener('keypress', e => { if (e.key === 'Enter') { confirmAddGoal(); } });
+    function clearAllData() { if (prompt("Type 'DELETE' to wipe all history:") === "DELETE") { state = { dailyData: {}, longTermGoals: [], dailyRoutine: [], monthNotes: {}, studyNotes: {}, flashcards: [], backlog: [], fcStudyDays: [], ui: { goals: true, calendar: true } }; saveAndRender(); addSyncLog("Local history wiped."); } }
 
     applyUIState();
     saveAndRender();
