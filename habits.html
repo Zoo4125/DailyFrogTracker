@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habits | Daily Frog</title>
+    <title>Habit Calendars | Daily Frog</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.85em' x='0.05em' font-size='75'>🟩</text></svg>">
     
@@ -46,21 +46,20 @@
         .particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; animation: explode 1.2s ease-out forwards; pointer-events: none; }
         @keyframes explode { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--x), var(--y)); opacity: 0; } }
 
-        /* Nav Bar - Centered Stack */
+        /* Nav Bar */
         .nav-bar { 
-            display: flex; 
-            flex-direction: column;
+            display: grid; 
+            grid-template-columns: 1fr auto 1fr;
             align-items: center; 
-            gap: 15px;
             width: 100%; 
             max-width: 1000px;
             padding-bottom: 20px; 
             border-bottom: 1px solid var(--border); 
         }
         
-        .page-title { font-weight: 800; color: var(--primary); font-size: 1.8rem; margin: 0; text-align: center; }
-        
-        .controls { display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap; }
+        .nav-bar > a { justify-self: start; }
+        .page-title { justify-self: center; font-weight: 800; color: var(--primary); font-size: 1.4rem; margin: 0; }
+        .controls { display: flex; gap: 10px; justify-self: end; }
 
         /* Buttons */
         .btn { 
@@ -203,7 +202,7 @@
 
         .log-today-btn { padding: 10px 18px; white-space: nowrap; }
 
-        /* Advanced Stats Section (Hidden Yearly %) */
+        /* Advanced Stats Section */
         details.adv-stats { font-size: 0.8rem; color: #a1a1aa; cursor: pointer; user-select: none; text-align: center; width: 100%; margin-top: 5px; }
         details.adv-stats summary { outline: none; font-weight: bold; transition: 0.2s; display: inline-block; }
         details.adv-stats summary:hover { color: var(--text); }
@@ -226,43 +225,25 @@
         .color-input::-webkit-color-swatch-wrapper { padding: 0; }
         .color-input::-webkit-color-swatch { border: 1px solid #3f3f46; border-radius: 6px; }
 
-        /* ==========================================
-           MOBILE RESPONSIVENESS OVERRIDES
-           ========================================== */
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
-            .nav-bar { 
-                gap: 15px; 
-            }
-            .controls { flex-direction: column; }
-            .controls .btn, .nav-bar > a { width: 100%; text-align: center; }
-
+            .nav-bar { display: flex; flex-direction: column; gap: 15px; align-items: stretch; }
+            .nav-bar > a { justify-self: center; text-align: center; }
+            .controls { display: flex; flex-direction: column; width: 100%; }
+            .controls .btn { width: 100%; }
             .lod-card { width: 100%; padding: 20px 15px; }
             .lod-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-            
             .header-left { width: 100%; }
             .header-center { width: 100%; align-items: flex-start; }
             .progress-bg { max-width: 100%; }
-            
             .header-right { width: 100%; justify-content: space-between; margin-top: 5px; }
-
-            /* Enable horizontal swipe on the grid container */
-            .matrix-container {
-                width: 100%;
-                overflow-x: auto;
-                justify-content: flex-start;
-                padding-bottom: 12px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: thin;
-                scrollbar-color: #3f3f46 transparent;
-            }
+            .matrix-container { width: 100%; overflow-x: auto; justify-content: flex-start; padding-bottom: 12px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
             .matrix-container::-webkit-scrollbar { height: 6px; }
             .matrix-container::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-            
             .matrix-months, .matrix-right { flex-shrink: 0; }
             .footer-top { flex-direction: column; align-items: stretch; gap: 15px; }
             .log-today-btn { width: 100%; text-align: center; }
         }
-
         @media (max-width: 480px) {
             .lod-stats-grid { grid-template-columns: 1fr; gap: 8px; }
         }
@@ -275,10 +256,10 @@
 
 <div class="container">
     
-    <!-- Nav / Controls (Stacked perfectly) -->
+    <!-- Nav / Controls -->
     <div class="nav-bar">
-        <h1 class="page-title">Habits</h1>
         <a href="index.html" class="btn btn-outline" style="padding: 8px 16px;">← Back to Dashboard</a>
+        <h1 class="page-title">Habits</h1>
         <div class="controls">
             <button id="noteModeBtn" class="btn btn-outline" onclick="toggleNoteMode()">📝 Note Mode: OFF</button>
             <button class="btn btn-outline" onclick="openNewHabitModal()">+ New Habit</button>
@@ -357,7 +338,7 @@
         0: "#3b82f6", 1: "#3b82f6", 2: "#3b82f6", 3: "#3b82f6", 4: "#3b82f6", 5: "#3b82f6", 6: "#3b82f6"
     };
 
-    // Pull from the exact same local storage key you use for the dashboard so the data persists!
+    // Integrate with main database
     let masterState = JSON.parse(localStorage.getItem('discipline_v12')) || {};
     let lifeHabits = masterState.lifeHabits || [
         { 
@@ -429,7 +410,7 @@
         return cells;
     }
 
-    // --- 4. Math & Stats ---
+    // --- 4. Math & Stats (MONDAY-SUNDAY WEEK) ---
     function getChronologicalHistory(habit) {
         const todayObj = new Date();
         todayObj.setHours(0,0,0,0);
@@ -470,7 +451,7 @@
                 totalEntries++;
                 if (tempStreak > longestStreak) longestStreak = tempStreak;
             } else if (log && log.rest) {
-                // Streak is preserved
+                // Preserved
             } else {
                 tempStreak = 0;
             }
@@ -483,21 +464,26 @@
             if (log && log.stamped) {
                 currentStreak++;
             } else if (log && log.rest) {
-                // Streak preserved
+                // Preserved
             } else if (dStr !== getTodayStr()) { 
                 break;
             }
         }
 
+        // Calculate Full Weeks based strictly on MONDAY -> SUNDAY
         const weeklyCounts = {};
         const allStampedDates = Object.keys(logs).filter(d => logs[d].stamped);
         
         allStampedDates.forEach(dStr => {
             const d = new Date(dStr + "T00:00:00");
-            const dayOfWeek = d.getDay(); 
-            const sundayObj = new Date(d);
-            sundayObj.setDate(d.getDate() - dayOfWeek);
-            const weekKey = formatDateString(sundayObj.getFullYear(), sundayObj.getMonth(), sundayObj.getDate());
+            const jsDay = d.getDay(); 
+            // Shift so Monday is 0, Sunday is 6
+            const offsetToMonday = (jsDay + 6) % 7; 
+            
+            const mondayObj = new Date(d);
+            mondayObj.setDate(d.getDate() - offsetToMonday);
+            
+            const weekKey = formatDateString(mondayObj.getFullYear(), mondayObj.getMonth(), mondayObj.getDate());
             weeklyCounts[weekKey] = (weeklyCounts[weekKey] || 0) + 1;
         });
 
@@ -532,7 +518,7 @@
                 stampedDays++;
                 eligibleActiveDays++;
             } else if (log && log.rest) {
-                // Exempt from denominator
+                // Exempt
             } else {
                 eligibleActiveDays++;
             }
@@ -575,11 +561,14 @@
         const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const todayStr = getTodayStr();
         
+        // Setup "Current Week" bounds (Monday -> Sunday)
         const todayObj = new Date();
         todayObj.setHours(0,0,0,0);
-        const dayOfWeek = todayObj.getDay();
+        const jsDay = todayObj.getDay();
+        const offsetToMonday = (jsDay + 6) % 7;
+        
         const startOfWeek = new Date(todayObj);
-        startOfWeek.setDate(todayObj.getDate() - dayOfWeek);
+        startOfWeek.setDate(todayObj.getDate() - offsetToMonday);
         
         const currentWeekDates = [];
         for(let i=0; i<7; i++){
@@ -738,13 +727,11 @@
         if (noteModeActive) {
             openEditorModal(habitId, dateStr);
         } else {
-            // Fast click ignores rest days, simply toggles Stamped / Cleared
             const habit = lifeHabits.find(h => h.id === habitId);
             if (!habit.logs[dateStr]) habit.logs[dateStr] = { stamped: false, rest: false, note: '' };
             
             const isCurrentlyStamped = habit.logs[dateStr].stamped;
             
-            // Toggle to opposite state. If it was a Rest day, fast click clears it.
             habit.logs[dateStr].stamped = !isCurrentlyStamped;
             habit.logs[dateStr].rest = false; 
 
@@ -758,8 +745,11 @@
     function checkFireworks(habit, dateStr) {
         const today = new Date();
         today.setHours(0,0,0,0);
+        const jsDay = today.getDay();
+        const offsetToMonday = (jsDay + 6) % 7;
+        
         const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
+        startOfWeek.setDate(today.getDate() - offsetToMonday);
         
         let isCurrentWeek = false;
         let curWkStamps = 0;
@@ -834,7 +824,6 @@
         }
     }
 
-    // Advanced Editor Modal (With Rest Day toggles)
     function openEditorModal(habitId, dateStr) {
         editingHabitId = habitId;
         editingDateStr = dateStr;
@@ -860,7 +849,6 @@
         const btnRest = document.getElementById('modalBtnRest');
         const btnClear = document.getElementById('modalBtnClear');
         
-        // Reset all
         btnStamp.className = 'btn btn-outline';
         btnRest.className = 'btn btn-outline';
         btnClear.className = 'btn btn-outline';
@@ -893,7 +881,6 @@
         
         updateModalButtonsUI(habit.logs[editingDateStr].stamped, habit.logs[editingDateStr].rest);
         
-        // Background render so changes are visible behind modal
         saveData();
         renderTrackers();
     }
@@ -906,7 +893,6 @@
         closeModal('editNoteModal');
     }
 
-    // Color Picker Modal
     function openColorPicker(habitId) {
         editingHabitId = habitId;
         const habit = lifeHabits.find(h => h.id === habitId);
@@ -934,7 +920,6 @@
         }
     }
 
-    // Escape key
     document.addEventListener('keydown', (e) => { 
         if (e.key === 'Escape') { 
             closeModal('newHabitModal'); 
@@ -943,7 +928,6 @@
         } 
     });
 
-    // Launch
     renderTrackers();
 
 </script>
