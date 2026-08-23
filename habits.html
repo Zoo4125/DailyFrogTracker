@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Habit Calendars | Daily Frog</title>
+    <title>Habits | Daily Frog</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.85em' x='0.05em' font-size='75'>🟩</text></svg>">
     
@@ -46,26 +46,28 @@
         .particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; animation: explode 1.2s ease-out forwards; pointer-events: none; }
         @keyframes explode { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--x), var(--y)); opacity: 0; } }
 
-        /* Nav Bar */
+        /* Nav Bar - Centered Stack */
         .nav-bar { 
-            display: grid; 
-            grid-template-columns: 1fr auto 1fr;
+            display: flex; 
+            flex-direction: column;
             align-items: center; 
+            gap: 15px;
             width: 100%; 
             max-width: 1000px;
             padding-bottom: 20px; 
             border-bottom: 1px solid var(--border); 
         }
         
-        .nav-bar > a { justify-self: start; }
-        .page-title { justify-self: center; font-weight: 800; color: var(--primary); font-size: 1.4rem; margin: 0; }
-        .controls { display: flex; gap: 10px; justify-self: end; }
+        .page-title { font-weight: 800; color: var(--primary); font-size: 1.8rem; margin: 0; text-align: center; }
+        
+        .controls { display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap; }
 
         /* Buttons */
         .btn { 
             background: var(--primary); color: white; border: none; padding: 10px 18px; 
             border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; 
             font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center;
+            text-decoration: none;
         }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         
@@ -229,25 +231,13 @@
            ========================================== */
         @media (max-width: 768px) {
             .nav-bar { 
-                display: flex; 
-                flex-direction: column; 
-                gap: 15px; 
-                align-items: stretch;
-            }
-            .nav-bar > a { justify-self: center; text-align: center; }
-            .controls { display: flex; flex-direction: column; width: 100%; }
-            .controls .btn { width: 100%; }
-
-            .lod-card { 
-                width: 100%; 
-                padding: 20px 15px; 
-            }
-
-            .lod-header { 
-                flex-direction: column; 
-                align-items: flex-start; 
                 gap: 15px; 
             }
+            .controls { flex-direction: column; }
+            .controls .btn, .nav-bar > a { width: 100%; text-align: center; }
+
+            .lod-card { width: 100%; padding: 20px 15px; }
+            .lod-header { flex-direction: column; align-items: flex-start; gap: 15px; }
             
             .header-left { width: 100%; }
             .header-center { width: 100%; align-items: flex-start; }
@@ -262,16 +252,13 @@
                 justify-content: flex-start;
                 padding-bottom: 12px;
                 -webkit-overflow-scrolling: touch;
-                /* Sleek styling for the mobile scrollbar */
                 scrollbar-width: thin;
                 scrollbar-color: #3f3f46 transparent;
             }
             .matrix-container::-webkit-scrollbar { height: 6px; }
             .matrix-container::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
             
-            /* Prevent grid columns from squishing */
             .matrix-months, .matrix-right { flex-shrink: 0; }
-
             .footer-top { flex-direction: column; align-items: stretch; gap: 15px; }
             .log-today-btn { width: 100%; text-align: center; }
         }
@@ -288,10 +275,10 @@
 
 <div class="container">
     
-    <!-- Nav / Controls -->
+    <!-- Nav / Controls (Stacked perfectly) -->
     <div class="nav-bar">
-        <a href="index.html" class="btn btn-outline" style="padding: 8px 12px;">← Back to Dashboard</a>
-        <h1 class="page-title">Habit Calendars</h1>
+        <h1 class="page-title">Habits</h1>
+        <a href="index.html" class="btn btn-outline" style="padding: 8px 16px;">← Back to Dashboard</a>
         <div class="controls">
             <button id="noteModeBtn" class="btn btn-outline" onclick="toggleNoteMode()">📝 Note Mode: OFF</button>
             <button class="btn btn-outline" onclick="openNewHabitModal()">+ New Habit</button>
@@ -370,7 +357,9 @@
         0: "#3b82f6", 1: "#3b82f6", 2: "#3b82f6", 3: "#3b82f6", 4: "#3b82f6", 5: "#3b82f6", 6: "#3b82f6"
     };
 
-    let lifeHabits = JSON.parse(localStorage.getItem('discipline_v12_habits')) || [
+    // Pull from the exact same local storage key you use for the dashboard so the data persists!
+    let masterState = JSON.parse(localStorage.getItem('discipline_v12')) || {};
+    let lifeHabits = masterState.lifeHabits || [
         { 
             id: 1, 
             name: "Read 20 Pages", 
@@ -382,7 +371,8 @@
     ];
 
     function saveData() {
-        localStorage.setItem('discipline_v12_habits', JSON.stringify(lifeHabits));
+        masterState.lifeHabits = lifeHabits;
+        localStorage.setItem('discipline_v12', JSON.stringify(masterState));
     }
 
     // --- 2. Firework Engine ---
@@ -439,7 +429,7 @@
         return cells;
     }
 
-    // --- 4. Math & Stats (Including Rest Days & Creation Date) ---
+    // --- 4. Math & Stats ---
     function getChronologicalHistory(habit) {
         const todayObj = new Date();
         todayObj.setHours(0,0,0,0);
@@ -480,7 +470,7 @@
                 totalEntries++;
                 if (tempStreak > longestStreak) longestStreak = tempStreak;
             } else if (log && log.rest) {
-                // Streak is preserved but not incremented
+                // Streak is preserved
             } else {
                 tempStreak = 0;
             }
