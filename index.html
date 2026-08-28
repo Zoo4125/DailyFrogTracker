@@ -538,14 +538,11 @@
 </div>
 
 <div id="studyModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeStudyModal()">✕</div><div class="modal-title" style="font-size: 1.5rem;">Master Electrician Prep</div><div class="modal-text">Select a notebook to edit or review:</div><div class="modal-btns"><button onclick="openRichTextModal('study', 'Code Definitions (NEC 2023 / 2026)')" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Code Definitions</button><button onclick="openRichTextModal('study', 'Calculation Methodologies')" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Calculation Methodologies</button></div></div></div>
-<div id="gratitudeModal" class="modal-overlay"><div class="sync-modal" style="max-width: 500px; max-height: 90vh; display: flex; flex-direction: column;"><div class="modal-close" onclick="closeGratitudeModal()">✕</div><div style="display:flex; justify-content:center; align-items:center; gap: 15px; margin-bottom: 5px;"><div class="modal-title" style="margin: 0;">Daily Gratitude</div><div class="pen-btn" style="font-size:1.4rem;" onclick="openCurrentMonthNotes()" title="Current Month Notes">✎</div></div><div class="modal-text" style="margin-bottom: 15px;">What are 3 things you are grateful for today?</div><div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-bottom:20px;"><input type="text" id="grat1" class="custom-input" placeholder="1. ..."><input type="text" id="grat2" class="custom-input" placeholder="2. ..."><input type="text" id="grat3" class="custom-input" placeholder="3. ..."><button onclick="saveGratitude()" class="confirm-btn">Save Today's Entries</button></div><hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;"><div class="input-toggle" onclick="toggleCollapse('gratitudeHistoryBox')" style="font-size: 0.9rem;">View Gratitude Journal <span>▼</span></div><div id="gratitudeHistoryBox" class="collapsible-content" style="overflow-y:auto; flex:1; text-align:left; gap:10px; max-height: 300px;"></div></div></div>
 <div id="alarmModal" class="modal-overlay"><div class="sync-modal"><div class="alarm-title">Timer Ended</div><div class="modal-text">Frog time is over. Take a breath.</div><button onclick="stopAlarmLoop()" class="confirm-btn">Okay</button></div></div>
 <div id="goalInputModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeGoalModal()">✕</div><div class="modal-title">Longterm Goal</div><input type="text" id="newGoalText" class="custom-input" placeholder="e.g. Run a Marathon"><button onclick="confirmAddGoal()" class="confirm-btn">OK</button></div></div>
 <div id="milestoneInputModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeMilestoneModal()">✕</div><div class="modal-title" style="font-size: 1.5rem;">Add Milestone</div><input type="text" id="newMilestoneText" class="custom-input" placeholder="e.g. Read Chapter 1"><button onclick="confirmAddMilestone()" class="confirm-btn">Add</button></div></div>
 <div id="richTextModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeRichTextModal()">✕</div><div class="modal-text" id="richTextTitle">Notes</div><div class="editor-wrapper"><div class="editor-toolbar"><button class="fmt-btn" onclick="fmt('bold')" title="Bold"><b>B</b></button><button class="fmt-btn" onclick="fmt('italic')" title="Italic"><i>I</i></button><button class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Bullet List">• List</button><div style="width:1px; background:#3f3f46; margin:0 5px;"></div><button class="fmt-btn" onclick="fmt('justifyLeft')" title="Align Left">⇐</button><button class="fmt-btn" onclick="fmt('justifyCenter')" title="Align Center">=</button><button class="fmt-btn" onclick="fmt('justifyRight')" title="Align Right">⇒</button><div style="width:1px; background:#3f3f46; margin:0 5px;"></div><button class="fmt-btn" onclick="insertTimestamp()" title="Insert Timestamp">⏱️ Time</button></div><div id="richEditor" class="editor-content" contenteditable="true"></div></div><button onclick="saveRichText()" class="confirm-btn">Save Notes</button></div></div>
 <div id="goalStatsModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeStatsModal()">✕</div><div class="modal-text" id="statsTitle" style="font-weight:bold; color:#fff; margin-bottom:10px;">Goal Stats</div><div class="graph-wrapper"><svg id="graphSvg" class="graph-svg"></svg><div id="graphTooltip" class="graph-tooltip"></div></div><div id="graphLegend" class="legend-container"></div><div class="input-toggle" onclick="toggleCollapse('manageDataSection')">Manage Data & Variables <span>▼</span></div><div id="manageDataSection" class="collapsible-content"><div id="variableListContainer" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div><button id="createVarBtn" onclick="createVariable()" class="confirm-btn" style="width:100%; background:#27272a; border:1px solid #3f3f46;">+ Add New Variable</button><hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;"><div id="dataEntryContainer" style="display:none; width:100%; flex-direction:column; gap:10px;"><div class="section-header">Add Data Entry</div><select id="seriesSelect" class="series-select"></select><div style="display:flex; gap:10px; width:100%;"><input type="number" id="statValue" class="custom-input" style="flex:1; margin-bottom:0;" placeholder="Value"><input type="date" id="statDate" class="custom-input" style="flex:1; margin-bottom:0; font-family:sans-serif;"></div><button onclick="addStat()" class="confirm-btn" style="width:100%;">Add Entry</button></div><div id="noVarsMsg" style="color:#555; font-size:0.8rem;">Create a variable above to add data.</div></div><div class="input-toggle" onclick="toggleCollapse('editHistorySection')">Edit Data Points <span>▼</span></div><div id="editHistorySection" class="collapsible-content"><div id="dataHistoryContent" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div></div></div></div>
-<div id="goalRoutineModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeRoutineModal()">✕</div><div class="modal-title">Goal Routine</div><div class="routine-list" id="routineList"></div><input type="text" id="newRoutineTask" class="custom-input" placeholder="New task (e.g. Hangboard)" onkeypress="if(event.key==='Enter') addRoutineTask()"><button onclick="addAllRoutinesToToday()" class="confirm-btn">Add All to Today</button></div></div>
-<div id="dailyRoutineModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeDailyRoutineModal()">✕</div><div class="modal-title">Daily Routine</div><div class="routine-list" id="dailyRoutineList"></div><input type="text" id="newDailyRoutineTask" class="custom-input" placeholder="(e.g. take a hike)" onkeypress="if(event.key==='Enter') addDailyRoutineTask()"><button onclick="addAllDailyRoutinesToToday()" class="confirm-btn">Add All to Today</button></div></div>
 <div id="customTimerModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeCustomTimerModal()">✕</div><div class="modal-text" style="font-size: 1.1rem; font-weight: bold;">Set Timer Duration</div><input type="number" id="customTimerInput" class="custom-input" placeholder="Minutes (e.g. 45)" onkeypress="if(event.key==='Enter') confirmCustomTimer()"><button onclick="confirmCustomTimer()" class="confirm-btn">Start</button></div></div>
 
 <div class="container">
@@ -786,6 +783,12 @@
             state.backlog.splice(taskIndex, 1); 
             const key = getTodayKey(viewingDate); 
             if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; 
+            
+            // Auto-heal habits array before push
+            if (!Array.isArray(state.dailyData[key].habits)) {
+                state.dailyData[key].habits = state.dailyData[key].habits ? Object.values(state.dailyData[key].habits) : [];
+            }
+            
             state.dailyData[key].habits.push({ id: Date.now() + Math.floor(Math.random()*10000), text: task.text, done: false, col: 1, isFrog: false }); 
             saveAndRender(); 
             renderBacklog(); 
@@ -1241,23 +1244,36 @@
         renderNextFlashcard();
     }
 
-    // --- Core Methods ---
     function openSweepModal() { document.getElementById('sweepModal').style.display = 'flex'; }
     function closeSweepModal() { document.getElementById('sweepModal').style.display = 'none'; }
+    
+    // --- AUT-HEALING SWEEP ---
     function executeSweep(targetCol) {
         const currentKey = getTodayKey(viewingDate); 
         if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) { showToast("No tasks to sweep."); closeSweepModal(); return; }
-        const habits = state.dailyData[currentKey].habits; 
+        
+        // Auto-heal the current habits array just in case
+        let habits = state.dailyData[currentKey].habits || [];
+        if (!Array.isArray(habits)) habits = Object.values(habits);
+        
         const toSweep = []; 
         const remaining = [];
         habits.forEach(h => { if (!h.done && (targetCol === 'all' || h.col === targetCol)) toSweep.push(h); else remaining.push(h); });
+        
         if (toSweep.length === 0) { showToast("No incomplete tasks match."); closeSweepModal(); return; }
         state.dailyData[currentKey].habits = remaining;
         
+        // Push safely to Tomorrow
         let tomorrow = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), viewingDate.getDate() + 1); 
         const nextKey = getTodayKey(tomorrow);
         
         if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
+        
+        // Crucial bug fix: Force array initialization before pushing
+        if (!Array.isArray(state.dailyData[nextKey].habits)) {
+            state.dailyData[nextKey].habits = state.dailyData[nextKey].habits ? Object.values(state.dailyData[nextKey].habits) : [];
+        }
+        
         toSweep.forEach(h => state.dailyData[nextKey].habits.push({ ...h }));
         saveAndRender(); 
         closeSweepModal(); 
@@ -1267,13 +1283,19 @@
     function sweepToBacklog(targetCol) {
         const currentKey = getTodayKey(viewingDate); 
         if (!state.dailyData[currentKey] || !state.dailyData[currentKey].habits) { showToast("No tasks to move."); closeSweepModal(); return; }
-        const habits = state.dailyData[currentKey].habits; 
+        
+        let habits = state.dailyData[currentKey].habits || [];
+        if (!Array.isArray(habits)) habits = Object.values(habits);
+        
         const toMove = []; 
         const remaining = [];
         habits.forEach(h => { if (!h.done && h.col === targetCol) toMove.push(h); else remaining.push(h); });
+        
         if (toMove.length === 0) { showToast("No tasks match."); closeSweepModal(); return; }
         state.dailyData[currentKey].habits = remaining; 
-        if (!state.backlog) state.backlog = [];
+        
+        if (!Array.isArray(state.backlog)) state.backlog = state.backlog ? Object.values(state.backlog) : [];
+        
         toMove.forEach(h => state.backlog.push({ id: Date.now() + Math.floor(Math.random()*10000), text: h.text }));
         saveAndRender(); 
         closeSweepModal(); 
@@ -1486,14 +1508,88 @@
     function addFrog() { const input = document.getElementById('frogInput'); if (!input.value.trim()) return; const key = getTodayKey(viewingDate); if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; state.dailyData[key].habits.unshift({ id: Date.now(), text: input.value, done: false, col: 1, isFrog: true }); input.value = ''; saveAndRender(); input.blur(); }
     function requestDelete(btn, id) { const moveBtn = document.getElementById(`move-btn-${id}`); if (btn.classList.contains('confirm')) { clearTimeout(deleteTimeouts[id]); deleteHabit(id); } else { btn.classList.add('confirm'); btn.innerText = '✓'; if (moveBtn) moveBtn.style.display = 'block'; deleteTimeouts[id] = setTimeout(() => { btn.classList.remove('confirm'); btn.innerText = '✕'; if (moveBtn) moveBtn.style.display = 'none'; }, 3000); } }
     function deleteHabit(id) { const key = getTodayKey(viewingDate); if (state.dailyData[key]) { state.dailyData[key].habits = state.dailyData[key].habits.filter(h => h.id != id); saveAndRender(); } }
-    function toggleHabit(id) { const key = getTodayKey(viewingDate); let habits = state.dailyData[key].habits; let changedHabit = null; state.dailyData[key].habits = habits.map(h => { if (h.id == id) { changedHabit = {...h, done: !h.done}; return changedHabit; } return h; }); if (changedHabit && changedHabit.done) { const total = habits.length; const doneCount = state.dailyData[key].habits.filter(h => h.done).length; const pct = Math.round((1 / total) * 100); const is100 = (doneCount === total); triggerPctDrop(pct, changedHabit.isFrog, is100); if (changedHabit.isFrog) triggerFrogworks(); } saveAndRender(); }
+    
+    function toggleHabit(id) { 
+        const key = getTodayKey(viewingDate); 
+        let habits = state.dailyData[key].habits || []; 
+        if (!Array.isArray(habits)) habits = Object.values(habits);
+        
+        let changedHabit = null; 
+        state.dailyData[key].habits = habits.map(h => { 
+            if (h.id == id) { changedHabit = {...h, done: !h.done}; return changedHabit; } 
+            return h; 
+        }); 
+        
+        if (changedHabit && changedHabit.done) { 
+            const total = habits.length; 
+            const doneCount = state.dailyData[key].habits.filter(h => h.done).length; 
+            const pct = Math.round((1 / total) * 100); 
+            const is100 = (doneCount === total); 
+            triggerPctDrop(pct, changedHabit.isFrog, is100); 
+            if (changedHabit.isFrog) triggerFrogworks(); 
+        } 
+        saveAndRender(); 
+    }
+    
     function moveHabit(id, col) { const key = getTodayKey(viewingDate); state.dailyData[key].habits = state.dailyData[key].habits.map(h => h.id == id ? {...h, col: col} : h); saveAndRender(); }
-    function forwardHabit(id) { clearTimeout(deleteTimeouts[id]); const currentKey = getTodayKey(viewingDate); const hToMove = state.dailyData[currentKey].habits.find(h => h.id == id); state.dailyData[currentKey].habits = state.dailyData[currentKey].habits.filter(h => h.id != id); let tomorrow = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), viewingDate.getDate() + 1); const nextKey = getTodayKey(tomorrow); if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 }; state.dailyData[nextKey].habits.push({ ...hToMove, done: false }); saveAndRender(); }
+    
+    function forwardHabit(id) { 
+        clearTimeout(deleteTimeouts[id]); 
+        const currentKey = getTodayKey(viewingDate); 
+        
+        let habits = state.dailyData[currentKey].habits || [];
+        if (!Array.isArray(habits)) habits = Object.values(habits);
+        
+        const hToMove = habits.find(h => h.id == id); 
+        state.dailyData[currentKey].habits = habits.filter(h => h.id != id); 
+        
+        let tomorrow = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), viewingDate.getDate() + 1); 
+        const nextKey = getTodayKey(tomorrow); 
+        
+        if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 }; 
+        if (!Array.isArray(state.dailyData[nextKey].habits)) {
+            state.dailyData[nextKey].habits = state.dailyData[nextKey].habits ? Object.values(state.dailyData[nextKey].habits) : [];
+        }
+        
+        state.dailyData[nextKey].habits.push({ ...hToMove, done: false }); 
+        saveAndRender(); 
+    }
 
     function handleDragStart(e) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', this.dataset.id); setTimeout(() => this.classList.add('dragging'), 0); }
     function handleDragEnd(e) { this.classList.remove('dragging'); }
     function handleDragOver(e) { e.preventDefault(); const container = e.currentTarget; if (!container.classList.contains('column')) return; const afterElement = getDragAfterElement(container, e.clientY); const draggable = document.querySelector('.habit-item.dragging'); if (draggable) { if (afterElement == null) container.appendChild(draggable); else container.insertBefore(draggable, afterElement); } }
-    function handleDrop(e) { e.preventDefault(); const newColIndex = parseInt(e.currentTarget.dataset.col); const draggable = document.querySelector('.habit-item.dragging'); if(!draggable) return; const id = parseInt(draggable.dataset.id); const key = getTodayKey(viewingDate); let habits = state.dailyData[key].habits; const habitIndex = habits.findIndex(h => h.id == id); if(habitIndex === -1) return; habits[habitIndex].col = newColIndex; const newHabitsOrder = []; const cols = [document.getElementById('col-0'), document.getElementById('col-1'), document.getElementById('col-2')]; [0, 1, 2].forEach(colIdx => { const colEl = cols[colIdx]; if(!colEl) return; const itemEls = colEl.querySelectorAll('.habit-item'); itemEls.forEach(el => { const itemId = parseInt(el.dataset.id); const item = habits.find(h => h.id == itemId); if (item) { item.col = colIdx; newHabitsOrder.push(item); } }); }); state.dailyData[key].habits = newHabitsOrder; saveAndRender(); }
+    
+    function handleDrop(e) { 
+        e.preventDefault(); 
+        const newColIndex = parseInt(e.currentTarget.dataset.col); 
+        const draggable = document.querySelector('.habit-item.dragging'); 
+        if(!draggable) return; 
+        const id = parseInt(draggable.dataset.id); 
+        const key = getTodayKey(viewingDate); 
+        
+        let habits = state.dailyData[key].habits || [];
+        if (!Array.isArray(habits)) habits = Object.values(habits);
+        
+        const habitIndex = habits.findIndex(h => h.id == id); 
+        if(habitIndex === -1) return; 
+        
+        habits[habitIndex].col = newColIndex; 
+        const newHabitsOrder = []; 
+        const cols = [document.getElementById('col-0'), document.getElementById('col-1'), document.getElementById('col-2')]; 
+        [0, 1, 2].forEach(colIdx => { 
+            const colEl = cols[colIdx]; 
+            if(!colEl) return; 
+            const itemEls = colEl.querySelectorAll('.habit-item'); 
+            itemEls.forEach(el => { 
+                const itemId = parseInt(el.dataset.id); 
+                const item = habits.find(h => h.id == itemId); 
+                if (item) { item.col = colIdx; newHabitsOrder.push(item); } 
+            }); 
+        }); 
+        state.dailyData[key].habits = newHabitsOrder; 
+        saveAndRender(); 
+    }
+    
     function getDragAfterElement(container, y) { const draggableElements = [...container.querySelectorAll('.habit-item:not(.dragging)')]; return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2; if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } else { return closest; } }, { offset: Number.NEGATIVE_INFINITY }).element; }
 
     function confirmAddGoal() { const text = document.getElementById('newGoalText').value; if (state.longTermGoals.length >= 9) { showToast("Max 9 Goals reached."); return; } if (text) { state.longTermGoals.push({ id: Date.now(), text: text, done: false, milestones: [], notes: '', routine: [], datasets: [] }); saveAndRender(); closeGoalModal(); } }
@@ -1542,8 +1638,28 @@
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateKey = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; const dayData = state.dailyData[dateKey];
                 let bgStyle = 'background: rgba(255, 255, 255, 0.05)'; let emoji = ''; let dataPctText = ''; let score = 0; let hasFrogAndDone = false;
-                if (dayData && dayData.habits && dayData.habits.length > 0) { const totalTasks = dayData.habits.length; const doneTasks = dayData.habits.filter(h => h.done).length; score = Math.round((doneTasks / totalTasks) * 100); hasFrogAndDone = dayData.habits.some(h => h.isFrog && h.done); if (!dayData.isDayOff) { monthTotal += score; daysLogged++; } }
-                if (dayData && dayData.isDayOff) { bgStyle = 'background: rgba(59, 130, 246, 0.3); border: 1px solid var(--primary);'; emoji = hasFrogAndDone ? '💤🐸' : '💤'; dataPctText = 'Day Off'; } else { if (score === 100 && dayData && dayData.habits && dayData.habits.length > 0) { bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);'; } else if (score > 0) { bgStyle = `background: rgba(59, 130, 246, ${0.2 + (score/100)*0.8})`; } emoji = hasFrogAndDone ? '🐸' : ''; dataPctText = `${score}% Completed`; }
+                
+                let habits = (dayData && dayData.habits) ? dayData.habits : [];
+                if (!Array.isArray(habits)) habits = Object.values(habits);
+
+                if (habits.length > 0) { 
+                    const totalTasks = habits.length; 
+                    const doneTasks = habits.filter(h => h.done).length; 
+                    score = Math.round((doneTasks / totalTasks) * 100); 
+                    hasFrogAndDone = habits.some(h => h.isFrog && h.done); 
+                    if (dayData && !dayData.isDayOff) { monthTotal += score; daysLogged++; } 
+                }
+                
+                if (dayData && dayData.isDayOff) { 
+                    bgStyle = 'background: rgba(59, 130, 246, 0.3); border: 1px solid var(--primary);'; emoji = hasFrogAndDone ? '💤🐸' : '💤'; dataPctText = 'Day Off'; 
+                } else { 
+                    if (score === 100 && habits.length > 0) { 
+                        bgStyle = 'background: var(--success); box-shadow: 0 0 5px rgba(34, 197, 94, 0.4);'; 
+                    } else if (score > 0) { 
+                        bgStyle = `background: rgba(59, 130, 246, ${0.2 + (score/100)*0.8})`; 
+                    } 
+                    emoji = hasFrogAndDone ? '🐸' : ''; dataPctText = `${score}% Completed`; 
+                }
                 monthHtml += `<div class="day-sq ${dateKey === getTodayKey(viewingDate) ? 'active' : ''}" onclick="jumpToDate('${dateKey}')" style="${bgStyle}" data-pct="${dataPctText}">${emoji}</div>`;
             }
             grid.innerHTML += monthHtml + `</div></div>`; const finalAvg = daysLogged > 0 ? Math.round(monthTotal / daysLogged) : 0; const label = document.getElementById(`m-pct-${mIdx}`); if (label) { label.innerText = finalAvg + '%'; }
@@ -1584,13 +1700,21 @@
 
     function saveAndRender(shouldRenderBoard = true) {
         const key = getTodayKey(viewingDate); 
-        const dayData = state.dailyData[key] || { habits: [], percent: 0 };
+        
+        if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 };
+        const dayData = state.dailyData[key];
+        
+        // Auto-heal the arrays just in case they were corrupted
+        if (!Array.isArray(dayData.habits)) {
+            dayData.habits = dayData.habits ? Object.values(dayData.habits) : [];
+        }
+
         const btnDayOff = document.getElementById('btnDayOffToggle');
         if (dayData.isDayOff) { if(btnDayOff) { btnDayOff.innerText = "Resume Day"; btnDayOff.style.color = "var(--danger)"; btnDayOff.style.borderColor = "var(--danger)"; } } else { if(btnDayOff) { btnDayOff.innerText = "Take Day Off"; btnDayOff.style.color = "var(--milestone)"; btnDayOff.style.borderColor = "var(--milestone)"; } }
         const mainEl = document.getElementById('mainPercent'); 
         const frogLabel = document.getElementById('frogLabel'); 
-        const total = dayData.habits ? dayData.habits.length : 0; 
-        const doneCount = dayData.habits ? dayData.habits.filter(h => h.done).length : 0;
+        const total = dayData.habits.length; 
+        const doneCount = dayData.habits.filter(h => h.done).length;
         
         if (dayData.isDayOff) { 
             if(mainEl) { mainEl.innerText = '💤'; mainEl.style.fontSize = '5rem'; mainEl.classList.remove('complete'); } 
@@ -1611,19 +1735,23 @@
         }
         
         const frogInput = document.getElementById('frogInput'); 
-        if(frogInput) frogInput.style.display = (dayData.habits && dayData.habits.some(h => h.isFrog)) ? 'none' : 'block';
+        if(frogInput) frogInput.style.display = (dayData.habits.some(h => h.isFrog)) ? 'none' : 'block';
         const dateDisplay = document.getElementById('dateDisplay'); 
         if(dateDisplay) dateDisplay.innerText = viewingDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
         
         let totalFrogs = 0; 
-        Object.values(state.dailyData).forEach(d => { if(d.habits) { d.habits.forEach(h => { if(h.isFrog && h.done) totalFrogs++; }); } });
+        Object.values(state.dailyData).forEach(d => { 
+            let hArr = d.habits || [];
+            if (!Array.isArray(hArr)) hArr = Object.values(hArr);
+            hArr.forEach(h => { if(h.isFrog && h.done) totalFrogs++; }); 
+        });
+        
         const frogCounter = document.getElementById('frogCounter'); if(frogCounter) { frogCounter.innerText = `${totalFrogs} Frogs Eaten`; }
         const fcCounter = document.getElementById('fcCounter'); if(fcCounter) { fcCounter.innerText = `${(state.fcStudyDays || []).length} Days Studied`; }
         
-        state.dailyData[key] = dayData; 
         localStorage.setItem('discipline_v12', JSON.stringify(state));
         
-        if (shouldRenderBoard) { renderBoard(dayData.habits || []); } 
+        if (shouldRenderBoard) { renderBoard(dayData.habits); } 
         renderYear(); 
         renderGoals(); 
         updateFcDueCount(); 
