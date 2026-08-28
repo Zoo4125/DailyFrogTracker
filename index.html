@@ -538,6 +538,7 @@
 </div>
 
 <div id="studyModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeStudyModal()">✕</div><div class="modal-title" style="font-size: 1.5rem;">Master Electrician Prep</div><div class="modal-text">Select a notebook to edit or review:</div><div class="modal-btns"><button onclick="openRichTextModal('study', 'Code Definitions (NEC 2023 / 2026)')" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Code Definitions</button><button onclick="openRichTextModal('study', 'Calculation Methodologies')" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Calculation Methodologies</button></div></div></div>
+<div id="gratitudeModal" class="modal-overlay"><div class="sync-modal" style="max-width: 500px; max-height: 90vh; display: flex; flex-direction: column;"><div class="modal-close" onclick="closeGratitudeModal()">✕</div><div style="display:flex; justify-content:center; align-items:center; gap: 15px; margin-bottom: 5px;"><div class="modal-title" style="margin: 0;">Daily Gratitude</div><div class="pen-btn" style="font-size:1.4rem;" onclick="openCurrentMonthNotes()" title="Current Month Notes">✎</div></div><div class="modal-text" style="margin-bottom: 15px;">What are 3 things you are grateful for today?</div><div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-bottom:20px;"><input type="text" id="grat1" class="custom-input" placeholder="1. ..."><input type="text" id="grat2" class="custom-input" placeholder="2. ..."><input type="text" id="grat3" class="custom-input" placeholder="3. ..."><button onclick="saveGratitude()" class="confirm-btn">Save Today's Entries</button></div><hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;"><div class="input-toggle" onclick="toggleCollapse('gratitudeHistoryBox')" style="font-size: 0.9rem;">View Gratitude Journal <span>▼</span></div><div id="gratitudeHistoryBox" class="collapsible-content" style="overflow-y:auto; flex:1; text-align:left; gap:10px; max-height: 300px;"></div></div></div>
 <div id="alarmModal" class="modal-overlay"><div class="sync-modal"><div class="alarm-title">Timer Ended</div><div class="modal-text">Frog time is over. Take a breath.</div><button onclick="stopAlarmLoop()" class="confirm-btn">Okay</button></div></div>
 <div id="goalInputModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeGoalModal()">✕</div><div class="modal-title">Longterm Goal</div><input type="text" id="newGoalText" class="custom-input" placeholder="e.g. Run a Marathon"><button onclick="confirmAddGoal()" class="confirm-btn">OK</button></div></div>
 <div id="milestoneInputModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeMilestoneModal()">✕</div><div class="modal-title" style="font-size: 1.5rem;">Add Milestone</div><input type="text" id="newMilestoneText" class="custom-input" placeholder="e.g. Read Chapter 1"><button onclick="confirmAddMilestone()" class="confirm-btn">Add</button></div></div>
@@ -634,6 +635,56 @@
     function formatText(str) { 
         if(!str) return ''; 
         return String(str).replace(/==(.*?)==/g, '<span style="color:var(--frog); background:rgba(250, 204, 21, 0.15); padding:2px 4px; border-radius:4px;">$1</span>'); 
+    }
+
+    // THE MISSING ANIMATION FUNCTIONS
+    function triggerFireworks() {
+        const container = document.getElementById('firework-container');
+        const colors = ['#f472b6', '#facc15', '#60a5fa', '#c084fc', '#22c55e', '#ef4444'];
+        for (let b = 0; b < 5 + Math.floor(Math.random() * 4); b++) {
+            setTimeout(() => {
+                const centerX = (20 + Math.random() * 60) + '%';
+                const centerY = (15 + Math.random() * 35) + '%';
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                for (let i = 0; i < 30 + Math.floor(Math.random() * 20); i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    p.style.backgroundColor = color;
+                    p.style.left = centerX;
+                    p.style.top = centerY;
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = 40 + Math.random() * 120;
+                    p.style.setProperty('--x', Math.cos(angle) * dist + 'px');
+                    p.style.setProperty('--y', Math.sin(angle) * dist + 'px');
+                    container.appendChild(p);
+                    setTimeout(() => p.remove(), 1200);
+                }
+            }, b * 200);
+        }
+    }
+
+    function triggerFrogworks() { 
+        const container = document.getElementById('firework-container'); 
+        for (let b = 0; b < 6 + Math.floor(Math.random() * 3); b++) { 
+            setTimeout(() => { 
+                const centerX = (20 + Math.random() * 60) + '%'; 
+                const centerY = (15 + Math.random() * 35) + '%'; 
+                for (let i = 0; i < 8 + Math.floor(Math.random() * 5); i++) { 
+                    const p = document.createElement('div'); 
+                    p.className = 'frog-particle'; 
+                    p.style.left = centerX; 
+                    p.style.top = centerY; 
+                    p.innerText = '🐸'; 
+                    p.style.fontSize = (1.2 + Math.random() * 2) + 'rem'; 
+                    const angle = Math.random() * Math.PI * 2; 
+                    const dist = 40 + Math.random() * 160; 
+                    p.style.setProperty('--x', Math.cos(angle) * dist + 'px'); 
+                    p.style.setProperty('--y', Math.sin(angle) * dist + 'px'); 
+                    container.appendChild(p); 
+                    setTimeout(() => p.remove(), 1200); 
+                } 
+            }, b * 200); 
+        } 
     }
 
     window.addEventListener('firebase-ready', () => { setupRealtimeSync(); });
@@ -1756,7 +1807,6 @@
         const frogCounter = document.getElementById('frogCounter'); if(frogCounter) { frogCounter.innerText = `${totalFrogs} Frogs Eaten`; }
         const fcCounter = document.getElementById('fcCounter'); if(fcCounter) { fcCounter.innerText = `${(state.fcStudyDays || []).length} Days Studied`; }
         
-        state.dailyData[key] = dayData; 
         localStorage.setItem('discipline_v12', JSON.stringify(state));
         
         if (shouldRenderBoard) { renderBoard(dayData.habits); } 
