@@ -173,7 +173,7 @@
         .routine-action.del:hover { transform: scale(1.2); color: #fff; }
 
         .nav-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 600px; margin: 10px auto 30px auto; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .nav-btn { background: none; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; text-decoration: none; }
+        .nav-btn { background: none; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 10px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
         .nav-btn:hover { background: var(--card); }
         .current-date-display { font-weight: 800; color: var(--primary); cursor: pointer; font-size: 1.1rem; }
 
@@ -538,14 +538,11 @@
 </div>
 
 <div id="studyModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeStudyModal()">✕</div><div class="modal-title" style="font-size: 1.5rem;">Master Electrician Prep</div><div class="modal-text">Select a notebook to edit or review:</div><div class="modal-btns"><button onclick="openRichTextModal('study', 'Code Definitions (NEC 2023 / 2026)')" class="tool-btn" style="border-color: var(--primary); color: var(--primary);">Code Definitions</button><button onclick="openRichTextModal('study', 'Calculation Methodologies')" class="tool-btn" style="border-color: var(--frog); color: var(--frog);">Calculation Methodologies</button></div></div></div>
-<div id="gratitudeModal" class="modal-overlay"><div class="sync-modal" style="max-width: 500px; max-height: 90vh; display: flex; flex-direction: column;"><div class="modal-close" onclick="closeGratitudeModal()">✕</div><div style="display:flex; justify-content:center; align-items:center; gap: 15px; margin-bottom: 5px;"><div class="modal-title" style="margin: 0;">Daily Gratitude</div><div class="pen-btn" style="font-size:1.4rem;" onclick="openCurrentMonthNotes()" title="Current Month Notes">✎</div></div><div class="modal-text" style="margin-bottom: 15px;">What are 3 things you are grateful for today?</div><div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-bottom:20px;"><input type="text" id="grat1" class="custom-input" placeholder="1. ..."><input type="text" id="grat2" class="custom-input" placeholder="2. ..."><input type="text" id="grat3" class="custom-input" placeholder="3. ..."><button onclick="saveGratitude()" class="confirm-btn">Save Today's Entries</button></div><hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;"><div class="input-toggle" onclick="toggleCollapse('gratitudeHistoryBox')" style="font-size: 0.9rem;">View Gratitude Journal <span>▼</span></div><div id="gratitudeHistoryBox" class="collapsible-content" style="overflow-y:auto; flex:1; text-align:left; gap:10px; max-height: 300px;"></div></div></div>
 <div id="alarmModal" class="modal-overlay"><div class="sync-modal"><div class="alarm-title">Timer Ended</div><div class="modal-text">Frog time is over. Take a breath.</div><button onclick="stopAlarmLoop()" class="confirm-btn">Okay</button></div></div>
 <div id="goalInputModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeGoalModal()">✕</div><div class="modal-title">Longterm Goal</div><input type="text" id="newGoalText" class="custom-input" placeholder="e.g. Run a Marathon"><button onclick="confirmAddGoal()" class="confirm-btn">OK</button></div></div>
 <div id="milestoneInputModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeMilestoneModal()">✕</div><div class="modal-title" style="font-size: 1.5rem;">Add Milestone</div><input type="text" id="newMilestoneText" class="custom-input" placeholder="e.g. Read Chapter 1"><button onclick="confirmAddMilestone()" class="confirm-btn">Add</button></div></div>
 <div id="richTextModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeRichTextModal()">✕</div><div class="modal-text" id="richTextTitle">Notes</div><div class="editor-wrapper"><div class="editor-toolbar"><button class="fmt-btn" onclick="fmt('bold')" title="Bold"><b>B</b></button><button class="fmt-btn" onclick="fmt('italic')" title="Italic"><i>I</i></button><button class="fmt-btn" onclick="fmt('insertUnorderedList')" title="Bullet List">• List</button><div style="width:1px; background:#3f3f46; margin:0 5px;"></div><button class="fmt-btn" onclick="fmt('justifyLeft')" title="Align Left">⇐</button><button class="fmt-btn" onclick="fmt('justifyCenter')" title="Align Center">=</button><button class="fmt-btn" onclick="fmt('justifyRight')" title="Align Right">⇒</button><div style="width:1px; background:#3f3f46; margin:0 5px;"></div><button class="fmt-btn" onclick="insertTimestamp()" title="Insert Timestamp">⏱️ Time</button></div><div id="richEditor" class="editor-content" contenteditable="true"></div></div><button onclick="saveRichText()" class="confirm-btn">Save Notes</button></div></div>
 <div id="goalStatsModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeStatsModal()">✕</div><div class="modal-text" id="statsTitle" style="font-weight:bold; color:#fff; margin-bottom:10px;">Goal Stats</div><div class="graph-wrapper"><svg id="graphSvg" class="graph-svg"></svg><div id="graphTooltip" class="graph-tooltip"></div></div><div id="graphLegend" class="legend-container"></div><div class="input-toggle" onclick="toggleCollapse('manageDataSection')">Manage Data & Variables <span>▼</span></div><div id="manageDataSection" class="collapsible-content"><div id="variableListContainer" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div><button id="createVarBtn" onclick="createVariable()" class="confirm-btn" style="width:100%; background:#27272a; border:1px solid #3f3f46;">+ Add New Variable</button><hr style="width:100%; border:0; border-top:1px solid #333; margin:10px 0;"><div id="dataEntryContainer" style="display:none; width:100%; flex-direction:column; gap:10px;"><div class="section-header">Add Data Entry</div><select id="seriesSelect" class="series-select"></select><div style="display:flex; gap:10px; width:100%;"><input type="number" id="statValue" class="custom-input" style="flex:1; margin-bottom:0;" placeholder="Value"><input type="date" id="statDate" class="custom-input" style="flex:1; margin-bottom:0; font-family:sans-serif;"></div><button onclick="addStat()" class="confirm-btn" style="width:100%;">Add Entry</button></div><div id="noVarsMsg" style="color:#555; font-size:0.8rem;">Create a variable above to add data.</div></div><div class="input-toggle" onclick="toggleCollapse('editHistorySection')">Edit Data Points <span>▼</span></div><div id="editHistorySection" class="collapsible-content"><div id="dataHistoryContent" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div></div></div></div>
-<div id="goalRoutineModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeRoutineModal()">✕</div><div class="modal-title">Goal Routine</div><div class="routine-list" id="routineList"></div><input type="text" id="newRoutineTask" class="custom-input" placeholder="New task (e.g. Hangboard)" onkeypress="if(event.key==='Enter') addRoutineTask()"><button onclick="addAllRoutinesToToday()" class="confirm-btn">Add All to Today</button></div></div>
-<div id="dailyRoutineModal" class="modal-overlay"><div class="sync-modal" style="max-width: 400px;"><div class="modal-close" onclick="closeDailyRoutineModal()">✕</div><div class="modal-title">Daily Routine</div><div class="routine-list" id="dailyRoutineList"></div><input type="text" id="newDailyRoutineTask" class="custom-input" placeholder="(e.g. take a hike)" onkeypress="if(event.key==='Enter') addDailyRoutineTask()"><button onclick="addAllDailyRoutinesToToday()" class="confirm-btn">Add All to Today</button></div></div>
 <div id="customTimerModal" class="modal-overlay"><div class="sync-modal"><div class="modal-close" onclick="closeCustomTimerModal()">✕</div><div class="modal-text" style="font-size: 1.1rem; font-weight: bold;">Set Timer Duration</div><input type="number" id="customTimerInput" class="custom-input" placeholder="Minutes (e.g. 45)" onkeypress="if(event.key==='Enter') confirmCustomTimer()"><button onclick="confirmCustomTimer()" class="confirm-btn">Start</button></div></div>
 
 <div class="container">
@@ -596,13 +593,11 @@
 </div>
 
 <script>
-    // --- Globals & State ---
     const markTwainQuote = { text: "If it's your job to eat a frog, it's best to do it first thing in the morning. And If it's your job to eat two frogs, it's best to eat the biggest one first.", author: "Mark Twain" };
     const quotesList = [ { text: "You do not rise to the level of your goals. You fall to the level of your systems.", author: "James Clear" }, { text: "A year from now you may wish you had started today.", author: "Karen Lamb" }, { text: "Start before you are ready.", author: "Steven Pressfield" }, { text: "Long-term consistency trumps short-term intensity.", author: "Bruce Lee" }, { text: "It is not that we have a short time to live, but that we waste a lot of it.", author: "Seneca" }, { text: "Action is the foundational key to all success.", author: "Pablo Picasso" }, { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" }, { text: "You have power over your mind - not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" }, { text: "The man who moves a mountain begins by carrying away small stones.", author: "Confucius" }, { text: "I have been impressed with the urgency of doing. Knowing is not enough; we must apply.", author: "Leonardo da Vinci" }, { text: "Give me six hours to chop down a tree and I will spend the first four sharpening the axe.", author: "Abraham Lincoln" }, { text: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" }, { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" }, { text: "First say to yourself what you would be; and then do what you have to do.", author: "Epictetus" }, { text: "I’m a greater believer in luck, and I find the harder I work the more I have of it.", author: "Thomas Jefferson" }, { text: "The beginning is the most important part of the work.", author: "Plato" }, { text: "Opportunities multiply as they are seized.", author: "Sun Tzu" }, { text: "The secret of change is to focus all of your energy, not on fighting the old, but on building the new.", author: "Socrates" }, { text: "Don't wait. The time will never be just right.", author: "Napoleon Hill" } ];
     const restQuotes = [ { text: "Rest and self-care are so important. When you take time to replenish your spirit, it allows you to serve others from the overflow.", author: "Eleanor Brownn" }, { text: "Sometimes the most productive thing you can do is relax.", author: "Mark Black" }, { text: "Almost everything will work again if you unplug it for a few minutes, including you.", author: "Anne Lamott" }, { text: "Rest is not idleness, and to lie sometimes on the grass under trees on a summer's day... is by no means a waste of time.", author: "John Lubbock" }, { text: "Take rest; a field that has rested gives a bountiful crop.", author: "Ovid" } ];
     const firstVictoryQuote = "The frog is eaten. The day is won.";
     const randomVictoryQuotes = [ "Rest easy. You have earned it.", "A day well spent brings happy sleep.", "The standard has been set.", "Chaos conquered.", "Consistency is the only magic.", "No regrets today.", "Momentum is built one day at a time.", "The Pain of growth is far less than the pain of regret.", "Tomorrow starts with the victory of today.", "You are what you repeatedly do.", "Sleep the sleep of the just.", "Another brick laid. Another step taken.", "The mind commands, the body obeys.", "Respect yourself. You kept your word.", "Sharpen the axe. Rest now.", "This is what progress feels like." ];
-    const gratitudeQuotes = [ { text: "Do not spoil what you have by desiring what you have not; remember that what you now have was once among the things you only hoped for.", author: "Epicurus" }, { text: "When you arise in the morning, think of what a precious privilege it is to be alive—to breathe, to think, to enjoy, to love.", author: "Marcus Aurelius" }, { text: "Enjoy the little things, for one day you may look back and realize they were the big things.", author: "Robert Brault" }, { text: "Acknowledging the good that you already have in your life is the foundation for all abundance.", author: "Eckhart Tolle" }, { text: "This is a wonderful day. I've never seen this one before.", author: "Maya Angelou" }, { text: "Wear gratitude like a cloak, and it will feed every corner of your life.", author: "Rumi" }, { text: "The soul that gives thanks can find comfort in everything; the soul that complains can find comfort in nothing.", author: "Hannah Whitall Smith" }, { text: "There are only two ways to live your life. One is as though nothing is a miracle. The other is as though everything is a miracle.", author: "Albert Einstein" }, { text: "Piglet noticed that even though he had a Very Small Heart, it could hold a rather large amount of Gratitude.", author: "A.A. Milne" }, { text: "Let us rise up and be thankful, for if we didn't learn a lot today, at least we learned a little...", author: "Buddha" }, { text: "Gratitude changes the pangs of memory into a tranquil joy.", author: "Dietrich Bonhoeffer" } ];
 
     let state = JSON.parse(localStorage.getItem('discipline_v12')) || { dailyData: {} };
     if (!state.longTermGoals || !Array.isArray(state.longTermGoals)) state.longTermGoals = []; 
@@ -615,7 +610,11 @@
     if (!state.ui) state.ui = { goals: true, calendar: true };
 
     const DEVICE_ID = 'dev-' + Math.random().toString(36).substr(2, 9); 
-    let viewingDate = new Date(); 
+    
+    // --- UPDATED BULLETPROOF DATE ENGINE ---
+    const _now = new Date();
+    let viewingDate = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate()); 
+    
     let activeTimer = { id: null, totalSeconds: 0, interval: null, isPaused: false }; 
     let audioCtx; 
     let alarmLoopInterval = null; 
@@ -632,13 +631,11 @@
     let pendingFrontImg = null; 
     let pendingBackImg = null;
 
-    // --- Format Text ---
     function formatText(str) { 
         if(!str) return ''; 
         return String(str).replace(/==(.*?)==/g, '<span style="color:var(--frog); background:rgba(250, 204, 21, 0.15); padding:2px 4px; border-radius:4px;">$1</span>'); 
     }
 
-    // --- Firebase Sync Engine ---
     window.addEventListener('firebase-ready', () => { setupRealtimeSync(); });
     function setupRealtimeSync() {
         document.getElementById('syncStatus').innerText = "Cloud: Connected";
@@ -725,7 +722,6 @@
         }
     }
 
-    // --- Alerts ---
     let alertsActive = true; 
     setTimeout(() => { alertsActive = false; updateAlertGlows(); }, 15000);
     
@@ -743,7 +739,6 @@
         }
     }
 
-    // --- Day Off ---
     function toggleDayOff() { 
         const key = getTodayKey(viewingDate); 
         if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; 
@@ -752,7 +747,6 @@
         showToast(state.dailyData[key].isDayOff ? "Day off set! 💤" : "Day off removed."); 
     }
 
-    // --- Backlog ---
     function openBacklogModal() { renderBacklog(); document.getElementById('backlogModal').style.display = 'flex'; document.getElementById('newBacklogTask').focus(); }
     function closeBacklogModal() { document.getElementById('backlogModal').style.display = 'none'; }
     function renderBacklog() {
@@ -796,7 +790,6 @@
         } 
     }
 
-    // --- Drag & Drop Setup ---
     function setupDragAndDrop(zoneId, type) {
         const zone = document.getElementById(zoneId); 
         if(!zone) return;
@@ -812,7 +805,6 @@
         });
     }
 
-    // --- Flashcards ---
     function openFlashcardModal() { updateFcDueCount(); setFcTab('review'); document.getElementById('flashcardModal').style.display = 'flex'; }
     function closeFlashcardModal() { document.getElementById('flashcardModal').style.display = 'none'; currentFc = null; clearPreview('front'); clearPreview('back'); }
     function setFcTab(tab) {
@@ -1258,9 +1250,10 @@
         habits.forEach(h => { if (!h.done && (targetCol === 'all' || h.col === targetCol)) toSweep.push(h); else remaining.push(h); });
         if (toSweep.length === 0) { showToast("No incomplete tasks match."); closeSweepModal(); return; }
         state.dailyData[currentKey].habits = remaining;
-        let tomorrow = new Date(viewingDate); 
-        tomorrow.setDate(tomorrow.getDate() + 1); 
+        
+        let tomorrow = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), viewingDate.getDate() + 1); 
         const nextKey = getTodayKey(tomorrow);
+        
         if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 };
         toSweep.forEach(h => state.dailyData[nextKey].habits.push({ ...h }));
         saveAndRender(); 
@@ -1282,49 +1275,6 @@
         saveAndRender(); 
         closeSweepModal(); 
         showToast(`Moved ${toMove.length} tasks to Backlog.`);
-    }
-
-    function openGratitudeModal() { 
-        const key = getTodayKey(viewingDate); 
-        if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; 
-        const grat = state.dailyData[key].gratitude || ['', '', '']; 
-        document.getElementById('grat1').value = grat[0] || ''; 
-        document.getElementById('grat2').value = grat[1] || ''; 
-        document.getElementById('grat3').value = grat[2] || ''; 
-        renderGratitudeHistory(); 
-        document.getElementById('gratitudeModal').style.display = 'flex'; 
-    }
-    
-    function closeGratitudeModal() { document.getElementById('gratitudeModal').style.display = 'none'; }
-    
-    function saveGratitude() { 
-        const key = getTodayKey(viewingDate); 
-        if (!state.dailyData[key]) state.dailyData[key] = { habits: [], percent: 0 }; 
-        state.dailyData[key].gratitude = [document.getElementById('grat1').value.trim(), document.getElementById('grat2').value.trim(), document.getElementById('grat3').value.trim()]; 
-        saveAndRender(); 
-        renderGratitudeHistory(); 
-        const quote = gratitudeQuotes[Math.floor(Math.random() * gratitudeQuotes.length)]; 
-        showToast(`<div style="font-style:italic; margin-bottom:10px; line-height:1.4;">"${quote.text}"</div><div style="font-size:0.85rem; color:var(--primary); font-weight:bold;">— ${quote.author}</div>`, 6000); 
-    }
-    
-    function renderGratitudeHistory() {
-        const box = document.getElementById('gratitudeHistoryBox'); 
-        box.innerHTML = ''; 
-        const keys = Object.keys(state.dailyData).sort((a,b) => new Date(b) - new Date(a)); 
-        let hasEntries = false;
-        keys.forEach(k => { 
-            const day = state.dailyData[k]; 
-            if (day.gratitude && day.gratitude.some(g => g !== '')) { 
-                hasEntries = true; 
-                const dateParts = k.split('-'); 
-                const localDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); 
-                let html = `<div style="background:#111; padding:15px; border-radius:8px; border:1px solid #27272a;"><div style="font-size:0.7rem; color:var(--primary); text-transform:uppercase; font-weight:bold; margin-bottom:8px;">${localDate.toLocaleDateString(undefined, {weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}</div><ul style="margin:0; padding-left:20px; color:#d4d4d8; font-size:0.85rem; line-height:1.5;">`; 
-                day.gratitude.forEach(g => { if (g) html += `<li>${g}</li>`; }); 
-                html += `</ul></div>`; 
-                box.innerHTML += html; 
-            } 
-        });
-        if (!hasEntries) box.innerHTML = `<div style="text-align:center; color:#555; font-size:0.8rem; margin-top: 10px;">No past entries found. Start today!</div>`;
     }
 
     function openCurrentMonthNotes() { const monthKey = `${viewingDate.getFullYear()}-${viewingDate.getMonth()}`; openRichTextModal('month', monthKey); }
@@ -1492,7 +1442,7 @@
     function deleteHabit(id) { const key = getTodayKey(viewingDate); if (state.dailyData[key]) { state.dailyData[key].habits = state.dailyData[key].habits.filter(h => h.id != id); saveAndRender(); } }
     function toggleHabit(id) { const key = getTodayKey(viewingDate); let habits = state.dailyData[key].habits; let changedHabit = null; state.dailyData[key].habits = habits.map(h => { if (h.id == id) { changedHabit = {...h, done: !h.done}; return changedHabit; } return h; }); if (changedHabit && changedHabit.done) { const total = habits.length; const doneCount = state.dailyData[key].habits.filter(h => h.done).length; const pct = Math.round((1 / total) * 100); const is100 = (doneCount === total); triggerPctDrop(pct, changedHabit.isFrog, is100); if (changedHabit.isFrog) triggerFrogworks(); } saveAndRender(); }
     function moveHabit(id, col) { const key = getTodayKey(viewingDate); state.dailyData[key].habits = state.dailyData[key].habits.map(h => h.id == id ? {...h, col: col} : h); saveAndRender(); }
-    function forwardHabit(id) { clearTimeout(deleteTimeouts[id]); const currentKey = getTodayKey(viewingDate); const hToMove = state.dailyData[currentKey].habits.find(h => h.id == id); state.dailyData[currentKey].habits = state.dailyData[currentKey].habits.filter(h => h.id != id); let tomorrow = new Date(viewingDate); tomorrow.setDate(tomorrow.getDate() + 1); const nextKey = getTodayKey(tomorrow); if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 }; state.dailyData[nextKey].habits.push({ ...hToMove, done: false }); saveAndRender(); }
+    function forwardHabit(id) { clearTimeout(deleteTimeouts[id]); const currentKey = getTodayKey(viewingDate); const hToMove = state.dailyData[currentKey].habits.find(h => h.id == id); state.dailyData[currentKey].habits = state.dailyData[currentKey].habits.filter(h => h.id != id); let tomorrow = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), viewingDate.getDate() + 1); const nextKey = getTodayKey(tomorrow); if (!state.dailyData[nextKey]) state.dailyData[nextKey] = { habits: [], percent: 0 }; state.dailyData[nextKey].habits.push({ ...hToMove, done: false }); saveAndRender(); }
 
     function handleDragStart(e) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', this.dataset.id); setTimeout(() => this.classList.add('dragging'), 0); }
     function handleDragEnd(e) { this.classList.remove('dragging'); }
@@ -1555,9 +1505,9 @@
     }
 
     function getTodayKey(date) { const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, '0'); const day = String(date.getDate()).padStart(2, '0'); return `${year}-${month}-${day}`; }
-    function changeDate(d) { viewingDate.setDate(viewingDate.getDate() + d); saveAndRender(); }
-    function jumpToToday() { viewingDate = new Date(); saveAndRender(); }
-    function jumpToDate(s) { viewingDate = new Date(s + 'T00:00:00'); saveAndRender(); }
+    function changeDate(d) { viewingDate = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), viewingDate.getDate() + d); saveAndRender(); }
+    function jumpToToday() { const _n = new Date(); viewingDate = new Date(_n.getFullYear(), _n.getMonth(), _n.getDate()); saveAndRender(); }
+    function jumpToDate(s) { const parts = s.split('-'); viewingDate = new Date(parts[0], parts[1] - 1, parts[2]); saveAndRender(); }
 
     function applyUIState() {
         if(!state.ui) return;
